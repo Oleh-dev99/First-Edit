@@ -13,6 +13,6 @@ The card shows:
 - their follower count, formatted for reading
 - one "Follow" button
 
-The component receives `HelloCardProps` (see `props.ts`) as its props.
+The component receives `Props` (see `props.ts`) as its props.
 The name may be empty; the card must still render sensibly.
 The "Follow" button does not need to do anything when clicked.
