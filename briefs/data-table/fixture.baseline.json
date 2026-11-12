@@ -1,0 +1,55 @@
+{
+  "title": "Recent orders",
+  "summary": "Orders placed in the last 7 days, newest first.",
+  "currency": "USD",
+  "orders": [
+    {
+      "id": "#10482",
+      "customerName": "Elena Marquez",
+      "email": "elena.marquez@example.com",
+      "status": "paid",
+      "amount": 248.5,
+      "date": "Nov 11, 2026"
+    },
+    {
+      "id": "#10481",
+      "customerName": "Tom Becker",
+      "email": "tom.becker@example.org",
+      "status": "pending",
+      "amount": 89,
+      "date": "Nov 11, 2026"
+    },
+    {
+      "id": "#10480",
+      "customerName": "Aisha Khan",
+      "email": "aisha.k@example.net",
+      "status": "paid",
+      "amount": 1320,
+      "date": "Nov 10, 2026"
+    },
+    {
+      "id": "#10479",
+      "customerName": "Lucas Silva",
+      "email": "lucas.silva@example.com",
+      "status": "refunded",
+      "amount": 64.99,
+      "date": "Nov 9, 2026"
+    },
+    {
+      "id": "#10478",
+      "customerName": "Hannah Lee",
+      "email": "hannah.lee@example.org",
+      "status": "failed",
+      "amount": 412,
+      "date": "Nov 8, 2026"
+    },
+    {
+      "id": "#10477",
+      "customerName": "Marco Rossi",
+      "email": "m.rossi@example.net",
+      "status": "paid",
+      "amount": 37.2,
+      "date": "Nov 7, 2026"
+    }
+  ]
+}

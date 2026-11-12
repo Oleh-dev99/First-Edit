@@ -1,0 +1,12 @@
+{
+  "title": { "kind": "label", "required": true },
+  "summary": { "kind": "prose" },
+  "currency": { "kind": "fixed" },
+  "orders": { "kind": "list" },
+  "orders[].id": { "kind": "id" },
+  "orders[].customerName": { "kind": "label", "required": true },
+  "orders[].email": { "kind": "label", "required": true },
+  "orders[].status": { "kind": "fixed" },
+  "orders[].amount": { "kind": "number" },
+  "orders[].date": { "kind": "fixed" }
+}
