@@ -77,7 +77,8 @@ survives when the content changes.
 - candidates/<source>/<brief-id>/<variant>/Component.tsx
   (source is _samples, _reference or a model id)
 - harness/ : Node. Vite app, Playwright runner, mutations, checks
-- runner/ : Python. Generation, scoring, calibration (added later)
+- runner/ : Python. Generation (see Generation); scoring and calibration
+  later
 - results/ : run output, git-ignored
 - docs/ : spec, methodology, decisions
 
@@ -406,6 +407,185 @@ cleanly. Bump schemaVersion on any incompatible change.
 }
 ```
 
+## Generation
+The Python runner (runner/, package first_edit, Python 3.13) prompts
+models for candidates and stress-tests them:
+
+```
+python -m first_edit generate --model <id> [--brief <id> | --all]
+  [--variant plain|hinted] [--samples N] [--max-requests N] [--max-cost USD]
+python -m first_edit stress --model <id> [--brief <id> | --all]
+  [--variant plain|hinted]
+```
+
+--all means every corpus brief (sample: false). The default variant is
+plain for generate and every variant found for stress. Setup: a virtual
+environment at .venv in the repo root, then
+`python -m pip install -r runner/requirements.lock -e runner`.
+Dependencies are httpx and python-dotenv, plus pytest for tests.
+
+### Models file
+runner/models.toml lists the models the runner may call:
+
+```
+[[model]]
+id = "mock-reference"        # used in paths and reports
+provider = "mock"
+
+[[model]]                    # a real entry
+id = "example-model"
+provider = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "<provider model id>"
+params = { max_tokens = 16000 }        # merged into the request body
+price = { input = 0.0, output = 0.0 }  # USD per million tokens, optional
+```
+
+- openai-compatible: POST {base_url}/chat/completions with a Bearer key
+  read from the variable named by api_key_env. It is the only real
+  provider type (D-023). Keys live in .env; .env.example lists the names.
+- mock: replies with the brief's reference candidate inside one tsx code
+  fence, with no network.
+- A model id matches [a-z0-9][a-z0-9._-]* and is used in paths.
+
+### Prompt
+The prompt is part of the method; its text is fixed and stored under
+runner/first_edit/prompts/, used verbatim.
+
+System message (system.md):
+
+```
+Write one React component in TypeScript, styled with Tailwind CSS v4
+utility classes.
+
+Rules:
+- Reply with one fenced code block that contains the complete file, and
+  nothing else.
+- The file has a default export: a function component that takes the
+  props described by the Props interface in the request.
+- Declare the Props types inside the file. Do not import them.
+- Import from "react" only. No other imports.
+- Style with Tailwind utility classes and inline styles only. There is
+  no custom Tailwind configuration.
+- Images come only from URLs in the props. No other assets and no
+  network requests.
+- No timers, no randomness, no data fetching and no browser storage.
+- The component is rendered once with the given props. It does not need
+  to be interactive.
+```
+
+User message, variant plain (user.md; {brief}, {props} and {fixture} are
+brief.md, props.ts and fixture.baseline.json, each trimmed):
+
+````
+{brief}
+
+## Props interface
+
+```ts
+{props}
+```
+
+## Example props
+
+```json
+{fixture}
+```
+````
+
+User message, variant hinted: the plain message, a blank line, then
+(hint.md):
+
+```
+The component will be used with real content: text of any length, lists
+of any size including empty ones, numbers of any size, and screens from
+320px wide. Nothing may overflow, be cut off or overlap.
+```
+
+The example props are the baseline fixture (D-028). The plain variant
+carries no robustness hints, like the briefs; the hinted one measures how
+much an explicit instruction helps (D-026).
+
+### Sampling
+The request body is the provider model id, the two messages and the
+entry's params, nothing else: no temperature or seed unless params sets
+them (D-024). Samples are repeated calls with the same prompt, numbered
+s1, s2 and so on.
+
+### Cache
+Every raw reply is stored in results/cache/<key>.json, where the key is
+the SHA-256 of the model entry's identity (id, provider, base URL,
+provider model id), its params, both messages and the sample number. A
+cached reply is reused as is, so a sample is never re-rolled; price and
+key name are not part of the key.
+
+### Calls, retries and budget
+- Timeouts, HTTP 429 and 5xx are retried with exponential backoff (2, 4
+  and 8 s), at most four attempts. Any other API error fails the sample
+  at once; it is recorded and, since nothing is cached, called again on
+  the next run (D-025).
+- --max-requests: stop before the provider call that would exceed this
+  count. A call and its retries count once; cache hits are free.
+- --max-cost: when the entry has prices, stop before a call whose upper
+  estimate would exceed the limit. The estimate is the prompt (4
+  characters per token) at the input price plus the params' max_tokens
+  (16,000 if unset) at the output price; spend counts the actual usage.
+- Skipped samples are printed and get no files.
+
+### Candidate files and validity
+Each sample is written to
+candidates/<model-id>/<brief-id>/<variant>-s<n>/:
+- Component.tsx: exactly one fenced block is used as is; with several,
+  the largest, with a warning; with none, the whole reply.
+- generation.json: schemaVersion, brief, candidate, model entry (the key's
+  variable name, never the key), variant, sample, cacheKey, promptHash,
+  cached, generatedAt, receivedAt, status (generated or api-error), token
+  usage, estimatedCostUsd, latencyMs, attempts, finishReason, extraction,
+  warnings, valid and reasons.
+
+A candidate is valid only if the gate passes and the reply was not cut
+off by the token limit (finish reason "length"). The gate is
+`npm run candidate:check -- --brief <id> --candidate <path> --json`,
+which prints { valid, reasons: [{ rule, message }] } and exits 0 either
+way. Its rules:
+- parse: the file parses
+- default-export: it has a default export
+- props: the default export accepts the brief's Props (tsc; type errors
+  inside the component itself do not count)
+- imports: it imports nothing but react (no require either)
+- network, timers, randomness, storage: no fetch, XMLHttpRequest,
+  WebSocket, EventSource or sendBeacon; no setTimeout, setInterval,
+  setImmediate, requestAnimationFrame or requestIdleCallback; no
+  Math.random, crypto.getRandomValues or crypto.randomUUID; no
+  localStorage, sessionStorage, indexedDB or document.cookie
+- dynamic-import: no import()
+- hardcoded-url: no http(s) or protocol-relative URL in src, href,
+  srcSet, or in any string containing CSS url()
+
+Invalid output is a model failure: it is recorded, never re-rolled, and
+not stressed (D-025). Outputs of mock models (candidates/mock-*) are
+git-ignored; real model outputs are kept. Every git-ignored folder under
+candidates/ needs its own @source line in harness/src/styles.css, or
+Tailwind skips its classes.
+
+### Stress
+`python -m first_edit stress` runs `npm run stress` on every valid
+candidate and reads its summary.json. It prints one row per candidate
+(brief, variant, sample, valid, baseline errors, survived/applicable,
+truncations over all cases) and totals; invalid candidates appear as
+rows and are not stressed.
+
+### Tailwind v3 compatibility
+The prompt names Tailwind v4, but models often write v3 class names. The
+harness keeps the v3 utilities that the v4 upgrade guide
+(https://tailwindcss.com/docs/upgrade-guide, "Removed deprecated
+utilities") removed and that affect layout, sizing or text overflow
+(D-027): flex-shrink, flex-shrink-*, flex-grow, flex-grow-*,
+overflow-ellipsis, decoration-slice and decoration-clone. Purely visual
+removals and renames (the *-opacity-* utilities, shadow, drop-shadow,
+blur, backdrop-blur, rounded, outline-none, ring) are left alone.
+
 ## Known gaps
 Accepted in step 3:
 - text-clipped does not report clipping by a second, further-out hidden
@@ -449,7 +629,7 @@ content-spill (D-014). Empty states are out of scope rather than a gap
 3. Checks v0 on hand-written robust and brittle samples (done)
 4. Mutation engine (done)
 5. Spill gap, brief format, first three briefs (done)
-6. Seven more briefs
+6. Seven more briefs (done)
 7. Generation runner, one model
 8. End-to-end spike and go/no-go review
 9. Full brief corpus (about 40)

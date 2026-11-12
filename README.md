@@ -77,6 +77,26 @@ prints one row per brief and exits non-zero if any brief fails.
 Fixtures reference images only as `/fe-assets/<name>.svg`; the six
 placeholder images live in `harness/public/fe-assets/`.
 
+## Generation runner (Python)
+
+The runner in `runner/` prompts models for candidates and stress-tests
+them; see [docs/SPEC.md](docs/SPEC.md), Generation. It needs Python 3.13
+and, for the gate and the stress runs, the harness set up as above. From
+the repo root (on Windows; use `.venv/bin/python` elsewhere):
+
+```sh
+python -m venv .venv
+.venv\Scripts\python -m pip install -r runner/requirements.lock -e runner
+.venv\Scripts\python -m first_edit generate --model mock-reference --all
+.venv\Scripts\python -m first_edit stress --model mock-reference --all
+.venv\Scripts\python -m pytest runner
+```
+
+Models are listed in `runner/models.toml`; API keys go in `.env` (see
+`.env.example`). `mock-reference` replies with each brief's reference
+candidate and needs no network. Before publishing anything, work through
+[docs/PUBLISH-CHECKLIST.md](docs/PUBLISH-CHECKLIST.md).
+
 ## Stress runs
 
 ```sh

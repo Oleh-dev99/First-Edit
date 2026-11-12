@@ -138,3 +138,42 @@ harness-served placeholder SVGs with different aspect ratios, declared
 fixed. Renders stay offline and deterministic, and candidates must cope
 with images of any ratio because the image comes from props, never from
 the component.
+
+## D-023 One provider type: OpenAI-compatible chat completions (2026-11-12)
+The runner speaks one protocol: POST {base_url}/chat/completions with a
+Bearer key. A configurable base URL reaches most vendors directly or
+through a router, so one code path covers every model and behaves the
+same for all of them. A mock provider stands in for tests.
+
+## D-024 Provider default sampling; samples are repeated calls (2026-11-12)
+No temperature or seed is sent unless a model's params says so: models
+are measured as their vendors ship them. Several samples of one prompt
+are repeated calls, numbered s1, s2, and cached separately.
+
+## D-025 Invalid output is a model failure; API errors are retried (2026-11-12)
+A reply that fails the gate or is cut off by the token limit counts
+against the model and is never re-rolled: re-rolling until valid would
+hide how often a model fails the contract. Transient API errors
+(timeouts, 429, 5xx) are retried, up to four attempts; other API errors
+fail the sample, are recorded and are not cached.
+
+## D-026 Two prompt variants, plain and hinted (2026-11-12)
+The plain prompt carries no robustness hints and measures what models do
+unprompted. The hinted variant adds one paragraph naming real content,
+any list size, any number size and 320px screens, to measure how much an
+explicit instruction helps. The two share the rest of the prompt word for
+word.
+
+## D-027 The prompt names Tailwind v4; removed v3 layout utilities still work (2026-11-12)
+The prompt says Tailwind CSS v4 because the harness runs v4. Models still
+write v3 class names, so the harness keeps the removed v3 utilities that
+affect layout, sizing or text overflow (flex-shrink, flex-grow,
+overflow-ellipsis, decoration-slice/clone) working. A candidate is then
+judged on its layout, not on a renamed class. Visual renames are left
+alone.
+
+## D-028 The prompt includes the baseline fixture as example props (2026-11-12)
+The user message shows the baseline fixture as example props, as a
+designer hands over mock data with a design. Models see realistic values
+and shapes; the mutations then change them, which is what the benchmark
+measures.
