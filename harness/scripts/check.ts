@@ -1,59 +1,95 @@
 /**
  * Renders one case and runs every check on it.
  *
- *   npm run check -- --brief <id> --candidate <path> [--fixture <name>] [--width <px>]
+ *   npm run check -- --brief <id> --candidate <path>
+ *                    [--fixture <name>] [--mutation <id>] [--width <px>]
  *
  * Writes to results/checks/:
  *   <name>.json            the findings
  *   <name>.png             a clean full-page screenshot
  *   <name>.annotated.png   red outlines on errors, amber on info findings
- * where <name> is <source>__<brief>__<variant>__<fixture>__<width>.
- * Prints a one-line summary. Exits non-zero only if the case fails to render.
+ * where <name> is <source>__<brief>__<variant>__<fixture>[__<mutation>]__<width>.
+ * The width defaults to the mutation's viewport (1280, or 320 for
+ * viewport-320); the height is 800. Prints a one-line summary. Exits
+ * non-zero only if the case fails to render.
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium, type Browser } from 'playwright';
 import { annotate } from '../lib/annotate.ts';
+import { loadBrief } from '../lib/briefs.ts';
 import { countFindings } from '../lib/findings.ts';
-import { candidateQuery, collectFindings, openPage } from '../lib/render.ts';
 import { repoRoot } from '../lib/paths.ts';
+import { candidateQuery, collectFindings, openPage } from '../lib/render.ts';
 import { startServer } from '../lib/server.ts';
 import { CHECK_NAMES } from '../src/checks/finding.ts';
+import { applyContentMutation } from '../src/mutations/content.ts';
+import {
+  MUTATION_IDS,
+  isContentMutation,
+  isMutationId,
+  viewportFor,
+  type MutationId,
+} from '../src/mutations/index.ts';
 
-const HEIGHT = 800;
 const USAGE =
-  'usage: npm run check -- --brief <id> --candidate <path> [--fixture <name>] [--width <px>]';
+  'usage: npm run check -- --brief <id> --candidate <path> ' +
+  '[--fixture <name>] [--mutation <id>] [--width <px>]';
 
-function readArgs(): { brief: string; candidate: string; fixture: string; width: number } {
+interface Args {
+  brief: string;
+  candidate: string;
+  fixture: string;
+  mutation: MutationId | null;
+  width: number;
+}
+
+function readArgs(): Args {
   const { values } = parseArgs({
     options: {
       brief: { type: 'string' },
       candidate: { type: 'string' },
       fixture: { type: 'string', default: 'baseline' },
-      width: { type: 'string', default: '1280' },
+      mutation: { type: 'string' },
+      width: { type: 'string' },
     },
     strict: true,
   });
-  const width = Number(values.width);
-  if (!values.brief || !values.candidate || !Number.isInteger(width) || width < 1) {
-    throw new Error(USAGE);
+  if (!values.brief || !values.candidate) throw new Error(USAGE);
+  if (values.mutation !== undefined && !isMutationId(values.mutation)) {
+    throw new Error(`unknown mutation "${values.mutation}"; known: ${MUTATION_IDS.join(', ')}`);
   }
-  return { brief: values.brief, candidate: values.candidate, fixture: values.fixture ?? 'baseline', width };
+  const mutation = values.mutation ?? null;
+  const width = values.width === undefined ? viewportFor(mutation).width : Number(values.width);
+  if (!Number.isInteger(width) || width < 1) throw new Error(USAGE);
+  return { brief: values.brief, candidate: values.candidate, fixture: values.fixture ?? 'baseline', mutation, width };
 }
 
 async function main(): Promise<void> {
   const args = readArgs();
-  const viewport = { width: args.width, height: HEIGHT };
-  const name = [...args.candidate.split('/'), args.fixture, String(args.width)].join('__');
+  const viewport = { width: args.width, height: viewportFor(args.mutation).height };
+  const name = [
+    ...args.candidate.split('/'),
+    args.fixture,
+    ...(args.mutation ? [args.mutation] : []),
+    String(args.width),
+  ].join('__');
   const outDir = path.join(repoRoot, 'results', 'checks');
   await mkdir(outDir, { recursive: true });
+
+  // Content mutations are applied in the page; compute the changed paths here too.
+  let changed: string[] | null = null;
+  if (args.mutation !== null && isContentMutation(args.mutation)) {
+    const { fixture, fields } = loadBrief(args.brief, args.fixture);
+    changed = applyContentMutation(fixture, fields, args.mutation).changed;
+  }
 
   const server = await startServer();
   let browser: Browser | undefined;
   try {
     browser = await chromium.launch();
-    const query = candidateQuery(args.brief, args.candidate, args.fixture);
+    const query = candidateQuery(args.brief, args.candidate, args.fixture, args.mutation);
     const { context, page } = await openPage(browser, server.origin, query, viewport);
     try {
       const findings = await collectFindings(page);
@@ -66,7 +102,7 @@ async function main(): Promise<void> {
       const annotated = await annotate(browser, clean, findings);
       const counts = countFindings(findings);
 
-      const report = { ...args, viewport, page: pageSize, counts, findings };
+      const report = { ...args, query, viewport, changed, page: pageSize, counts, findings };
       await writeFile(path.join(outDir, `${name}.json`), `${JSON.stringify(report, null, 2)}\n`);
       await writeFile(path.join(outDir, `${name}.png`), clean);
       await writeFile(path.join(outDir, `${name}.annotated.png`), annotated);
@@ -76,8 +112,10 @@ async function main(): Promise<void> {
         .join(', ');
       const errorTotal = findings.filter((f) => f.severity === 'error').length;
       const infoTotal = findings.length - errorTotal;
+      const mutationNote =
+        args.mutation === null ? '' : ` mutation=${args.mutation}${changed?.length === 0 ? ' (not applicable: nothing changed)' : ''}`;
       console.log(
-        `${args.candidate} fixture=${args.fixture} ${args.width}x${HEIGHT}: ` +
+        `${args.candidate} fixture=${args.fixture}${mutationNote} ${viewport.width}x${viewport.height}: ` +
           `${errorTotal} error${errorTotal === 1 ? '' : 's'}${errors ? ` (${errors})` : ''}, ${infoTotal} info ` +
           `-> results/checks/${name}.{json,png,annotated.png}`,
       );

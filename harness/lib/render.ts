@@ -8,8 +8,15 @@ export interface Viewport {
 
 export const TIMEOUT_MS = 30_000;
 
-export function candidateQuery(brief: string, candidate: string, fixture = 'baseline'): string {
-  return `?brief=${brief}&candidate=${candidate}&fixture=${fixture}`;
+/** The query string of a candidate case; open it with `npm run dev` to reproduce the case. */
+export function candidateQuery(
+  brief: string,
+  candidate: string,
+  fixture = 'baseline',
+  mutation: string | null = null,
+): string {
+  const query = `?brief=${brief}&candidate=${candidate}&fixture=${fixture}`;
+  return mutation === null ? query : `${query}&mutation=${mutation}`;
 }
 
 /**

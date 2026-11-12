@@ -8,7 +8,7 @@ import { renderCandidate } from './render-candidate.tsx';
 import { describe, fail, markReady } from './status.ts';
 
 // Routes:
-//   /?brief=<brief-id>&candidate=<source>/<brief-id>/<variant>[&fixture=<name>]
+//   /?brief=<brief-id>&candidate=<source>/<brief-id>/<variant>[&fixture=<name>][&mutation=<id>]
 //   /?lab=<case-id>
 
 const FONT_FAMILY = 'Inter Variable';

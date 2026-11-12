@@ -1,5 +1,9 @@
 import { Component, useEffect, type ComponentType, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { applyEnvironment } from './environment.ts';
+import { applyContentMutation } from './mutations/content.ts';
+import { assertValidFields } from './mutations/fields.ts';
+import { isContentMutation, isMutationId, MUTATION_IDS, type MutationId } from './mutations/index.ts';
 import { settle } from './settle.ts';
 import { describe, fail } from './status.ts';
 
@@ -12,6 +16,9 @@ const candidates = import.meta.glob<CandidateModule>('../../candidates/**/Compon
 const fixtures = import.meta.glob<unknown>('../../briefs/*/fixture.*.json', {
   import: 'default',
 });
+
+// Keys look like "../../briefs/hello-card/fields.json".
+const fieldsMaps = import.meta.glob<unknown>('../../briefs/*/fields.json', { import: 'default' });
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -37,15 +44,28 @@ function ReadyProbe({ root, onReady }: { root: Element; onReady: () => void }): 
   return null;
 }
 
+function readMutation(params: URLSearchParams): MutationId | null {
+  const value = params.get('mutation');
+  if (value === null) return null;
+  if (!isMutationId(value)) {
+    throw new Error(`Unknown mutation: "${value}". Known: ${MUTATION_IDS.join(', ')}`);
+  }
+  return value;
+}
+
 /**
- * Renders /?brief=<brief-id>&candidate=<source>/<brief-id>/<variant>[&fixture=<name>]
- * into `root`. The fixture defaults to "baseline". Resolves once the
- * candidate is on screen with its fonts loaded.
+ * Renders /?brief=<brief-id>&candidate=<source>/<brief-id>/<variant>
+ *          [&fixture=<name>][&mutation=<id>]
+ * into `root`. The fixture defaults to "baseline" and is checked against the
+ * brief's fields map. A content mutation is applied to the fixture; an
+ * environment mutation changes <html>. Resolves once the candidate is on
+ * screen with its fonts and images loaded.
  */
 export async function renderCandidate(root: HTMLElement, params: URLSearchParams): Promise<void> {
   const briefId = params.get('brief');
   const candidateId = params.get('candidate');
   const fixtureName = params.get('fixture') ?? 'baseline';
+  const mutation = readMutation(params);
   if (!briefId) throw new Error('Missing query parameter "brief"');
   if (!candidateId) throw new Error('Missing query parameter "candidate"');
 
@@ -55,20 +75,27 @@ export async function renderCandidate(root: HTMLElement, params: URLSearchParams
   }
   const loadFixture = fixtures[`${briefDir}fixture.${fixtureName}.json`];
   if (!loadFixture) throw new Error(`Unknown fixture "${fixtureName}" for brief "${briefId}"`);
+  const loadFields = fieldsMaps[`${briefDir}fields.json`];
+  if (!loadFields) throw new Error(`Brief "${briefId}" has no fields.json`);
   const loadCandidate = candidates[`../../candidates/${candidateId}/Component.tsx`];
   if (!loadCandidate) throw new Error(`Unknown candidate: "${candidateId}"`);
 
-  const [fixture, candidateModule] = await Promise.all([loadFixture(), loadCandidate()]);
-  if (typeof fixture !== 'object' || fixture === null || Array.isArray(fixture)) {
-    throw new Error(`Fixture "${fixtureName}" for brief "${briefId}" is not a JSON object`);
-  }
+  const [fixture, fields, candidateModule] = await Promise.all([loadFixture(), loadFields(), loadCandidate()]);
+  assertValidFields(fixture, fields, `fields map of brief "${briefId}" for fixture "${fixtureName}"`);
   const Candidate = candidateModule.default;
   if (!Candidate) throw new Error(`Candidate "${candidateId}" has no default export`);
+
+  let props = fixture;
+  if (mutation !== null && isContentMutation(mutation)) {
+    props = applyContentMutation(fixture, fields, mutation).fixture;
+  } else if (mutation !== null) {
+    applyEnvironment(mutation);
+  }
 
   await new Promise<void>((resolve) => {
     createRoot(root).render(
       <ErrorBoundary>
-        <Candidate {...(fixture as Record<string, unknown>)} />
+        <Candidate {...(props as Record<string, unknown>)} />
         <ReadyProbe root={root} onReady={resolve} />
       </ErrorBoundary>,
     );
