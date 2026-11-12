@@ -80,3 +80,34 @@ covers counts and prices that outgrow their boxes. image-missing is
 deferred until a check can see its effect: the v0 checks look at text
 and box geometry, which a missing image does not change in a way they
 report.
+
+## D-014 content-spill treats visibly boxed elements as content (2026-11-12)
+A visibly boxed element (a pill, a panel, a badge) is compared with its
+own nearest visibly boxed ancestor, under the same in-flow and
+visible-rect rules as text. Before this, a pill that ran out of a card
+went unnoticed because its own text stayed inside the pill.
+
+## D-015 Headline survival uses clean-baseline candidates only (2026-11-12)
+The headline survival rate is computed over candidates whose baseline
+has no error findings; the share of born-broken candidates is reported
+as its own number. Structural selectors stay: selector drift under
+list mutations can only affect candidates that are already left out of
+the headline.
+
+## D-016 v0 judges geometric breakage only (2026-11-12)
+The benchmark judges overflow, clipping, spill, overlap and crashes.
+Empty states, such as a blank avatar or an empty fixed-height box, are
+out of scope for v0: whether they look acceptable is a design judgement
+that no geometric check can make reliably.
+
+## D-017 Every corpus brief ships a surviving reference candidate (2026-11-12)
+Each corpus brief has a hand-written reference that survives every
+applicable mutation, checked by briefs:check. It shows that a full score
+is attainable, so a model's failures are its own and not the brief's.
+
+## D-018 Briefs carry no robustness hints (2026-11-12)
+A brief describes the product need only: nothing about long text,
+wrapping, truncation, small screens, many items or empty data, and no
+implementation hints. The benchmark measures what models do unprompted;
+a hint would measure whether they follow instructions instead.
+briefs:check rejects the common hint words.

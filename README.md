@@ -58,6 +58,22 @@ amber on info findings) to `results/checks/`. `--fixture` defaults to
 the mutation's viewport (1280, or 320 for viewport-320). The height is
 always 800.
 
+## Briefs
+
+Briefs live in `briefs/<id>/` (format in [docs/SPEC.md](docs/SPEC.md));
+each corpus brief has a reference candidate in
+`candidates/_reference/<id>/v1/`. From `harness/`:
+
+```sh
+npm run briefs:check
+npm run briefs:check -- --brief pricing-table
+```
+
+validates the brief files, the fields map, the fixture against `Props`,
+the corpus rules and the reference candidate (types, imports, a clean
+baseline and survival of every applicable mutation). It prints one row
+per brief and exits non-zero if any brief fails.
+
 ## Stress runs
 
 ```sh

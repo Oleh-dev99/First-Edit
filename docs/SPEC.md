@@ -7,9 +7,12 @@ survives when the content changes.
 
 ## Terms
 - Brief: a UI task. A prompt, a TypeScript props interface (the data
-  contract) and a baseline fixture (JSON matching the interface).
+  contract), a baseline fixture (JSON matching the interface) and a
+  fields map. See Brief format.
 - Candidate: one React component implementing a brief. Hand-written or
   model-generated.
+- Reference candidate: a hand-written candidate for a corpus brief that
+  survives every applicable mutation. See Reference candidates.
 - Mutation: a deterministic change to the fixture (content) or to the
   render environment (viewport width, text size, direction).
 - Check: a deterministic in-page function that returns findings of the
@@ -34,6 +37,14 @@ survives when the content changes.
 - Survival rate = mutations survived / mutations applicable. See Case
   results.
 - Reported per candidate, per mutation type and per model.
+- The headline survival rate is computed only over candidates with a
+  clean baseline (no born-broken errors). The share of born-broken
+  candidates is reported as its own number. Selector drift (see Known
+  gaps) can then only affect candidates already left out of the
+  headline.
+- v0 judges geometric breakage only: overflow, clipping, spill, overlap
+  and crashes. Empty states (blank placeholders, collapsed boxes) are out
+  of scope.
 
 ## Pipeline
 1. generate (Python runner): brief -> model API -> candidate file.
@@ -59,14 +70,71 @@ survives when the content changes.
   Mutations (v0).
 
 ## Layout
-- briefs/<brief-id>/ : brief.md, props.ts, fields.json,
-  fixture.baseline.json and optional fixture.<name>.json
+- briefs/<brief-id>/ : meta.json, brief.md, props.ts,
+  fixture.baseline.json, fields.json. See Brief format.
 - candidates/<source>/<brief-id>/<variant>/Component.tsx
-  (source is _samples or a model id)
+  (source is _samples, _reference or a model id)
 - harness/ : Node. Vite app, Playwright runner, mutations, checks
 - runner/ : Python. Generation, scoring, calibration (added later)
 - results/ : run output, git-ignored
 - docs/ : spec, methodology, decisions
+
+## Brief format
+briefs/<id>/ contains exactly:
+- meta.json: { id, title, category, sample }. id equals the directory
+  name. category is one of: card, list, table, form, navigation,
+  dashboard, page-section, messaging, board. sample is true for
+  hello-card and false for corpus briefs.
+- brief.md: the request a model will receive
+- props.ts: `export interface Props`, plus helper types if needed
+- fixture.baseline.json
+- fields.json (see Fields map)
+
+A sample brief may also carry extra fixtures (fixture.<name>.json, e.g.
+hello-card's fixture.stress.json) for the harness's own tests. Corpus
+briefs carry none.
+
+Rules for writing a corpus brief:
+1. brief.md is sent to models word for word, together with props.ts and
+   the baseline fixture. Write it as a product request in 80 to 150
+   words: what the component is for, what it shows, and whether it is a
+   full-width page section or a self-sized widget.
+2. No implementation hints: no CSS, no layout techniques, no pixel sizes.
+3. No robustness hints: nothing about long text, wrapping, truncation,
+   small screens, many items or empty data. This matters more than any
+   other rule, because the benchmark measures what models do unprompted.
+4. Static render only. No behaviour is required.
+5. Props are plain data: strings, numbers, booleans, arrays, nested
+   objects and string-literal unions. No functions, no React nodes, no
+   display-derived values (D-007), no images in this batch.
+6. The fixture is realistic mock data, as a designer would put in a
+   mockup: plausible names and amounts, 3 to 8 items per list, English.
+7. At least 8 of the 10 mutations must be applicable.
+
+`npm run briefs:check [-- --brief <id>]` (in harness/, separate from
+`npm test`) validates every brief: the files and meta.json, the fields
+map against the baseline fixture, the baseline fixture against Props
+with tsc (string-literal unions included) and the number of applicable
+mutations. For corpus briefs it also enforces rules 1, 2, 3, 5 (a word
+count and a list of banned hint words, which catch the common cases but
+not every phrasing), 6 (list sizes) and 7. It prints one row per brief
+and exits non-zero if any brief fails.
+
+## Reference candidates
+Every corpus brief ships a reference candidate at
+candidates/_reference/<brief-id>/v1/Component.tsx. It follows the
+candidate contract, is written the way a careful senior front-end
+engineer would (it must look good at baseline, not merely survive), and
+never special-cases mutation values. briefs:check verifies that its
+default export accepts Props (type-level), that it imports nothing but
+react (found with a parser, so comments and strings never count), that
+its baseline is clean and that every applicable mutation survives. A
+reference therefore shows that a full score is attainable for its brief
+(D-017).
+
+If a reference fails because a check is wrong, the reference is not bent
+around the check: a lab case reproduces the false positive and the check
+is fixed.
 
 ## Fields map
 Each brief has briefs/<id>/fields.json, which declares what every value
@@ -191,6 +259,10 @@ that belong to the same element are merged.
    its nearest visibly boxed ancestor. Visibly boxed means any of: a
    non-transparent background color, a background image, a border with
    width and color, a box shadow, or an outline.
+   A visibly boxed element is itself a content box for this check: its
+   border box is compared with the border box of its own nearest visibly
+   boxed ancestor, under the same in-flow and visible-rect rules, with a
+   1px tolerance on both axes. One finding per spilling element.
    Out-of-flow content is exempt.
 4. text-overlap (error)
    The visible rect of an in-flow text line box intersects another
@@ -238,7 +310,9 @@ and then every applicable mutation, and runs the checks on each.
 - render-error: the candidate threw during render or the page crashed.
   window.__FE_ERROR__ holds the message, which the page also shows.
   timeout: the page did not become ready within 30 s. Both are failed
-  cases; the run continues with the next case.
+  cases; the run continues with the next case. The page's console is
+  not forwarded to the terminal; the error message is kept in the case
+  JSON.
 - Survival rate = survived / applicable.
 - Statuses: ok, render-error, timeout, not-applicable.
 
@@ -304,34 +378,33 @@ Accepted in step 3:
   initials past the curve of a round avatar) is not caught.
 
 Found in step 4:
-- A visibly boxed element that spills out of its boxed parent is not
-  caught while its own text stays inside it. content-spill compares
-  content boxes with their nearest boxed ancestor, and a tag pill is that
-  ancestor for its own text. Seen with the brittle hello-card: under
-  text-long and text-200pct its tag pills run out of the card with no
-  finding.
 - Selectors are structural, so a mutation that adds or removes elements
   (list-0 removing a list, list-many) can shift nth-child indices. A
-  problem that already exists at baseline can then look new.
-- Empty states are not judged: text-empty can leave a blank placeholder
-  (an avatar with no initials, an empty fixed-height box) that no check
-  sees. element-collapsed is deferred.
+  problem that already exists at baseline can then look new. Accepted:
+  the headline survival rate uses clean-baseline candidates only (D-015),
+  where there is no old problem to shift.
 - page-overflow-x culprits only look past the right edge. With dir-rtl,
   overflow goes to the left, so culprits would be empty and the rect
   strip is drawn on the wrong side. Not yet observed.
+
+Closed in step 5: a visibly boxed element spilling out of its boxed
+parent (for example a tag pill out of a card) is now caught by
+content-spill (D-014). Empty states are out of scope rather than a gap
+(D-016).
 
 ## Roadmap
 1. Attribution setup (done)
 2. Repo foundation and harness walking skeleton (done)
 3. Checks v0 on hand-written robust and brittle samples (done)
-4. Mutation engine
-5. Brief format and first 10 briefs
-6. Generation runner, one model
-7. End-to-end spike and go/no-go review
-8. Full brief corpus (about 40)
-9. Multi-model runs
-10. Labelling tool and calibration
-11. Scoring and report tables
-12. Results site
-13. CLI packaging
-14. Write-up and README
+4. Mutation engine (done)
+5. Spill gap, brief format, first three briefs
+6. Seven more briefs
+7. Generation runner, one model
+8. End-to-end spike and go/no-go review
+9. Full brief corpus (about 40)
+10. Multi-model runs
+11. Labelling tool and calibration
+12. Scoring and report tables
+13. Results site
+14. CLI packaging
+15. Write-up and README
