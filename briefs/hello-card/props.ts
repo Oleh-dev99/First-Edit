@@ -6,4 +6,8 @@ export interface HelloCardProps {
   jobTitle: string;
   /** A short bio of one to three sentences. */
   bio: string;
+  /** Number of followers, shown formatted. */
+  followers: number;
+  /** Skill tags, usually about five. */
+  skills: string[];
 }

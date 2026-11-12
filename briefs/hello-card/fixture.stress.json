@@ -1,5 +1,13 @@
 {
   "name": "Anna-Katharina Wolfeschlegelsteinhausenbergerdorff von Linde",
   "jobTitle": "Principal Product Designer, Accessibility and Design Systems, Clinical Platforms, Portugal",
-  "bio": "Designs calm, accessible tools for clinical teams in three countries. Previously led the design system at a telehealth startup, where she rebuilt the component library, wrote the accessibility guidelines and ran research with nurses on night shifts. Speaks at conferences about inclusive forms, error messages and designing for tired people. Mentors junior designers every week. Case studies and talks are collected at https://portfolio.example.org/anna_katharina/case_studies/clinical_scheduling_redesign_2026 and new writing appears there first. Based in Lisbon, reachable on most weekday mornings."
+  "bio": "Designs calm, accessible tools for clinical teams in three countries. Previously led the design system at a telehealth startup, where she rebuilt the component library, wrote the accessibility guidelines and ran research with nurses on night shifts. Speaks at conferences about inclusive forms, error messages and designing for tired people. Mentors junior designers every week. Case studies and talks are collected at https://portfolio.example.org/anna_katharina/case_studies/clinical_scheduling_redesign_2026 and new writing appears there first. Based in Lisbon, reachable on most weekday mornings.",
+  "followers": 12345678,
+  "skills": [
+    "Accessibility auditing",
+    "Design systems governance",
+    "Clinical workflow research",
+    "Service blueprinting",
+    "Inclusive form design"
+  ]
 }
