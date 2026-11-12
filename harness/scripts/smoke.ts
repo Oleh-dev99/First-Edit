@@ -7,7 +7,8 @@ import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium, type Browser } from 'playwright';
 import { candidateQuery, openPage } from '../lib/render.ts';
-import { repoRoot, startServer } from '../lib/server.ts';
+import { repoRoot } from '../lib/paths.ts';
+import { startServer } from '../lib/server.ts';
 
 const BRIEF = 'hello-card';
 const CANDIDATE = '_samples/hello-card/robust';

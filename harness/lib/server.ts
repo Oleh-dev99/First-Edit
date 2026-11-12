@@ -1,9 +1,6 @@
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
-
-export const harnessDir = fileURLToPath(new URL('..', import.meta.url));
-export const repoRoot = path.resolve(harnessDir, '..');
+import { harnessDir } from './paths.ts';
 
 export interface HarnessServer {
   origin: string;

@@ -17,7 +17,8 @@ import { chromium, type Browser } from 'playwright';
 import { annotate } from '../lib/annotate.ts';
 import { countFindings } from '../lib/findings.ts';
 import { candidateQuery, collectFindings, openPage } from '../lib/render.ts';
-import { repoRoot, startServer } from '../lib/server.ts';
+import { repoRoot } from '../lib/paths.ts';
+import { startServer } from '../lib/server.ts';
 import { CHECK_NAMES } from '../src/checks/finding.ts';
 
 const HEIGHT = 800;

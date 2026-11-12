@@ -1,0 +1,8 @@
+{
+  "name": { "kind": "label" },
+  "jobTitle": { "kind": "label" },
+  "bio": { "kind": "prose" },
+  "followers": { "kind": "number" },
+  "skills": { "kind": "list" },
+  "skills[]": { "kind": "label", "required": true }
+}
