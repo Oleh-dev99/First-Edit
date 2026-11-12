@@ -1,0 +1,11 @@
+{
+  "headline": { "kind": "label", "required": true },
+  "subheadline": { "kind": "prose" },
+  "primaryCtaLabel": { "kind": "label", "required": true },
+  "secondaryCtaLabel": { "kind": "label" },
+  "benefits": { "kind": "list", "max": 6 },
+  "benefits[]": { "kind": "label", "required": true },
+  "customerCount": { "kind": "number" },
+  "customers": { "kind": "list", "max": 12 },
+  "customers[]": { "kind": "label", "required": true }
+}
