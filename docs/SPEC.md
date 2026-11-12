@@ -28,6 +28,8 @@ survives when the content changes.
 - Imports allowed: react only.
 - Styling: Tailwind utility classes and inline styles. No other CSS, no
   external assets, no network.
+- Images come from props only: an image's src is taken from the fixture,
+  never hard-coded. Inline SVG icons drawn in the component are allowed.
 - No randomness, no timers, no data fetching.
 
 ## Scoring
@@ -106,19 +108,29 @@ Rules for writing a corpus brief:
 4. Static render only. No behaviour is required.
 5. Props are plain data: strings, numbers, booleans, arrays, nested
    objects and string-literal unions. No functions, no React nodes, no
-   display-derived values (D-007), no images in this batch.
+   display-derived values (D-007). Images are referenced only by a
+   /fe-assets/ path in a field declared fixed (see Images).
 6. The fixture is realistic mock data, as a designer would put in a
    mockup: plausible names and amounts, 3 to 8 items per list, English.
 7. At least 8 of the 10 mutations must be applicable.
+8. No file names and no mention of imports.
+9. No size words about content: one-line, short, long, brief, small,
+   few. They are hints in the wrong direction.
+10. Invented product and company names only. No real brands or people.
+
+props.ts is sent to models too, so rules 2, 3, 8 and 9 apply to its
+comments as well.
 
 `npm run briefs:check [-- --brief <id>]` (in harness/, separate from
 `npm test`) validates every brief: the files and meta.json, the fields
 map against the baseline fixture, the baseline fixture against Props
-with tsc (string-literal unions included) and the number of applicable
-mutations. For corpus briefs it also enforces rules 1, 2, 3, 5 (a word
-count and a list of banned hint words, which catch the common cases but
-not every phrasing), 6 (list sizes) and 7. It prints one row per brief
-and exits non-zero if any brief fails.
+with tsc (string-literal unions included), image references and the
+number of applicable mutations. For corpus briefs it also enforces
+rule 1 (word count), rules 2, 3, 8 and 9 on brief.md and props.ts (a
+list of banned words, which catches the common cases but not every
+phrasing), rule 5 (plain data, images), 6 (list sizes) and 7. Rule 10
+needs a human review. It prints one row per brief and exits non-zero if
+any brief fails.
 
 ## Reference candidates
 Every corpus brief ships a reference candidate at
@@ -132,9 +144,31 @@ its baseline is clean and that every applicable mutation survives. A
 reference therefore shows that a full score is attainable for its brief
 (D-017).
 
+A reference never hides fixture content, at any viewport or under any
+mutation (D-019). Truncation with an ellipsis (or a line clamp) is
+allowed; display none, visually hidden text and icon-only replacements
+are not. Content inside a scroll container that is reachable by
+scrolling counts as shown. Showing the same content in a different
+arrangement at another width (for example a table on wide screens and a
+stacked list on narrow ones) is not hiding.
+
 If a reference fails because a check is wrong, the reference is not bent
 around the check: a lab case reproduces the false positive and the check
 is fixed.
+
+## Images
+The harness serves six abstract placeholder SVGs, without text, under
+/fe-assets/ (from harness/public/fe-assets/): placeholder-1x1,
+placeholder-4x3, placeholder-3x2, placeholder-16x9, placeholder-3x4 and
+placeholder-2x3 (.svg), each with its own aspect ratio. A fixture
+references images only by a /fe-assets/ path, in a field declared fixed;
+briefs:check fails on any other image reference, on a missing asset and
+on an image field that is not fixed. A reference that hard-codes an
+image src fails too.
+
+A failed image load never hangs readiness: the page waits for every
+image to decode or fail, lazy images are switched to eager first (below
+the fold they would never load), and the wait is capped at 5 s.
 
 ## Fields map
 Each brief has briefs/<id>/fields.json, which declares what every value
@@ -314,16 +348,19 @@ and then every applicable mutation, and runs the checks on each.
   not forwarded to the terminal; the error message is kept in the case
   JSON.
 - Survival rate = survived / applicable.
+- Truncations: the text-clipped info findings of a case (text cut with an
+  ellipsis or a line clamp) are counted as `truncations`, a secondary
+  measure (D-021). They never fail a case.
 - Statuses: ok, render-error, timeout, not-applicable.
 
 Output in results/runs/<brief>/<candidate with / replaced by __>/ (the
 directory is replaced on every run):
 - baseline.json: case, brief, candidate, fixture, query, viewport,
-  status, error, bornBroken, findings
+  status, error, bornBroken, truncations, findings
 - <mutation>.json for every rendered case: case, brief, candidate,
   fixture, mutation { id, kind }, changed (content mutations; null
   otherwise), query, viewport, status, error, survived, newErrors,
-  newFindings, findings
+  truncations, newFindings, findings
 - <case>.png and <case>.annotated.png when a screenshot could be taken
   (not after a timeout)
 - summary.json, below
@@ -343,6 +380,7 @@ cleanly. Bump schemaVersion on any incompatible change.
   "baseline": {
     "status": "ok" | "render-error" | "timeout",
     "errors": <born-broken error count>,
+    "truncations": <text-clipped info findings> | null, // null when not rendered
     "viewport": { "width": 1280, "height": 800 },
     "files": { "result": "baseline.json", "screenshot": <name> | null, "annotated": <name> | null }
   },
@@ -356,6 +394,7 @@ cleanly. Bump schemaVersion on any incompatible change.
       "newErrors": { "page-overflow-x": n, "text-clipped": n,
                      "content-spill": n, "text-overlap": n } | null,
                                        // null when not applicable or not rendered
+      "truncations": n | null,         // null when not applicable or not rendered
       "files": { "result": "<id>.json", "screenshot": <name> | null,
                  "annotated": <name> | null } | null
     }
@@ -387,6 +426,18 @@ Found in step 4:
   overflow goes to the left, so culprits would be empty and the rect
   strip is drawn on the wrong side. Not yet observed.
 
+Found in step 6:
+- Content that is hidden rather than shown is not measured. Display
+  none, visually hidden text, icon-only replacements and text cut off
+  inside form controls (inputs, selects) escape every check; the
+  no-hiding rule for references is enforced by review, not by a check.
+- list-many copies fixed flags along with the items, so two links can be
+  active or two plans highlighted.
+- page-overflow-x can fire with an empty culprits list when the overflow
+  comes from a screen-reader-only element, which the scan skips. Seen
+  when visually hidden text inside a horizontal scroller had no
+  positioned ancestor and widened the page.
+
 Closed in step 5: a visibly boxed element spilling out of its boxed
 parent (for example a tag pill out of a card) is now caught by
 content-spill (D-014). Empty states are out of scope rather than a gap
@@ -397,7 +448,7 @@ content-spill (D-014). Empty states are out of scope rather than a gap
 2. Repo foundation and harness walking skeleton (done)
 3. Checks v0 on hand-written robust and brittle samples (done)
 4. Mutation engine (done)
-5. Spill gap, brief format, first three briefs
+5. Spill gap, brief format, first three briefs (done)
 6. Seven more briefs
 7. Generation runner, one model
 8. End-to-end spike and go/no-go review

@@ -111,3 +111,30 @@ wrapping, truncation, small screens, many items or empty data, and no
 implementation hints. The benchmark measures what models do unprompted;
 a hint would measure whether they follow instructions instead.
 briefs:check rejects the common hint words.
+
+## D-019 References never hide fixture content; ellipsis is allowed (2026-11-12)
+A reference shows all of its fixture content at every viewport and under
+every mutation. Truncation with an ellipsis or a line clamp is allowed,
+because the reader can see that text continues. Display none, visually
+hidden text and icon-only replacements are not: a reference that wins by
+hiding content would show an unfair full score, since no check measures
+what is not shown.
+
+## D-020 Briefs avoid size words and file names (2026-11-12)
+Briefs and props.ts comments do not describe content as one-line, short,
+long, brief, small or few, and do not mention file names or imports.
+Size words steer models towards fixed sizes the mutations then break; a
+brief should describe the product, not the shape of its data.
+
+## D-021 Truncations are counted per case as a secondary measure (2026-11-12)
+summary.json counts text-clipped info findings (ellipsis or line clamp)
+per case as truncations. They never fail a case (D-005), but a candidate
+that survives by truncating everything is different from one that lays
+content out in full, and the count lets the report show it.
+
+## D-022 Images are local placeholders referenced from props (2026-11-12)
+Fixtures reference images only by a /fe-assets/ path to one of six
+harness-served placeholder SVGs with different aspect ratios, declared
+fixed. Renders stay offline and deterministic, and candidates must cope
+with images of any ratio because the image comes from props, never from
+the component.

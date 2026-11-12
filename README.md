@@ -70,9 +70,12 @@ npm run briefs:check -- --brief pricing-table
 ```
 
 validates the brief files, the fields map, the fixture against `Props`,
-the corpus rules and the reference candidate (types, imports, a clean
-baseline and survival of every applicable mutation). It prints one row
-per brief and exits non-zero if any brief fails.
+image references, the corpus rules and the reference candidate (types,
+imports, a clean baseline and survival of every applicable mutation). It
+prints one row per brief and exits non-zero if any brief fails.
+
+Fixtures reference images only as `/fe-assets/<name>.svg`; the six
+placeholder images live in `harness/public/fe-assets/`.
 
 ## Stress runs
 
