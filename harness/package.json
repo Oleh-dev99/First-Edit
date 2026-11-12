@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "vite",
     "smoke": "node scripts/smoke.ts",
+    "test": "node --test --test-concurrency=1 \"test/*.test.ts\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

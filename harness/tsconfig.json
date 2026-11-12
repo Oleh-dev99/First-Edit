@@ -27,5 +27,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "scripts", "vite.config.ts", "../briefs", "../candidates"]
+  "include": ["src", "lib", "scripts", "test", "vite.config.ts", "../briefs", "../candidates"]
 }
