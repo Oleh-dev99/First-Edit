@@ -19,17 +19,32 @@ export function candidateQuery(
   return mutation === null ? query : `${query}&mutation=${mutation}`;
 }
 
+/** How a page load ended. */
+export type LoadStatus = 'ok' | 'render-error' | 'timeout';
+
+export interface LoadedPage {
+  context: BrowserContext;
+  page: Page;
+  status: LoadStatus;
+  /** What went wrong, for render-error and timeout. */
+  error: string | null;
+}
+
+const messageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
+
 /**
  * Opens a harness page in a fresh browser context and waits for
- * __FE_READY__. Throws if the page reports an error or times out. Only the
- * harness server may be reached: every other request is blocked.
+ * __FE_READY__ or __FE_ERROR__. A page that reports an error or crashes is
+ * "render-error"; one that never becomes ready is "timeout". Only the
+ * harness server may be reached: every other request is blocked. The caller
+ * closes the context. Throws only when the harness itself fails.
  */
-export async function openPage(
+export async function loadPage(
   browser: Browser,
   origin: string,
   query: string,
   viewport: Viewport,
-): Promise<{ context: BrowserContext; page: Page }> {
+): Promise<LoadedPage> {
   const context = await browser.newContext({
     viewport,
     deviceScaleFactor: 1,
@@ -47,7 +62,15 @@ export async function openPage(
     });
 
     const page = await context.newPage();
-    await page.goto(`${origin}/${query}`, { timeout: TIMEOUT_MS });
+    const result = (status: LoadStatus, error: string | null): LoadedPage => ({ context, page, status, error });
+    try {
+      await page.goto(`${origin}/${query}`, { timeout: TIMEOUT_MS });
+    } catch (error) {
+      if (error instanceof errors.TimeoutError) {
+        return result('timeout', `navigation timed out after ${TIMEOUT_MS} ms`);
+      }
+      throw error;
+    }
     try {
       await page.waitForFunction(
         () => window.__FE_READY__ === true || window.__FE_ERROR__ !== undefined,
@@ -56,18 +79,29 @@ export async function openPage(
       );
     } catch (error) {
       if (error instanceof errors.TimeoutError) {
-        throw new Error(`timed out after ${TIMEOUT_MS} ms waiting for __FE_READY__ at ${viewport.width}px`);
+        return result('timeout', `timed out after ${TIMEOUT_MS} ms waiting for __FE_READY__`);
       }
-      throw error;
+      return result('render-error', `page failed: ${messageOf(error)}`);
     }
-
     const pageError = await page.evaluate(() => window.__FE_ERROR__);
-    if (pageError !== undefined) throw new Error(`page error at ${viewport.width}px: ${pageError}`);
-    return { context, page };
+    return pageError === undefined ? result('ok', null) : result('render-error', pageError);
   } catch (error) {
     await context.close();
     throw error;
   }
+}
+
+/** Like loadPage, but throws unless the page rendered. */
+export async function openPage(
+  browser: Browser,
+  origin: string,
+  query: string,
+  viewport: Viewport,
+): Promise<{ context: BrowserContext; page: Page }> {
+  const loaded = await loadPage(browser, origin, query, viewport);
+  if (loaded.status === 'ok') return { context: loaded.context, page: loaded.page };
+  await loaded.context.close();
+  throw new Error(`${loaded.status} at ${viewport.width}px: ${loaded.error}`);
 }
 
 /** Runs every check in the page. */

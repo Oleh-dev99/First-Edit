@@ -11,6 +11,7 @@
     "check": "node scripts/check.ts",
     "dev": "vite",
     "smoke": "node scripts/smoke.ts",
+    "stress": "node scripts/stress.ts",
     "test": "node --test --test-concurrency=1 \"test/*.test.ts\"",
     "typecheck": "tsc --noEmit"
   },
