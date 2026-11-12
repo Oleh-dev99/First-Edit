@@ -1,0 +1,54 @@
+{
+  "contact": {
+    "name": "Ilse Varga",
+    "status": "Active now"
+  },
+  "messages": [
+    {
+      "id": "m1",
+      "from": "them",
+      "author": "Ilse Varga",
+      "text": "Hi! I was charged twice for my March invoice. Can you take a look?",
+      "time": "9:12 AM"
+    },
+    {
+      "id": "m2",
+      "from": "me",
+      "author": "Tomás Reyes",
+      "text": "Hi Ilse, sorry about that. Could you share the invoice number?",
+      "time": "9:13 AM"
+    },
+    {
+      "id": "m3",
+      "from": "them",
+      "author": "Ilse Varga",
+      "text": "Sure, it's INV-20417.",
+      "time": "9:14 AM"
+    },
+    {
+      "id": "m4",
+      "from": "me",
+      "author": "Tomás Reyes",
+      "text": "Thanks. I can see the duplicate charge and have started a refund.",
+      "time": "9:16 AM"
+    },
+    {
+      "id": "m5",
+      "from": "me",
+      "author": "Tomás Reyes",
+      "text": "It should reach your card within 3 to 5 business days.",
+      "time": "9:16 AM"
+    },
+    {
+      "id": "m6",
+      "from": "them",
+      "author": "Ilse Varga",
+      "text": "That's great, thank you for sorting it out so quickly!",
+      "time": "9:17 AM"
+    }
+  ],
+  "composer": {
+    "placeholder": "Write a reply…",
+    "sendLabel": "Send"
+  }
+}

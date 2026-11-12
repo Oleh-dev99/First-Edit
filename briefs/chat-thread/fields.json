@@ -1,0 +1,12 @@
+{
+  "contact.name": { "kind": "label", "required": true },
+  "contact.status": { "kind": "label" },
+  "messages": { "kind": "list" },
+  "messages[].id": { "kind": "id" },
+  "messages[].from": { "kind": "fixed" },
+  "messages[].author": { "kind": "label", "required": true },
+  "messages[].text": { "kind": "prose", "required": true },
+  "messages[].time": { "kind": "fixed" },
+  "composer.placeholder": { "kind": "label" },
+  "composer.sendLabel": { "kind": "label", "required": true }
+}
