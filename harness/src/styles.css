@@ -3,12 +3,15 @@
 /*
  * Candidates live outside harness/, so Tailwind must be told to scan them.
  * Tailwind skips git-ignored files even inside an @source folder, unless a
- * source points into the ignored folder itself: every git-ignored folder
- * under candidates/ (see .gitignore) needs its own line, or its classes are
- * never generated and the candidate renders unstyled.
+ * source points into the ignored folder itself. Every folder under
+ * candidates/ except _samples and _reference is git-ignored (model outputs,
+ * D-029), so the second line names each of them through a one-level glob.
+ * Deeper globs such as candidates/** do not work. Without it their classes
+ * are never generated and the candidates render unstyled; the test
+ * tailwind-sources.test.ts guards this.
  */
 @source "../../candidates";
-@source "../../candidates/mock-*";
+@source "../../candidates/*";
 
 @theme {
   --font-sans:

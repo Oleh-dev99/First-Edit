@@ -11,8 +11,11 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 
-# Mock model outputs (real model outputs are kept)
-candidates/mock-*/
+# Model outputs stay out of git until a run is published (D-029). Only the
+# hand-written samples and references are tracked.
+candidates/*
+!candidates/_samples/
+!candidates/_reference/
 
 # Run output
 results/
