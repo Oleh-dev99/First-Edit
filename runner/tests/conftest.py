@@ -27,17 +27,20 @@ def chat_response(content: str, finish_reason: str = "stop", prompt_tokens: int 
 class FakeProvider:
     """Counts calls; replies with fixed content, or raises the given error."""
 
-    def __init__(self, content: str = VALID_REPLY, finish_reason: str = "stop", error: ProviderError | None = None) -> None:
+    def __init__(self, content: str = VALID_REPLY, finish_reason: str = "stop", error: ProviderError | None = None,
+                 raw: dict[str, Any] | None = None) -> None:
         self.content = content
         self.finish_reason = finish_reason
         self.error = error
+        self.raw = raw
         self.calls = 0
 
     def complete(self, messages: list[dict[str, str]], brief: Brief) -> Completion:
         self.calls += 1
         if self.error:
             raise self.error
-        return Completion(raw=chat_response(self.content, self.finish_reason), latency_ms=12, attempts=1)
+        raw = self.raw or chat_response(self.content, self.finish_reason)
+        return Completion(raw=raw, latency_ms=12, attempts=1)
 
 
 @pytest.fixture

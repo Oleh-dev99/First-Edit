@@ -15,7 +15,9 @@ from .briefs import Brief, reference_component
 from .models import ModelEntry
 
 MAX_ATTEMPTS = 4
-DEFAULT_TIMEOUT_SECONDS = 300.0
+#: Read timeout. A long reply with reasoning can take minutes, and a timed-out
+#: call that is retried may be billed twice, so this is generous.
+DEFAULT_TIMEOUT_SECONDS = 600.0
 DEFAULT_BACKOFF_SECONDS = 2.0
 
 
@@ -45,7 +47,16 @@ class Reply:
     content: str
     finish_reason: str | None
     input_tokens: int | None
+    #: Includes reasoning tokens, which are billed as output.
     output_tokens: int | None
+    reasoning_tokens: int | None = None
+    cached_input_tokens: int | None = None
+    #: The model that served the request, as the response names it.
+    reported_model: str | None = None
+    #: The upstream provider, when the response names it (OpenRouter does).
+    reported_provider: str | None = None
+    #: The cost the response reports (OpenRouter: usage.cost, in USD credits).
+    reported_cost: float | None = None
 
 
 class Provider(Protocol):
@@ -67,12 +78,26 @@ def parse_reply(raw: dict[str, Any]) -> Reply:
     if isinstance(content, list):
         content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
     usage = raw.get("usage") or {}
+    prompt_details = usage.get("prompt_tokens_details") or {}
+    completion_details = usage.get("completion_tokens_details") or {}
+    cost = usage.get("cost")
+    provider = raw.get("provider")
+    model = raw.get("model")
     return Reply(
         content="" if content is None else str(content),
         finish_reason=choice.get("finish_reason"),
-        input_tokens=usage.get("prompt_tokens"),
-        output_tokens=usage.get("completion_tokens"),
+        input_tokens=_count(usage.get("prompt_tokens")),
+        output_tokens=_count(usage.get("completion_tokens")),
+        reasoning_tokens=_count(completion_details.get("reasoning_tokens")),
+        cached_input_tokens=_count(prompt_details.get("cached_tokens")),
+        reported_model=model if isinstance(model, str) else None,
+        reported_provider=provider if isinstance(provider, str) else None,
+        reported_cost=float(cost) if isinstance(cost, (int, float)) and not isinstance(cost, bool) else None,
     )
+
+
+def _count(value: Any) -> int | None:
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
 class MockProvider:

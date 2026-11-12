@@ -11,7 +11,7 @@ from first_edit.prompts import build_messages
 from first_edit.briefs import load_brief
 from first_edit.providers import ProviderError
 
-from conftest import FakeProvider
+from conftest import VALID_REPLY, FakeProvider, chat_response
 
 BRIEFS = ["pricing-table", "data-table"]
 
@@ -53,10 +53,38 @@ def test_generation_json_records_the_call(tmp_path: Path, entry: ModelEntry, run
     run(replace(entry, price=Price(input=2.0, output=10.0)), FakeProvider(), ["pricing-table"])
     record = generation(tmp_path, "test-model/pricing-table/plain-s1")
     assert record["model"]["api_key_env"] == "TEST_KEY"
-    assert record["usage"] == {"inputTokens": 1000, "outputTokens": 500}
+    assert record["usage"] == {"inputTokens": 1000, "cachedInputTokens": None, "outputTokens": 500, "reasoningTokens": None}
     assert record["estimatedCostUsd"] == (1000 * 2.0 + 500 * 10.0) / 1_000_000
+    assert (record["actualCostUsd"], record["reportedModel"], record["reportedProvider"]) == (None, None, None)
     assert (record["latencyMs"], record["attempts"], record["finishReason"]) == (12, 1, "stop")
     assert record["extraction"] == {"blocks": 1, "method": "single-block"}
+
+
+def test_generation_json_records_what_the_provider_reports(tmp_path: Path, entry: ModelEntry, run) -> None:
+    # An OpenRouter-style response: the serving model and provider, reasoning
+    # and cached tokens, and the actual cost in usage.
+    raw = chat_response(VALID_REPLY, prompt_tokens=2000, completion_tokens=7000)
+    raw.update({"model": "vendor/test-20261001", "provider": "Vendor"})
+    raw["usage"].update({
+        "prompt_tokens_details": {"cached_tokens": 1500},
+        "completion_tokens_details": {"reasoning_tokens": 4000},
+        "cost": 0.0123,
+    })
+    budget = Budget()
+    run(replace(entry, price=Price(input=1.0, output=5.0)), FakeProvider(raw=raw), ["pricing-table"], budget=budget)
+    record = generation(tmp_path, "test-model/pricing-table/plain-s1")
+    assert (record["reportedModel"], record["reportedProvider"]) == ("vendor/test-20261001", "Vendor")
+    assert record["usage"] == {"inputTokens": 2000, "cachedInputTokens": 1500, "outputTokens": 7000, "reasoningTokens": 4000}
+    assert record["estimatedCostUsd"] == (2000 * 1.0 + 7000 * 5.0) / 1_000_000
+    assert record["actualCostUsd"] == 0.0123
+    # The budget counts the reported cost, not the estimate.
+    assert budget.spent == 0.0123
+
+
+def test_without_a_reported_cost_the_budget_counts_prices_times_usage(entry: ModelEntry, run) -> None:
+    budget = Budget()
+    run(replace(entry, price=Price(input=1.0, output=5.0)), FakeProvider(), ["pricing-table"], budget=budget)
+    assert budget.spent == (1000 * 1.0 + 500 * 5.0) / 1_000_000
 
 
 def test_a_cut_off_reply_is_invalid(tmp_path: Path, entry: ModelEntry, run) -> None:

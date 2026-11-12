@@ -17,7 +17,7 @@ from .extract import extract_code
 from .models import ModelEntry
 from .paths import CANDIDATES_DIR, REPO_ROOT
 from .prompts import build_messages, prompt_hash
-from .providers import Provider, ProviderError, parse_reply
+from .providers import Provider, ProviderError, Reply, parse_reply
 
 GENERATION_SCHEMA_VERSION = 1
 
@@ -35,6 +35,14 @@ class SampleResult:
     status: str
     valid: bool | None = None
     reasons: list[dict[str, str]] = field(default_factory=list)
+
+
+def spend(entry: ModelEntry, reply: Reply) -> float | None:
+    """What a call cost: the cost the response reports, else the configured
+    prices times the reported usage (output includes reasoning tokens)."""
+    if reply.reported_cost is not None:
+        return reply.reported_cost
+    return call_cost(entry.price, reply.input_tokens, reply.output_tokens)
 
 
 def candidate_id(model_id: str, brief_id: str, variant: str, sample: int) -> str:
@@ -118,7 +126,7 @@ def generate(
                     out(f"  {brief_id} {variant}-s{sample}: API error after {error.attempts} attempt(s): {error}")
                     continue
                 reply = parse_reply(completion.raw)
-                budget.record(call_cost(entry.price, reply.input_tokens, reply.output_tokens))
+                budget.record(spend(entry, reply))
                 record = {
                     "key": key,
                     "request": {"model": entry.identity(), "params": entry.params, "sample": sample, "messages": messages},
@@ -148,8 +156,16 @@ def generate(
                     "generatedAt": _now(),
                     "receivedAt": record.get("receivedAt"),
                     "status": "generated",
-                    "usage": {"inputTokens": reply.input_tokens, "outputTokens": reply.output_tokens},
+                    "reportedModel": reply.reported_model,
+                    "reportedProvider": reply.reported_provider,
+                    "usage": {
+                        "inputTokens": reply.input_tokens,
+                        "cachedInputTokens": reply.cached_input_tokens,
+                        "outputTokens": reply.output_tokens,
+                        "reasoningTokens": reply.reasoning_tokens,
+                    },
                     "estimatedCostUsd": call_cost(entry.price, reply.input_tokens, reply.output_tokens),
+                    "actualCostUsd": reply.reported_cost,
                     "latencyMs": record.get("latencyMs"),
                     "attempts": record.get("attempts"),
                     "finishReason": reply.finish_reason,
@@ -174,7 +190,7 @@ def summarize(results: list[SampleResult], budget: Budget) -> list[str]:
         f"samples: {len(results)}  called: {count('called')}  cache hits: {count('cached')}  "
         f"api errors: {count('api-error')}  skipped: {count('skipped')}",
         f"valid: {sum(1 for result in produced if result.valid)}  invalid: {sum(1 for result in produced if not result.valid)}"
-        f"  provider calls: {budget.requests}  estimated spend: ${budget.spent:.4f}",
+        f"  provider calls: {budget.requests}  spend: ${budget.spent:.4f}",
     ]
     skipped = [result for result in results if result.status == "skipped"]
     if skipped:
