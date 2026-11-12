@@ -1,7 +1,14 @@
 @import "tailwindcss";
 
-/* Candidates live outside harness/, so Tailwind must be told to scan them. */
+/*
+ * Candidates live outside harness/, so Tailwind must be told to scan them.
+ * Tailwind skips git-ignored files even inside an @source folder, unless a
+ * source points into the ignored folder itself: every git-ignored folder
+ * under candidates/ (see .gitignore) needs its own line, or its classes are
+ * never generated and the candidate renders unstyled.
+ */
 @source "../../candidates";
+@source "../../candidates/mock-*";
 
 @theme {
   --font-sans:
