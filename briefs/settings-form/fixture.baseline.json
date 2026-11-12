@@ -1,0 +1,54 @@
+{
+  "title": "Profile and notifications",
+  "description": "Update how your teammates see you and choose which updates reach your inbox.",
+  "displayName": {
+    "label": "Display name",
+    "value": "Maren Okonkwo",
+    "help": "Shown next to your messages and in mentions."
+  },
+  "email": {
+    "label": "Email address",
+    "value": "maren.okonkwo@example.com",
+    "help": "We send sign-in links and notifications to this address."
+  },
+  "timeZone": {
+    "label": "Time zone",
+    "value": "Europe/Berlin",
+    "options": [
+      { "value": "America/Los_Angeles", "label": "Pacific Time (Los Angeles)" },
+      { "value": "America/New_York", "label": "Eastern Time (New York)" },
+      { "value": "Europe/London", "label": "Greenwich Mean Time (London)" },
+      { "value": "Europe/Berlin", "label": "Central European Time (Berlin)" },
+      { "value": "Asia/Kolkata", "label": "India Standard Time (Kolkata)" },
+      { "value": "Asia/Tokyo", "label": "Japan Standard Time (Tokyo)" }
+    ]
+  },
+  "notifications": [
+    {
+      "id": "mentions",
+      "label": "Mentions and replies",
+      "description": "When someone mentions you or replies in a thread you follow.",
+      "enabled": true
+    },
+    {
+      "id": "direct",
+      "label": "Direct messages",
+      "description": "Every new message sent to you directly.",
+      "enabled": true
+    },
+    {
+      "id": "digest",
+      "label": "Weekly digest",
+      "description": "A summary of channel activity every Monday morning.",
+      "enabled": false
+    },
+    {
+      "id": "product",
+      "label": "Product updates",
+      "description": "News about features and improvements to Brindlewave.",
+      "enabled": false
+    }
+  ],
+  "saveLabel": "Save changes",
+  "cancelLabel": "Cancel"
+}

@@ -1,0 +1,22 @@
+{
+  "title": { "kind": "label", "required": true },
+  "description": { "kind": "prose" },
+  "displayName.label": { "kind": "label", "required": true },
+  "displayName.value": { "kind": "label" },
+  "displayName.help": { "kind": "prose" },
+  "email.label": { "kind": "label", "required": true },
+  "email.value": { "kind": "label" },
+  "email.help": { "kind": "prose" },
+  "timeZone.label": { "kind": "label", "required": true },
+  "timeZone.value": { "kind": "fixed" },
+  "timeZone.options": { "kind": "list", "min": 1 },
+  "timeZone.options[].value": { "kind": "id" },
+  "timeZone.options[].label": { "kind": "label", "required": true },
+  "notifications": { "kind": "list", "max": 10 },
+  "notifications[].id": { "kind": "id" },
+  "notifications[].label": { "kind": "label", "required": true },
+  "notifications[].description": { "kind": "prose" },
+  "notifications[].enabled": { "kind": "fixed" },
+  "saveLabel": { "kind": "label", "required": true },
+  "cancelLabel": { "kind": "label", "required": true }
+}
