@@ -4,11 +4,15 @@
 // - info: text-overflow ellipsis or a line clamp is set (deliberate truncation)
 // A scroll container (overflow auto or scroll) keeps its content reachable
 // and never produces a finding. Uses raw boxes. Replaced elements are exempt.
+// The finding's rect is where the cut is visible: the part of the clipped
+// lines still inside the clipping box, or the clipping box itself when the
+// clipped lines are hidden entirely.
 
 import {
   type Box,
   type ContentBox,
   TOLERANCE_X,
+  intersect,
   overflowPast,
   paddingBox,
   round,
@@ -29,6 +33,8 @@ interface Clip {
   overflowPx: number;
   clipper: Element;
   truncation: Truncation;
+  /** The visible part of the line, or the clipping box if none of it shows. */
+  shown: Box;
 }
 
 const isSet = (value: string): boolean => value !== '' && value !== 'none';
@@ -52,11 +58,18 @@ function clipOn(box: ContentBox, axis: Axis): Clip | null {
     if (overflow === 'visible') continue;
     if (overflow === 'auto' || overflow === 'scroll') return null;
 
-    const overflowPx = overflowPast(box.raw, paddingBox(el, style), axis);
+    const padding = paddingBox(el, style);
+    const overflowPx = overflowPast(box.raw, padding, axis);
     const tolerance = axis === 'x' ? TOLERANCE_X : verticalTolerance(box);
     if (overflowPx <= tolerance) return null;
     const path = box.clipChain.slice(0, index + 1);
-    return { axis, overflowPx, clipper: el, truncation: truncationOf(axis, el, path) };
+    return {
+      axis,
+      overflowPx,
+      clipper: el,
+      truncation: truncationOf(axis, el, path),
+      shown: intersect(box.raw, padding) ?? padding,
+    };
   }
   return null;
 }
@@ -69,13 +82,14 @@ export const textClipped: Check = (root) => {
     if (box.kind !== 'text' || !box.textNode) continue;
     const clips = [clipOn(box, 'x'), clipOn(box, 'y')].filter((clip) => clip !== null);
     if (clips.length === 0) continue;
+    const shown = clips.map((clip) => clip.shown).reduce(union);
     const group = groups.get(box.element);
     if (group) {
-      group.rect = union(group.rect, box.raw);
+      group.rect = union(group.rect, shown);
       group.clips.push(...clips);
       group.texts.push(box.textNode);
     } else {
-      groups.set(box.element, { rect: box.raw, clips, texts: [box.textNode] });
+      groups.set(box.element, { rect: shown, clips, texts: [box.textNode] });
     }
   }
 
