@@ -21,7 +21,9 @@ def test_mock_reference_end_to_end(capsys: pytest.CaptureFixture[str]) -> None:
         record = json.loads((CANDIDATES_DIR / "mock-reference" / brief / "plain-s1" / "generation.json").read_text(encoding="utf-8"))
         assert record["valid"], (brief, record["reasons"])
 
-    assert main(["stress", "--model", "mock-reference", "--all"]) == 0
+    # --variant plain: other variants left in candidates/mock-reference by
+    # earlier command-line runs must not change the counts below.
+    assert main(["stress", "--model", "mock-reference", "--all", "--variant", "plain"]) == 0
     for brief in briefs:
         summary_file = RUNS_DIR / brief / f"mock-reference__{brief}__plain-s1" / "summary.json"
         summary = json.loads(summary_file.read_text(encoding="utf-8"))
