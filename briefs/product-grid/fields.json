@@ -1,0 +1,17 @@
+{
+  "heading": { "kind": "label", "required": true },
+  "resultsSummary": { "kind": "label" },
+  "currency": { "kind": "fixed" },
+  "products": { "kind": "list", "max": 24 },
+  "products[].id": { "kind": "id" },
+  "products[].name": { "kind": "label", "required": true },
+  "products[].image.src": { "kind": "fixed" },
+  "products[].image.alt": { "kind": "fixed" },
+  "products[].price": { "kind": "number" },
+  "products[].originalPrice": { "kind": "number" },
+  "products[].rating": { "kind": "fixed" },
+  "products[].reviewCount": { "kind": "number" },
+  "products[].tags": { "kind": "list", "max": 6 },
+  "products[].tags[]": { "kind": "label", "required": true },
+  "products[].ctaLabel": { "kind": "label", "required": true }
+}

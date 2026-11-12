@@ -1,0 +1,69 @@
+{
+  "heading": "Kitchen and dining",
+  "resultsSummary": "Showing 6 of 48 products",
+  "currency": "USD",
+  "products": [
+    {
+      "id": "pour-over-set",
+      "name": "Stoneware pour-over set",
+      "image": { "src": "/fe-assets/placeholder-1x1.svg", "alt": "Stoneware pour-over set in warm orange glaze" },
+      "price": 48,
+      "originalPrice": 60,
+      "rating": 4.6,
+      "reviewCount": 128,
+      "tags": ["Ceramic", "Handmade", "Bestseller"],
+      "ctaLabel": "Add to cart"
+    },
+    {
+      "id": "tea-towels",
+      "name": "Linen tea towels, set of 3",
+      "image": { "src": "/fe-assets/placeholder-4x3.svg", "alt": "Three folded linen tea towels" },
+      "price": 24,
+      "rating": 4.8,
+      "reviewCount": 342,
+      "tags": ["Linen", "Machine washable", "New"],
+      "ctaLabel": "Add to cart"
+    },
+    {
+      "id": "serving-board",
+      "name": "Walnut serving board",
+      "image": { "src": "/fe-assets/placeholder-3x2.svg", "alt": "Walnut serving board with rounded handle" },
+      "price": 65,
+      "rating": 4.7,
+      "reviewCount": 87,
+      "tags": ["Walnut", "Food safe", "Handmade"],
+      "ctaLabel": "Add to cart"
+    },
+    {
+      "id": "storage-jars",
+      "name": "Glass storage jars, set of 4",
+      "image": { "src": "/fe-assets/placeholder-3x4.svg", "alt": "Four glass jars with cork lids" },
+      "price": 32,
+      "originalPrice": 40,
+      "rating": 4.3,
+      "reviewCount": 56,
+      "tags": ["Glass", "Airtight", "Dishwasher safe"],
+      "ctaLabel": "Add to cart"
+    },
+    {
+      "id": "dutch-oven",
+      "name": "Enamel dutch oven",
+      "image": { "src": "/fe-assets/placeholder-16x9.svg", "alt": "Enamel dutch oven in deep violet" },
+      "price": 129,
+      "rating": 4.9,
+      "reviewCount": 511,
+      "tags": ["Cast iron", "Oven safe", "Bestseller"],
+      "ctaLabel": "Add to cart"
+    },
+    {
+      "id": "candle-trio",
+      "name": "Beeswax candle trio",
+      "image": { "src": "/fe-assets/placeholder-2x3.svg", "alt": "Three beeswax pillar candles" },
+      "price": 19.5,
+      "rating": 4.4,
+      "reviewCount": 203,
+      "tags": ["Beeswax", "Unscented", "New"],
+      "ctaLabel": "Add to cart"
+    }
+  ]
+}
