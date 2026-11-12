@@ -14,7 +14,9 @@ export async function startServer(): Promise<HarnessServer> {
     configFile: path.join(harnessDir, 'vite.config.ts'),
     logLevel: 'warn',
     clearScreen: false,
-    server: { host: '127.0.0.1', port: 0, strictPort: true },
+    // forwardConsole: false keeps the page's console out of the terminal;
+    // render errors are recorded in the case JSON instead.
+    server: { host: '127.0.0.1', port: 0, strictPort: true, forwardConsole: false },
   });
   await server.listen();
   const address = server.httpServer?.address();
