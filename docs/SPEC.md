@@ -31,7 +31,8 @@ survives when the content changes.
 - A finding counts against a mutation only if it is new relative to the
   baseline. Findings already present in the baseline are reported
   separately as "born broken".
-- Survival rate = mutations with no new findings / mutations run.
+- Survival rate = mutations survived / mutations applicable. See Case
+  results.
 - Reported per candidate, per mutation type and per model.
 
 ## Pipeline
@@ -54,10 +55,12 @@ survives when the content changes.
   width.
 - The fixture is chosen with the query parameter `fixture=<name>`, which
   loads briefs/<brief>/fixture.<name>.json. The default is `baseline`.
+- The mutation is chosen with the query parameter `mutation=<id>`. See
+  Mutations (v0).
 
 ## Layout
-- briefs/<brief-id>/ : brief.md, props.ts, fixture.baseline.json and
-  optional fixture.<name>.json
+- briefs/<brief-id>/ : brief.md, props.ts, fields.json,
+  fixture.baseline.json and optional fixture.<name>.json
 - candidates/<source>/<brief-id>/<variant>/Component.tsx
   (source is _samples or a model id)
 - harness/ : Node. Vite app, Playwright runner, mutations, checks
@@ -65,10 +68,79 @@ survives when the content changes.
 - results/ : run output, git-ignored
 - docs/ : spec, methodology, decisions
 
-## Initial mutation set
-text-long (1.4x length), text-unbroken (60-character token), text-empty,
-list-0, list-1, list-many (10x), viewport-320, text-200pct, dir-rtl,
-image-missing
+## Fields map
+Each brief has briefs/<id>/fields.json, which declares what every value
+in the fixture is, so mutations only touch real content.
+- Keys are paths in dot notation; `[]` means every item of an array.
+  Examples: "skills", "skills[]", "links[].label".
+- Value: { kind, required?, min?, max? }
+- Kinds:
+  - label: short UI text: names, titles, button labels, tags
+  - prose: sentences and paragraphs
+  - number: a number shown to the user
+  - list: an array whose length can vary
+  - id: a unique identifier
+  - fixed: never mutated: enums, booleans, dates, URLs
+- required (label, prose): never emptied
+- min, max (list): length bounds. Default min 0, no max.
+
+Validation: every string, number, boolean and array in the baseline
+fixture must match a declared path, and every declared path must exist.
+A violation is an error, not a warning. Also errors: a value that does not
+fit its kind (label and prose hold strings, number a number, list an
+array, id a string or number), a malformed declaration (unknown kind or
+property, required outside label and prose, min or max outside list or
+not a non-negative integer, min above max) and a list length outside
+min and max. null values need no declaration. The app validates the
+fixture it renders on every candidate render; the stress runner validates
+before it renders anything.
+
+## Mutations (v0)
+Content mutations live in harness/src/mutations/: pure functions with no
+DOM and no randomness, importable from Node and from the app:
+`(fixture, fields, mutationId) => { fixture, changed }`, where `changed`
+lists the concrete paths that changed (e.g. "skills[2]"). Every eligible
+field is mutated at once. If nothing changed, the mutation is "not
+applicable" for that brief.
+
+Content mutations:
+- text-long: every label and prose value grows by the lower bound of
+  IBM's expansion table, based on its current length: up to 10 chars
+  +100%, 11-20 +80%, 21-30 +60%, 31-50 +40%, 51-70 +31%, over 70 +30%
+  (rounded up, lengths in characters). Values with spaces grow by
+  appending their own words in order, cut at the target length. Single
+  words grow by appending their own letters, with no space. Empty values
+  stay empty.
+- text-unbroken: in every label and prose value, the longest word (the
+  first one on a tie) is replaced by one fixed 60-letter token (letters
+  only).
+- text-empty: every label and prose value that is not required becomes
+  "".
+- list-0: every list with min 0 becomes empty.
+- list-1: every list keeps only its first item (skip if min > 1).
+- list-many: every list is repeated in order to 10 times its length,
+  capped at max. `id` values inside repeated items get a numeric suffix
+  so they stay unique: "home" becomes "home-2", "home-3", ...; a numeric
+  id gets two appended digits (7 becomes 702, 703, ...).
+- number-large: integers become 1234567890; non-integers become
+  1234567.89.
+
+Environment mutations (always applicable):
+- viewport-320: viewport 320x800
+- text-200pct: root font size 32px, which is what a browser's default
+  font size set to 200% does
+- dir-rtl: dir="rtl" on <html>
+
+The baseline and all other mutations render at 1280x800. Run order:
+text-long, text-unbroken, text-empty, list-0, list-1, list-many,
+number-large, viewport-320, text-200pct, dir-rtl.
+
+The app applies `mutation=<id>`: a content mutation to the fixture before
+rendering, text-200pct and dir-rtl to <html>. The viewport is set by the
+runner. Every case records its query string, so it can be reproduced by
+opening that URL with `npm run dev` at the case's viewport.
+
+Deferred until a check can see its effect: image-missing.
 
 ## Checks (v0)
 A check is a plain DOM function `(root: Element) => Finding[]` with no
@@ -152,10 +224,106 @@ Deferred until a real failure needs them: off-canvas, element-collapsed
 - The check lab (harness/src/lab/cases.ts, route /?lab=<id>) pins the
   behaviour of every check with minimal positive and negative cases.
 
+## Case results
+`npm run stress -- --brief <id> --candidate <path>` renders the baseline
+and then every applicable mutation, and runs the checks on each.
+- Baseline: fixture "baseline", no mutation, 1280x800. Its error findings
+  are "born broken"; they are reported once and never count against a
+  mutation.
+- New-finding rule: a finding is new if it is an error and no baseline
+  finding (of any severity) has the same check and selector.
+- Survived: the case rendered (status ok) and has no new findings.
+- Not applicable: a content mutation that changes nothing for the brief
+  is not rendered and is left out of the survival rate.
+- render-error: the candidate threw during render or the page crashed.
+  window.__FE_ERROR__ holds the message, which the page also shows.
+  timeout: the page did not become ready within 30 s. Both are failed
+  cases; the run continues with the next case.
+- Survival rate = survived / applicable.
+- Statuses: ok, render-error, timeout, not-applicable.
+
+Output in results/runs/<brief>/<candidate with / replaced by __>/ (the
+directory is replaced on every run):
+- baseline.json: case, brief, candidate, fixture, query, viewport,
+  status, error, bornBroken, findings
+- <mutation>.json for every rendered case: case, brief, candidate,
+  fixture, mutation { id, kind }, changed (content mutations; null
+  otherwise), query, viewport, status, error, survived, newErrors,
+  newFindings, findings
+- <case>.png and <case>.annotated.png when a screenshot could be taken
+  (not after a timeout)
+- summary.json, below
+
+### summary.json (schemaVersion 1)
+The contract with the Python side. File names are relative to the run
+directory. There is no timestamp, so two runs of the same code diff
+cleanly. Bump schemaVersion on any incompatible change.
+
+```
+{
+  "schemaVersion": 1,
+  "brief": "hello-card",
+  "candidate": "_samples/hello-card/brittle",
+  "fixture": "baseline",
+  "versions": { "playwright": "<npm version>", "chromium": "<browser version>" },
+  "baseline": {
+    "status": "ok" | "render-error" | "timeout",
+    "errors": <born-broken error count>,
+    "viewport": { "width": 1280, "height": 800 },
+    "files": { "result": "baseline.json", "screenshot": <name> | null, "annotated": <name> | null }
+  },
+  "mutations": [                       // every mutation, in run order
+    {
+      "id": "<mutation id>",
+      "kind": "content" | "environment",
+      "applicable": true | false,
+      "status": "ok" | "render-error" | "timeout" | "not-applicable",
+      "survived": true | false | null, // null when not applicable
+      "newErrors": { "page-overflow-x": n, "text-clipped": n,
+                     "content-spill": n, "text-overlap": n } | null,
+                                       // null when not applicable or not rendered
+      "files": { "result": "<id>.json", "screenshot": <name> | null,
+                 "annotated": <name> | null } | null
+    }
+  ],
+  "totals": {
+    "mutations": 10, "applicable": n, "survived": n, "failed": n,
+    "survivalRate": <survived / applicable, 4 decimals> | null
+  }
+}
+```
+
+## Known gaps
+Accepted in step 3:
+- text-clipped does not report clipping by a second, further-out hidden
+  ancestor.
+- Out-of-flow content is exempt from content-spill and text-overlap
+  (D-006): a positioned label that collides with text after a mutation is
+  not caught.
+- Boxes are rectangles: text that overflows a rounded shape (for example
+  initials past the curve of a round avatar) is not caught.
+
+Found in step 4:
+- A visibly boxed element that spills out of its boxed parent is not
+  caught while its own text stays inside it. content-spill compares
+  content boxes with their nearest boxed ancestor, and a tag pill is that
+  ancestor for its own text. Seen with the brittle hello-card: under
+  text-long and text-200pct its tag pills run out of the card with no
+  finding.
+- Selectors are structural, so a mutation that adds or removes elements
+  (list-0 removing a list, list-many) can shift nth-child indices. A
+  problem that already exists at baseline can then look new.
+- Empty states are not judged: text-empty can leave a blank placeholder
+  (an avatar with no initials, an empty fixed-height box) that no check
+  sees. element-collapsed is deferred.
+- page-overflow-x culprits only look past the right edge. With dir-rtl,
+  overflow goes to the left, so culprits would be empty and the rect
+  strip is drawn on the wrong side. Not yet observed.
+
 ## Roadmap
 1. Attribution setup (done)
 2. Repo foundation and harness walking skeleton (done)
-3. Checks v0 on hand-written robust and brittle samples
+3. Checks v0 on hand-written robust and brittle samples (done)
 4. Mutation engine
 5. Brief format and first 10 briefs
 6. Generation runner, one model

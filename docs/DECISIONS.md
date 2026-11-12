@@ -42,3 +42,41 @@ Values derived for display, such as avatar initials, are computed by the
 component from real props (initials from `name`) and are not fixture
 fields. Every fixture field is then real content a mutation can change,
 and a candidate's derivation logic is part of what is tested.
+
+## D-008 text-long uses the lower bounds of IBM's expansion table (2026-11-12)
+text-long grows each label and prose value by the lower bound of its
+length bracket in IBM's guidance on text expansion in translation (up to
+10 chars +100%, ..., over 70 +30%). The lower bound is a realistic floor:
+growth any shipped UI should survive, not a worst case. Source:
+https://www.ibm.com/support/knowledgecenter/en/ssw_ibm_i_72/nls/rbagstextdatatransdesign.htm
+
+## D-009 Every eligible field is mutated at once (2026-11-12)
+A mutation changes every eligible field in a single case, as a
+translation or a data change would. One render per mutation keeps runs
+small. The cost is attribution: a failure is not tied to one field, but
+the findings' selectors show where it happened.
+
+## D-010 A finding is new if its check and selector are absent at baseline (2026-11-12)
+An error in a mutation case counts only when no baseline finding has the
+same check and selector. Problems that exist at baseline are reported
+once as "born broken" instead of failing every mutation. Selectors are
+structural, so a mutation that adds or removes elements can shift them
+and make an old problem look new (see Known gaps).
+
+## D-011 A crash or timeout is a failed case (2026-11-12)
+A candidate that throws during render (render-error) or never becomes
+ready within 30 s (timeout) fails that case: a component that breaks on
+realistic content has not survived it. The run continues; only a failure
+of the harness itself stops it.
+
+## D-012 text-200pct is a 32px root font size (2026-11-12)
+A 32px root font size is what a browser's default font size set to 200%
+does: every rem-based size doubles and px sizes stay. It is not page
+zoom, which would scale px sizes too.
+
+## D-013 number-large added; image-missing deferred (2026-11-12)
+number-large (integers to 1234567890, other numbers to 1234567.89)
+covers counts and prices that outgrow their boxes. image-missing is
+deferred until a check can see its effect: the v0 checks look at text
+and box geometry, which a missing image does not change in a way they
+report.

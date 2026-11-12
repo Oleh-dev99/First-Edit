@@ -45,11 +45,27 @@ npm test
 npm run check -- --brief hello-card --candidate _samples/hello-card/brittle --fixture stress --width 320
 ```
 
-`npm test` renders every check-lab case and the sample matrix (robust and
-brittle hello-card, baseline and stress fixtures, 1280 and 320 wide) and
-asserts the findings. Lab cases can be viewed at `/?lab=<case-id>`.
+`npm test` runs the unit tests for the fields map and the mutations, every
+check-lab case, the sample matrix (robust and brittle hello-card,
+baseline and stress fixtures, 1280 and 320 wide) and the stress matrix
+(both samples through every mutation), and asserts the results. Lab cases
+can be viewed at `/?lab=<case-id>`.
 
 `npm run check` renders one case and writes the findings JSON, a clean
 full-page screenshot and an annotated screenshot (red outlines on errors,
 amber on info findings) to `results/checks/`. `--fixture` defaults to
-`baseline` and `--width` to 1280; the height is always 800.
+`baseline`. `--mutation <id>` applies one mutation; `--width` defaults to
+the mutation's viewport (1280, or 320 for viewport-320). The height is
+always 800.
+
+## Stress runs
+
+```sh
+npm run stress -- --brief hello-card --candidate _samples/hello-card/brittle
+```
+
+Renders the baseline and every applicable mutation (see
+[docs/SPEC.md](docs/SPEC.md)), prints a table of new errors per check and
+the survival rate, and writes per-case results, screenshots and
+`summary.json` to `results/runs/<brief>/<candidate>/`. Any case can be
+reproduced by opening its `query` (in the case JSON) with `npm run dev`.
