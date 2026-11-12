@@ -21,3 +21,42 @@ provider = "mock"
 # model = "<provider model id>"
 # params = { max_tokens = 16000 }        # merged into the request body
 # price = { input = 0.0, output = 0.0 }  # USD per million tokens, optional
+
+# Step 8, the first real run (2026-11-13). Listed cheapest first. Check
+# them with `python -m first_edit doctor` before any run.
+
+[[model]]
+id = "claude-haiku-5.5"
+provider = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "anthropic/claude-haiku-5.5"
+params = { max_tokens = 32000 }
+price = { input = 0.10, output = 0.50 }
+
+[[model]]
+id = "deepseek-v4.1-flash"
+provider = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "deepseek/deepseek-v4.1-flash-1017"
+params = { max_tokens = 32000 }
+price = { input = 0.30, output = 1.20 }
+
+[[model]]
+id = "gpt-6.1-terra"
+provider = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "openai/gpt-6.1-terra"
+params = { max_tokens = 32000 }
+price = { input = 1.00, output = 5.00 }
+
+[[model]]
+id = "gemini-4-carbon"
+provider = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "google/gemini-4-carbon"
+params = { max_tokens = 32000 }
+price = { input = 2.00, output = 10.00 }
