@@ -1,0 +1,39 @@
+{
+  "title": "Store performance",
+  "periodLabel": "Last 30 days",
+  "currency": "USD",
+  "metrics": [
+    {
+      "id": "revenue",
+      "label": "Revenue",
+      "value": 48250,
+      "format": "currency",
+      "change": 0.124,
+      "caption": "Gross sales before refunds"
+    },
+    {
+      "id": "orders",
+      "label": "Orders",
+      "value": 1284,
+      "format": "count",
+      "change": 0.031,
+      "caption": "Paid orders across all channels"
+    },
+    {
+      "id": "conversion",
+      "label": "Conversion rate",
+      "value": 0.034,
+      "format": "percent",
+      "change": -0.052,
+      "caption": "Sessions that ended in a purchase"
+    },
+    {
+      "id": "average-order",
+      "label": "Average order value",
+      "value": 37.58,
+      "format": "currency",
+      "change": 0.089,
+      "caption": "Revenue divided by paid orders"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "title": { "kind": "label", "required": true },
+  "periodLabel": { "kind": "label" },
+  "currency": { "kind": "fixed" },
+  "metrics": { "kind": "list", "min": 1, "max": 8 },
+  "metrics[].id": { "kind": "id" },
+  "metrics[].label": { "kind": "label", "required": true },
+  "metrics[].value": { "kind": "number" },
+  "metrics[].format": { "kind": "fixed" },
+  "metrics[].change": { "kind": "number" },
+  "metrics[].caption": { "kind": "prose" }
+}
