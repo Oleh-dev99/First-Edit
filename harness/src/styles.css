@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/* Candidates live outside harness/, so Tailwind must be told to scan them. */
+@source "../../candidates";
+
+@theme {
+  --font-sans:
+    "Inter Variable", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+#fe-error {
+  margin: 0;
+  padding: 16px;
+  color: #b91c1c;
+  font: 14px/1.5 ui-monospace, Consolas, monospace;
+  white-space: pre-wrap;
+}
