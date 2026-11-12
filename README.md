@@ -35,3 +35,21 @@ and open
 `http://localhost:5173/?brief=hello-card&candidate=_samples/hello-card/robust`.
 Add `&fixture=<name>` to load `briefs/<brief>/fixture.<name>.json`
 instead of the baseline fixture.
+
+## Checks
+
+The checks are defined in [docs/SPEC.md](docs/SPEC.md). From `harness/`:
+
+```sh
+npm test
+npm run check -- --brief hello-card --candidate _samples/hello-card/brittle --fixture stress --width 320
+```
+
+`npm test` renders every check-lab case and the sample matrix (robust and
+brittle hello-card, baseline and stress fixtures, 1280 and 320 wide) and
+asserts the findings. Lab cases can be viewed at `/?lab=<case-id>`.
+
+`npm run check` renders one case and writes the findings JSON, a clean
+full-page screenshot and an annotated screenshot (red outlines on errors,
+amber on info findings) to `results/checks/`. `--fixture` defaults to
+`baseline` and `--width` to 1280; the height is always 800.
