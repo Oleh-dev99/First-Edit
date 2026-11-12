@@ -13,13 +13,15 @@ import {
   MIN_APPLICABLE,
   countWords,
   fileProblems,
+  hardcodedImageProblems,
   hintProblems,
+  imageProblems,
   importProblems,
   listSizeProblems,
   metaProblems,
   propsProblems,
 } from './brief-rules.ts';
-import { briefsDir, candidatesDir, harnessDir, repoRoot, resultsDir } from './paths.ts';
+import { assetsDir, briefsDir, candidatesDir, harnessDir, repoRoot, resultsDir } from './paths.ts';
 import { runStress } from './stress.ts';
 
 export interface BriefCheck {
@@ -115,6 +117,7 @@ export function checkBriefStatic(id: string): BriefCheck {
   const fieldErrors = fieldsProblems(fixture, fields);
   result.problems.push(...fieldErrors.map((problem) => `fields.json: ${problem}`));
   result.problems.push(...propsProblems(read('props.ts')));
+  result.problems.push(...imageProblems(fixture, fields, (name) => existsSync(path.join(assetsDir, name))));
   if (fieldErrors.length === 0) result.applicable = applicableMutations(fixture, fields).length;
 
   if (!result.sample) {
@@ -132,7 +135,9 @@ export function checkBriefStatic(id: string): BriefCheck {
     const component = path.join(candidatesDir, reference, 'Component.tsx');
     if (existsSync(component)) {
       result.reference = reference;
-      result.problems.push(...importProblems(readFileSync(component, 'utf8')).map((p) => `reference ${p}`));
+      const source = readFileSync(component, 'utf8');
+      result.problems.push(...importProblems(source).map((p) => `reference ${p}`));
+      result.problems.push(...hardcodedImageProblems(source).map((p) => `reference ${p}`));
     } else {
       result.problems.push(`missing reference candidate candidates/${reference}/Component.tsx`);
     }

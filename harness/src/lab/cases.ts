@@ -243,6 +243,18 @@ export const LAB_CASES: LabCase[] = [
     expected: {},
   },
 
+  // readiness: images that fail or are lazy must never hang __FE_READY__
+  {
+    id: 'ready-broken-and-lazy-images',
+    check: 'content-spill',
+    description: '- a failed image and a lazy image below the fold neither hang readiness nor produce findings',
+    html:
+      `<img src="/fe-assets/does-not-exist.svg" width="120" height="80" alt="">` +
+      // Far beyond Chromium's lazy-load distance threshold, so it would never start loading on its own.
+      `<img src="/fe-assets/placeholder-4x3.svg" loading="lazy" width="160" height="120" alt="" style="margin-top:5000px">`,
+    expected: {},
+  },
+
   // text-overlap
   {
     id: 'overlap-fixed-row',

@@ -160,6 +160,54 @@ export function importedModules(source: string): { modules: string[]; errors: st
   return { modules: [...new Set(modules)], errors: result.errors.map((error) => error.message) };
 }
 
+/** Harness-served placeholder images live under this path. */
+export const ASSET_PREFIX = '/fe-assets/';
+
+const IMAGE_FILE = /\.(?:svg|png|jpe?g|gif|webp|avif)(?:[?#].*)?$/i;
+
+/**
+ * Rule 5: a fixture references images only by a /fe-assets/ path, in a
+ * field declared fixed, and the asset must exist.
+ */
+export function imageProblems(
+  fixture: unknown,
+  fields: FieldsMap,
+  assetExists: (name: string) => boolean,
+): string[] {
+  const problems = new Set<string>();
+  forEachValue(fixture, (path, value) => {
+    if (typeof value !== 'string') return;
+    const looksLikeImage = value.startsWith(ASSET_PREFIX) || value.startsWith('data:image/') || IMAGE_FILE.test(value);
+    if (!looksLikeImage) return;
+    if (!value.startsWith(ASSET_PREFIX)) {
+      problems.add(`fixture: ${path} references an image outside ${ASSET_PREFIX}: ${value.slice(0, 60)}`);
+      return;
+    }
+    if (fields[path]?.kind !== 'fixed') problems.add(`fields.json: ${path} holds image paths and must be fixed`);
+    const name = value.slice(ASSET_PREFIX.length);
+    if (!/^[\w.-]+$/.test(name) || !assetExists(name)) {
+      problems.add(`fixture: ${path} references a missing asset ${value}`);
+    }
+  });
+  return [...problems];
+}
+
+/** Candidate contract: images come from props only, never from a hard-coded src. */
+export function hardcodedImageProblems(source: string): string[] {
+  const problems: string[] = [];
+  walk(parseSync('Component.tsx', source).program, (node) => {
+    if (node.type !== 'JSXAttribute') return;
+    const name = (node.name as AstNode | null)?.name;
+    if (name !== 'src' && name !== 'srcSet') return;
+    let value = node.value as AstNode | null;
+    if (value?.type === 'JSXExpressionContainer') value = value.expression as AstNode | null;
+    if (value?.type === 'Literal' || value?.type === 'TemplateLiteral') {
+      problems.push(`hard-codes an image ${String(name)}; images must come from props`);
+    }
+  });
+  return problems;
+}
+
 /** The candidate contract allows imports from react only. */
 export function importProblems(source: string): string[] {
   const { modules, errors } = importedModules(source);

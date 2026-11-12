@@ -6,7 +6,9 @@ import { describe, test } from 'node:test';
 import {
   countWords,
   fileProblems,
+  hardcodedImageProblems,
   hintProblems,
+  imageProblems,
   importedModules,
   importProblems,
   listSizeProblems,
@@ -109,6 +111,49 @@ describe('listSizeProblems', () => {
     assert.deepStrictEqual(listSizeProblems(fixture, fields), [
       'fixture: items has 2 items; corpus lists hold 3 to 8',
       'fixture: items[].tags has 1 items; corpus lists hold 3 to 8',
+    ]);
+  });
+});
+
+describe('images', () => {
+  const fields: FieldsMap = {
+    items: { kind: 'list' },
+    'items[].image': { kind: 'fixed' },
+    'items[].cover': { kind: 'label' },
+  };
+  const exists = (name: string): boolean => name === 'placeholder-1x1.svg';
+
+  test('a /fe-assets/ path to an existing asset in a fixed field passes', () => {
+    assert.deepStrictEqual(imageProblems({ items: [{ image: '/fe-assets/placeholder-1x1.svg' }] }, fields, exists), []);
+  });
+
+  test('outside paths, missing assets and non-fixed image fields are problems', () => {
+    const fixture = {
+      items: [
+        { image: 'https://cdn.example.com/photo.jpg' },
+        { image: '/fe-assets/nope.svg' },
+        { image: '/fe-assets/../secret.svg' },
+        { cover: '/fe-assets/placeholder-1x1.svg' },
+      ],
+    };
+    assert.deepStrictEqual(imageProblems(fixture, fields, exists), [
+      'fixture: items[].image references an image outside /fe-assets/: https://cdn.example.com/photo.jpg',
+      'fixture: items[].image references a missing asset /fe-assets/nope.svg',
+      'fixture: items[].image references a missing asset /fe-assets/../secret.svg',
+      'fields.json: items[].cover holds image paths and must be fixed',
+    ]);
+  });
+
+  test('a candidate may not hard-code an image src', () => {
+    const source = [
+      'export default function A({ src }: { src: string }) {',
+      '  return (<div><img src={src} alt="" /><img src="/fe-assets/placeholder-1x1.svg" alt="" />',
+      '    <img src={`/x.png`} alt="" /></div>);',
+      '}',
+    ].join('\n');
+    assert.deepStrictEqual(hardcodedImageProblems(source), [
+      'hard-codes an image src; images must come from props',
+      'hard-codes an image src; images must come from props',
     ]);
   });
 });
