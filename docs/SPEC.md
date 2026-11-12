@@ -75,7 +75,8 @@ survives when the content changes.
 - briefs/<brief-id>/ : meta.json, brief.md, props.ts,
   fixture.baseline.json, fields.json. See Brief format.
 - candidates/<source>/<brief-id>/<variant>/Component.tsx
-  (source is _samples, _reference or a model id)
+  (source is _samples, _reference or a model id; model outputs are
+  git-ignored, D-029)
 - harness/ : Node. Vite app, Playwright runner, mutations, checks
 - runner/ : Python. Generation (see Generation); scoring and calibration
   later
@@ -416,6 +417,8 @@ python -m first_edit generate --model <id> [--brief <id> | --all]
   [--variant plain|hinted] [--samples N] [--max-requests N] [--max-cost USD]
 python -m first_edit stress --model <id> [--brief <id> | --all]
   [--variant plain|hinted]
+python -m first_edit doctor
+python -m first_edit summarize --out <dir> [--model <id> ...]
 ```
 
 --all means every corpus brief (sample: false). The default variant is
@@ -530,7 +533,11 @@ key name are not part of the key.
 - --max-cost: when the entry has prices, stop before a call whose upper
   estimate would exceed the limit. The estimate is the prompt (4
   characters per token) at the input price plus the params' max_tokens
-  (16,000 if unset) at the output price; spend counts the actual usage.
+  (16,000 if unset) at the output price. Spend counts the cost the
+  response reports (OpenRouter's usage.cost), or the configured prices
+  times the reported usage when it reports none.
+- The read timeout is 600 s: a long reply with reasoning can take
+  minutes, and a timed-out call that is retried may be billed twice.
 - Skipped samples are printed and get no files.
 
 ### Candidate files and validity
@@ -540,9 +547,13 @@ candidates/<model-id>/<brief-id>/<variant>-s<n>/:
   the largest, with a warning; with none, the whole reply.
 - generation.json: schemaVersion, brief, candidate, model entry (the key's
   variable name, never the key), variant, sample, cacheKey, promptHash,
-  cached, generatedAt, receivedAt, status (generated or api-error), token
-  usage, estimatedCostUsd, latencyMs, attempts, finishReason, extraction,
-  warnings, valid and reasons.
+  cached, generatedAt, receivedAt, status (generated or api-error),
+  reportedModel and reportedProvider (as the response names them), usage
+  (inputTokens, cachedInputTokens, outputTokens, and reasoningTokens,
+  which are part of outputTokens; null where not reported),
+  estimatedCostUsd (configured prices times usage), actualCostUsd (the
+  cost the response reports, else null), latencyMs, attempts,
+  finishReason, extraction, warnings, valid and reasons.
 
 A candidate is valid only if the gate passes and the reply was not cut
 off by the token limit (finish reason "length"). The gate is
@@ -564,10 +575,24 @@ way. Its rules:
   srcSet, or in any string containing CSS url()
 
 Invalid output is a model failure: it is recorded, never re-rolled, and
-not stressed (D-025). Outputs of mock models (candidates/mock-*) are
-git-ignored; real model outputs are kept. Every git-ignored folder under
-candidates/ needs its own @source line in harness/src/styles.css, or
-Tailwind skips its classes.
+not stressed (D-025). Every folder under candidates/ except _samples and
+_reference is git-ignored: model outputs stay out of git until a run is
+published (D-029). Tailwind skips git-ignored files unless a source
+points into the ignored folder, so harness/src/styles.css names them all
+with `@source "../../candidates/*"`; the test tailwind-sources.test.ts
+guards it.
+
+### Doctor
+`python -m first_edit doctor` checks every configured model without
+spending tokens: it validates runner/models.toml and, for each real
+model, reports whether its key variable is set (by name; the key is never
+printed), whether its model is listed at {base_url}/models (with context
+length and maximum output), and the listed prices next to the configured
+ones, flagging any difference. Listed prices are USD per token and are
+shown per million. A model is unusable if its key is not set, it is not
+listed, the listing cannot be fetched, or a listed price is higher than
+the configured one (the budget would undercount). Exit 0 when every
+model is usable, 1 when one is not, 2 on an invalid models file.
 
 ### Stress
 `python -m first_edit stress` runs `npm run stress` on every valid
@@ -575,6 +600,43 @@ candidate and reads its summary.json. It prints one row per candidate
 (brief, variant, sample, valid, baseline errors, survived/applicable,
 truncations over all cases) and totals; invalid candidates appear as
 rows and are not stressed.
+
+### Summarize and the gallery
+`python -m first_edit summarize --out <dir> [--model <id> ...]` reads
+every generation.json and stress summary of the given models (default:
+every non-mock model in runner/models.toml) for the corpus briefs and
+writes three files to <dir> (results/spike for the step 8 spike):
+- summary.json (schemaVersion 1, no timestamp): per model the provider
+  model id, the reported model ids and the first and last call; per model
+  and variant the numbers below; survival by brief; totals.
+- report.md: the same as tables.
+- gallery.html: a static page, opened from disk.
+
+Per model and variant:
+- candidates (generated samples), valid, invalid and invalid by rule (a
+  candidate counts once per rule), API errors, briefs with no candidate,
+  valid candidates with no stress results
+- clean baseline and born broken (baseline errors, or a baseline that
+  did not render)
+- mean, min and max survival rate over clean-baseline candidates (D-015)
+- failed cases per mutation (failed / applicable) and per check (cases
+  with at least one new error from that check), render errors and
+  timeouts
+- truncations per rendered case (baseline and mutation cases with status
+  ok)
+- tokens (input, cached input, output, of which reasoning) and cost: the
+  reported cost where there is one, else the estimate
+
+Failed cases, survival and truncations cover clean-baseline candidates
+only; born-broken candidates are counted, not scored.
+
+The gallery has one card per failed case of a clean-baseline candidate
+and per born-broken baseline, then one card per survived case. A card
+shows model, brief, variant and sample, the case, status, viewport, the
+checks with new errors, truncations, the clean and annotated screenshots
+side by side (linked relative to the output directory), the new (or
+born-broken) findings and the query that reproduces the case. Cards can
+be filtered by model, variant, brief, mutation and check.
 
 ### Tailwind v3 compatibility
 The prompt names Tailwind v4, but models often write v3 class names. The
@@ -630,7 +692,7 @@ content-spill (D-014). Empty states are out of scope rather than a gap
 4. Mutation engine (done)
 5. Spill gap, brief format, first three briefs (done)
 6. Seven more briefs (done)
-7. Generation runner, one model
+7. Generation runner, one model (done)
 8. End-to-end spike and go/no-go review
 9. Full brief corpus (about 40)
 10. Multi-model runs

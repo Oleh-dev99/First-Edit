@@ -49,3 +49,12 @@ For every generation and stress run that feeds published numbers, record:
 - the Playwright and Chromium versions (summary.json) and the repository
   commit the runs used
 - any sample that failed with an API error or was skipped by the budget
+
+Models so far (all through OpenRouter, https://openrouter.ai/api/v1):
+
+| Model id | Provider model id | Date | Runs |
+|---|---|---|---|
+| claude-haiku-5.5 | anthropic/claude-haiku-5.5 | 2026-11-13 | step 8 spike: not run yet (no API key) |
+| deepseek-v4.1-flash | deepseek/deepseek-v4.1-flash-1017 | 2026-11-13 | step 8 spike: not run yet (no API key) |
+| gpt-6.1-terra | openai/gpt-6.1-terra | 2026-11-13 | step 8 spike: not run yet (no API key) |
+| gemini-4-carbon | google/gemini-4-carbon | 2026-11-13 | step 8 spike: not run yet (no API key) |

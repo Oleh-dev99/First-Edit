@@ -177,3 +177,11 @@ The user message shows the baseline fixture as example props, as a
 designer hands over mock data with a design. Models see realistic values
 and shapes; the mutations then change them, which is what the benchmark
 measures.
+
+## D-029 Model outputs stay out of git until the published run (2026-11-13)
+Every folder under candidates/ except _samples and _reference is
+git-ignored, and so are the cache and run results. Spike and trial runs
+can then be repeated, compared and thrown away without filling the
+history with unreviewed model output, and nothing is published by
+accident. Outputs are committed deliberately at the step that publishes a
+run, together with the record the publish checklist asks for.

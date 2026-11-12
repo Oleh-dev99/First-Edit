@@ -94,7 +94,13 @@ python -m venv .venv
 
 Models are listed in `runner/models.toml`; API keys go in `.env` (see
 `.env.example`). `mock-reference` replies with each brief's reference
-candidate and needs no network. Before publishing anything, work through
+candidate and needs no network. Before a real run,
+`.venv\Scripts\python -m first_edit doctor` checks every model (key set,
+model listed, prices) without spending tokens. After the stress runs,
+`.venv\Scripts\python -m first_edit summarize --out results/spike` writes
+`summary.json`, `report.md` and a filterable `gallery.html` of the cases.
+Model outputs under `candidates/` are git-ignored until a run is
+published. Before publishing anything, work through
 [docs/PUBLISH-CHECKLIST.md](docs/PUBLISH-CHECKLIST.md).
 
 ## Stress runs
