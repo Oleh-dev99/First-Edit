@@ -1,0 +1,10 @@
+{
+  "productName": { "kind": "label", "required": true },
+  "links": { "kind": "list", "min": 1, "max": 8 },
+  "links[].label": { "kind": "label", "required": true },
+  "links[].href": { "kind": "fixed" },
+  "links[].active": { "kind": "fixed" },
+  "ctaLabel": { "kind": "label", "required": true },
+  "user.name": { "kind": "label" },
+  "user.email": { "kind": "label", "required": true }
+}

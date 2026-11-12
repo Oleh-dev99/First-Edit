@@ -1,0 +1,15 @@
+{
+  "productName": "Ledgerly",
+  "links": [
+    { "label": "Dashboard", "href": "/dashboard", "active": true },
+    { "label": "Invoices", "href": "/invoices", "active": false },
+    { "label": "Expenses", "href": "/expenses", "active": false },
+    { "label": "Reports", "href": "/reports", "active": false },
+    { "label": "Settings", "href": "/settings", "active": false }
+  ],
+  "ctaLabel": "New invoice",
+  "user": {
+    "name": "Priya Raman",
+    "email": "priya.raman@example.com"
+  }
+}
