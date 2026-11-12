@@ -1,0 +1,113 @@
+=== system ===
+Write one React component in TypeScript, styled with Tailwind CSS v4
+utility classes.
+
+Rules:
+- Reply with one fenced code block that contains the complete file, and
+  nothing else.
+- The file has a default export: a function component that takes the
+  props described by the Props interface in the request.
+- Declare the Props types inside the file. Do not import them.
+- Import from "react" only. No other imports.
+- Style with Tailwind utility classes and inline styles only. There is
+  no custom Tailwind configuration.
+- Images come only from URLs in the props. No other assets and no
+  network requests.
+- No timers, no randomness, no data fetching and no browser storage.
+- The component is rendered once with the given props. It does not need
+  to be interactive.
+=== user ===
+# Pricing table
+
+Build the pricing section of the marketing site for Tasklume, a project
+management tool. It is a full-width page section that sits between other
+sections of the landing page.
+
+Open with the section heading and subheading. Then present the plans so
+visitors can compare them at a glance. For each plan, show its name, its
+monthly price in the given currency, its description, the included
+features as a checklist, and a call-to-action button with the plan's
+label. A plan can carry a badge label such as "Most popular"; show it on
+that plan. One plan is highlighted: make it stand out as the recommended
+choice.
+
+The component receives the props described by the `Props` interface. It
+only needs to render; the buttons do not need to do anything.
+
+## Props interface
+
+```ts
+/** The pricing section of a marketing page. */
+export interface Props {
+  heading: string;
+  subheading: string;
+  /** ISO 4217 code used for every price, e.g. "USD". */
+  currency: string;
+  plans: Plan[];
+}
+
+export interface Plan {
+  /** Plan name, e.g. "Team". */
+  name: string;
+  /** Price per month, in the section's currency. */
+  monthlyPrice: number;
+  /** Who the plan is for. */
+  description: string;
+  /** Included features, in display order. */
+  features: string[];
+  /** Label of the plan's call-to-action button. */
+  ctaLabel: string;
+  /** Optional badge label, e.g. "Most popular". */
+  badge?: string;
+  /** True for the plan to recommend. */
+  highlighted: boolean;
+}
+```
+
+## Example props
+
+```json
+{
+  "heading": "Simple pricing for growing teams",
+  "subheading": "Start free and upgrade when your team needs more. Every plan includes unlimited guests.",
+  "currency": "USD",
+  "plans": [
+    {
+      "name": "Starter",
+      "monthlyPrice": 0,
+      "description": "For individuals getting organised.",
+      "features": ["Up to 3 projects", "Unlimited tasks", "Basic integrations"],
+      "ctaLabel": "Start for free",
+      "highlighted": false
+    },
+    {
+      "name": "Team",
+      "monthlyPrice": 12,
+      "description": "For teams that plan and ship together.",
+      "features": [
+        "Unlimited projects",
+        "Timeline and calendar views",
+        "Shared team workspaces",
+        "Priority email support"
+      ],
+      "ctaLabel": "Start 14-day trial",
+      "badge": "Most popular",
+      "highlighted": true
+    },
+    {
+      "name": "Business",
+      "monthlyPrice": 29,
+      "description": "For organisations that need control at scale.",
+      "features": [
+        "Everything in Team",
+        "Advanced permissions",
+        "SAML single sign-on",
+        "Audit log and data export",
+        "Dedicated success manager"
+      ],
+      "ctaLabel": "Contact sales",
+      "highlighted": false
+    }
+  ]
+}
+```

@@ -1,0 +1,23 @@
+# Models the generation runner may call. See docs/SPEC.md, Generation.
+#
+# provider = "mock": replies with the brief's reference candidate inside one
+#   tsx code fence, with no network.
+# provider = "openai-compatible": POST {base_url}/chat/completions with a
+#   Bearer key read from the environment variable named by api_key_env
+#   (put it in .env). params are merged into the request body; nothing else
+#   (no temperature, no seed) is sent unless params says so. price is USD
+#   per million tokens and is needed for --max-cost.
+
+[[model]]
+id = "mock-reference"        # used in paths and reports
+provider = "mock"
+
+# A real entry looks like this:
+# [[model]]
+# id = "example-model"
+# provider = "openai-compatible"
+# base_url = "https://openrouter.ai/api/v1"
+# api_key_env = "OPENROUTER_API_KEY"
+# model = "<provider model id>"
+# params = { max_tokens = 16000 }        # merged into the request body
+# price = { input = 0.0, output = 0.0 }  # USD per million tokens, optional

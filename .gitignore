@@ -8,6 +8,11 @@ dist/
 # Python
 .venv/
 __pycache__/
+.pytest_cache/
+*.egg-info/
+
+# Mock model outputs (real model outputs are kept)
+candidates/mock-*/
 
 # Run output
 results/

@@ -1,0 +1,32 @@
+[build-system]
+# Build-time only: lets `pip install -e runner` make `python -m first_edit`
+# importable from any directory.
+requires = ["setuptools==84.2.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "first-edit"
+version = "0.0.0"
+description = "Generation runner for the First Edit benchmark."
+requires-python = ">=3.13"
+dependencies = [
+  "httpx==0.28.1",
+  "python-dotenv==1.2.4",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.2.0",
+]
+
+[tool.setuptools]
+packages = ["first_edit", "first_edit.prompts"]
+
+[tool.setuptools.package-data]
+"first_edit.prompts" = ["*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "e2e: runs the Node harness end to end (needs npm and Chromium)",
+]
