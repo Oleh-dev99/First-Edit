@@ -1,0 +1,14 @@
+{
+  "folderTitle": { "kind": "label", "required": true },
+  "unreadCount": { "kind": "number" },
+  "messages": { "kind": "list" },
+  "messages[].id": { "kind": "id" },
+  "messages[].sender": { "kind": "label", "required": true },
+  "messages[].subject": { "kind": "label" },
+  "messages[].preview": { "kind": "prose" },
+  "messages[].time": { "kind": "fixed" },
+  "messages[].unread": { "kind": "fixed" },
+  "messages[].labels": { "kind": "list", "max": 5 },
+  "messages[].labels[]": { "kind": "label", "required": true },
+  "messages[].hasAttachment": { "kind": "fixed" }
+}

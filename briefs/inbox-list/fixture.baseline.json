@@ -1,0 +1,66 @@
+{
+  "folderTitle": "Inbox",
+  "unreadCount": 3,
+  "messages": [
+    {
+      "id": "msg-2041",
+      "sender": "Nadia Rahman",
+      "subject": "Draft agenda for Thursday's planning session",
+      "preview": "Hi all, I've put together a first pass at the agenda. Could you add anything I missed before Wednesday noon?",
+      "time": "9:41 AM",
+      "unread": true,
+      "labels": ["Team", "Planning", "Q1"],
+      "hasAttachment": true
+    },
+    {
+      "id": "msg-2040",
+      "sender": "Brookfield Supplies",
+      "subject": "Your invoice INV-88213 is ready",
+      "preview": "Thanks for your order. Your invoice for January is attached and due within 30 days of the issue date.",
+      "time": "8:15 AM",
+      "unread": true,
+      "labels": ["Finance", "Invoices", "Vendors"],
+      "hasAttachment": true
+    },
+    {
+      "id": "msg-2039",
+      "sender": "Leo Hartmann",
+      "subject": "Re: Homepage illustration feedback",
+      "preview": "Love the new direction. Two small notes on the colour of the background shapes and the spacing near the headline.",
+      "time": "Yesterday",
+      "unread": true,
+      "labels": ["Design", "Website", "Feedback"],
+      "hasAttachment": false
+    },
+    {
+      "id": "msg-2038",
+      "sender": "Calendar",
+      "subject": "Reminder: quarterly review with the board",
+      "preview": "This is a reminder that the quarterly review starts tomorrow at 2:00 PM in the north meeting room.",
+      "time": "Yesterday",
+      "unread": false,
+      "labels": ["Meetings", "Board", "Q1"],
+      "hasAttachment": false
+    },
+    {
+      "id": "msg-2037",
+      "sender": "Sofia Almeida",
+      "subject": "Travel booking for the Lisbon offsite",
+      "preview": "Flights and hotel are confirmed for everyone. I've attached the itinerary and the expense policy for the trip.",
+      "time": "Mon",
+      "unread": false,
+      "labels": ["Travel", "Offsite", "Team"],
+      "hasAttachment": true
+    },
+    {
+      "id": "msg-2036",
+      "sender": "Wrenfield Analytics",
+      "subject": "Your weekly traffic report",
+      "preview": "Visits were up 12% on last week, led by organic search. Top page: the pricing page, with 4,210 views.",
+      "time": "Sun",
+      "unread": false,
+      "labels": ["Reports", "Marketing", "Weekly"],
+      "hasAttachment": false
+    }
+  ]
+}
