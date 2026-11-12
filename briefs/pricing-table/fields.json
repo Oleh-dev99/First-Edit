@@ -1,0 +1,14 @@
+{
+  "heading": { "kind": "label", "required": true },
+  "subheading": { "kind": "prose" },
+  "currency": { "kind": "fixed" },
+  "plans": { "kind": "list", "min": 1, "max": 4 },
+  "plans[].name": { "kind": "label", "required": true },
+  "plans[].monthlyPrice": { "kind": "number" },
+  "plans[].description": { "kind": "prose" },
+  "plans[].features": { "kind": "list" },
+  "plans[].features[]": { "kind": "label", "required": true },
+  "plans[].ctaLabel": { "kind": "label", "required": true },
+  "plans[].badge": { "kind": "label" },
+  "plans[].highlighted": { "kind": "fixed" }
+}

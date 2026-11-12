@@ -1,0 +1,43 @@
+{
+  "heading": "Simple pricing for growing teams",
+  "subheading": "Start free and upgrade when your team needs more. Every plan includes unlimited guests.",
+  "currency": "USD",
+  "plans": [
+    {
+      "name": "Starter",
+      "monthlyPrice": 0,
+      "description": "For individuals getting organised.",
+      "features": ["Up to 3 projects", "Unlimited tasks", "Basic integrations"],
+      "ctaLabel": "Start for free",
+      "highlighted": false
+    },
+    {
+      "name": "Team",
+      "monthlyPrice": 12,
+      "description": "For teams that plan and ship together.",
+      "features": [
+        "Unlimited projects",
+        "Timeline and calendar views",
+        "Shared team workspaces",
+        "Priority email support"
+      ],
+      "ctaLabel": "Start 14-day trial",
+      "badge": "Most popular",
+      "highlighted": true
+    },
+    {
+      "name": "Business",
+      "monthlyPrice": 29,
+      "description": "For organisations that need control at scale.",
+      "features": [
+        "Everything in Team",
+        "Advanced permissions",
+        "SAML single sign-on",
+        "Audit log and data export",
+        "Dedicated success manager"
+      ],
+      "ctaLabel": "Contact sales",
+      "highlighted": false
+    }
+  ]
+}
