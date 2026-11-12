@@ -9,6 +9,18 @@
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+body {
+  margin: 0;
+}
+
+/* The render stage. Candidates start at its top-left and choose their own width. */
+#fe-root {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 16px;
+  background: #f1f5f9;
+}
+
 #fe-error {
   margin: 0;
   padding: 16px;

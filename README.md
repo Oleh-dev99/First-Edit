@@ -33,3 +33,5 @@ within 30 seconds.
 To view a candidate in your own browser, run `npm run dev` in `harness/`
 and open
 `http://localhost:5173/?brief=hello-card&candidate=_samples/hello-card/robust`.
+Add `&fixture=<name>` to load `briefs/<brief>/fixture.<name>.json`
+instead of the baseline fixture.
