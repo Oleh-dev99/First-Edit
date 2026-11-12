@@ -9,6 +9,7 @@
   },
   "scripts": {
     "briefs:check": "node scripts/briefs-check.ts",
+    "candidate:check": "node scripts/candidate-check.ts",
     "check": "node scripts/check.ts",
     "dev": "vite",
     "smoke": "node scripts/smoke.ts",

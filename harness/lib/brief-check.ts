@@ -2,8 +2,7 @@
 // fields map, the fixture against Props (type-level), and for the
 // reference its contract, its types and a full stress run.
 
-import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Browser } from 'playwright';
 import { fieldsProblems, isPlainObject, type FieldsMap } from '../src/mutations/fields.ts';
@@ -21,8 +20,9 @@ import {
   metaProblems,
   propsProblems,
 } from './brief-rules.ts';
-import { assetsDir, briefsDir, candidatesDir, harnessDir, repoRoot, resultsDir } from './paths.ts';
+import { assetsDir, briefsDir, candidatesDir, resultsDir } from './paths.ts';
 import { runStress } from './stress.ts';
+import { typeProblems } from './typecheck.ts';
 
 export interface BriefCheck {
   id: string;
@@ -45,48 +45,6 @@ export function listBriefs(): string[] {
 
 export function referencePath(id: string): string {
   return `_reference/${id}/v1`;
-}
-
-const posix = (file: string): string => file.split(path.sep).join('/');
-
-/**
- * Type-checks, with the project's tsc, that the baseline fixture is a valid
- * Props value (string-literal unions included) and, if there is a
- * reference, that its default export accepts Props.
- */
-function typeProblems(id: string, fixture: unknown, reference: string | null): string[] {
-  const dir = path.join(harnessDir, 'node_modules', '.cache', 'briefs-check', id);
-  mkdirSync(dir, { recursive: true });
-  const from = (target: string): string => posix(path.relative(dir, target));
-  const lines = [
-    `import type { Props } from '${from(path.join(briefsDir, id, 'props.ts'))}';`,
-    ...(reference
-      ? [
-          `import type { ComponentType } from 'react';`,
-          `import Component from '${from(path.join(candidatesDir, reference, 'Component.tsx'))}';`,
-        ]
-      : []),
-    `export const fixture: Props = ${JSON.stringify(fixture, null, 2)};`,
-    ...(reference ? ['export const component: ComponentType<Props> = Component;'] : []),
-  ];
-  writeFileSync(path.join(dir, 'check.ts'), `${lines.join('\n')}\n`);
-  const tsconfig = {
-    extends: from(path.join(harnessDir, 'tsconfig.json')),
-    include: [],
-    files: ['check.ts'],
-  };
-  writeFileSync(path.join(dir, 'tsconfig.json'), `${JSON.stringify(tsconfig, null, 2)}\n`);
-
-  const tsc = path.join(harnessDir, 'node_modules', 'typescript', 'bin', 'tsc');
-  const result = spawnSync(process.execPath, [tsc, '-p', path.join(dir, 'tsconfig.json'), '--pretty', 'false'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-  });
-  if (result.status === 0) return [];
-  const output = `${result.stdout}\n${result.stderr}`.split('\n').filter((line) => /error TS\d+/.test(line));
-  return output.length > 0
-    ? output.map((line) => `type: ${line.trim()}`)
-    : [`type: tsc exited with ${result.status}: ${result.stderr.trim() || result.stdout.trim()}`];
 }
 
 /** Everything that can be checked without a browser. */
@@ -143,7 +101,10 @@ export function checkBriefStatic(id: string): BriefCheck {
     }
   }
 
-  result.problems.push(...typeProblems(id, fixture, result.reference));
+  // The fixture must be a valid Props value (string-literal unions included)
+  // and the reference's default export must accept Props.
+  const componentFile = result.reference ? path.join(candidatesDir, result.reference, 'Component.tsx') : undefined;
+  result.problems.push(...typeProblems({ name: `briefs-check/${id}`, briefId: id, fixture, componentFile }));
   return result;
 }
 
