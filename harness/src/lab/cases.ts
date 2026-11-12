@@ -42,6 +42,12 @@ const PARAGRAPH =
   'Release notes for the spring update: faster sync, a calmer inbox, ' +
   'offline drafts and a redesigned settings page for every workspace.';
 
+const PILLS = ['Accessibility', 'Design systems', 'Prototyping'];
+
+const PILL =
+  'flex:none; padding:2px 10px; border-radius:9999px; background:#e0e7ff; color:#3730a3; ' +
+  'font-size:14px; white-space:nowrap';
+
 const SR_ONLY =
   'position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; ' +
   'clip:rect(0,0,0,0); white-space:nowrap; border:0';
@@ -179,6 +185,60 @@ export const LAB_CASES: LabCase[] = [
     html:
       `<div style="position:relative; width:160px; padding:12px; border:1px solid #cbd5e1; border-radius:8px; background:#fff">Inbox` +
       `<span style="position:absolute; top:-8px; right:-8px; padding:0 6px; border-radius:9999px; background:#dc2626; color:#fff; font-size:12px; line-height:18px">12</span>` +
+      `</div>`,
+    expected: {},
+  },
+
+  // content-spill: visibly boxed elements are content boxes too
+  {
+    id: 'spill-pill-row',
+    check: 'content-spill',
+    description: '+ three pills in a row that cannot wrap inside a 200px bordered box; two cross the edge',
+    html:
+      `<div style="display:flex; gap:6px; width:200px; padding:8px; border:1px solid #94a3b8">` +
+      PILLS.map((label) => `<span style="${PILL}">${label}</span>`).join('') +
+      `</div>`,
+    expected: { 'content-spill': { error: 2 } },
+  },
+  {
+    id: 'spill-wide-panel',
+    check: 'content-spill',
+    description: '+ a 300px boxed div inside a 200px boxed card',
+    html:
+      `<div style="width:200px; padding:12px; border:1px solid #94a3b8; background:#fff">` +
+      `<div style="width:300px; padding:8px; background:#e2e8f0">Wide panel</div>` +
+      `</div>`,
+    expected: { 'content-spill': { error: 1 } },
+  },
+  {
+    id: 'spill-pill-row-wraps',
+    check: 'content-spill',
+    description: '- the same pills with wrapping allowed',
+    html:
+      `<div style="display:flex; flex-wrap:wrap; gap:6px; width:200px; padding:8px; border:1px solid #94a3b8">` +
+      PILLS.map((label) => `<span style="${PILL}">${label}</span>`).join('') +
+      `</div>`,
+    expected: {},
+  },
+  {
+    id: 'spill-full-bleed-band',
+    check: 'content-spill',
+    description: "- a full-bleed band with negative margins that stays inside its card's border box",
+    html:
+      `<div style="width:240px; padding:16px; border:1px solid #cbd5e1; border-radius:12px; background:#fff">` +
+      `<p>Card body text.</p>` +
+      `<div style="margin:12px -16px; padding:8px 16px; background:#f1f5f9">Full-bleed band</div>` +
+      `<p>More card text.</p>` +
+      `</div>`,
+    expected: {},
+  },
+  {
+    id: 'spill-abs-boxed-badge',
+    check: 'content-spill',
+    description: '- an absolutely positioned boxed badge overhanging its boxed parent',
+    html:
+      `<div style="position:relative; width:160px; height:48px; border:1px solid #cbd5e1; border-radius:8px; background:#fff">` +
+      `<span style="position:absolute; top:-10px; right:-10px; width:20px; height:20px; border-radius:9999px; background:#dc2626"></span>` +
       `</div>`,
     expected: {},
   },

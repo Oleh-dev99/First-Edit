@@ -79,5 +79,10 @@ describe('stress matrix', () => {
       assert.equal(entry?.status, 'ok', `${id} rendered`);
       assert.equal(entry?.survived, false, `${id} fails`);
     }
+    // The tag pills run out of the card under these two (the step 4 spill gap).
+    for (const id of ['text-long', 'text-200pct']) {
+      const entry = summary.mutations.find((candidate) => candidate.id === id);
+      assert.ok((entry?.newErrors?.['content-spill'] ?? 0) >= 1, `${id} reports content-spill`);
+    }
   });
 });
