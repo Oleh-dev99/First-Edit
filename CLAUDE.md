@@ -8,6 +8,7 @@ docs/SPEC.md. Read it before any non-trivial change.
 ## Working rules
 - Never run `git push`, never add a remote, never open a pull request.
   The owner pushes.
+- The `origin` remote was added by the owner. Leave it alone and never push.
 - Commit locally in small, logical commits using Conventional Commits
   (feat, fix, chore, docs, test). A message is a subject and an optional
   body. No trailers.

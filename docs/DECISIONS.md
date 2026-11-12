@@ -11,7 +11,7 @@ metrics and screenshots between runs.
 ## D-002 Render on the Vite dev server for now (2026-11-12)
 Cases are rendered from the Vite dev server, not a production build. It
 is simpler and fast enough while the harness takes shape. Revisit at step
-7 (end-to-end spike), when run time and dev-only React behaviour can be
+8 (end-to-end spike), when run time and dev-only React behaviour can be
 measured on real candidates.
 
 ## D-003 The render stage (2026-11-12)
