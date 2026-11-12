@@ -5,7 +5,14 @@ import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
 import { chromium, type Browser } from 'playwright';
 import { startServer, type HarnessServer } from '../lib/server.ts';
-import { errorCounts, formatStressTable, newFindings, runStress, type StressSummary } from '../lib/stress.ts';
+import {
+  errorCounts,
+  formatStressTable,
+  newFindings,
+  runStress,
+  truncationCount,
+  type StressSummary,
+} from '../lib/stress.ts';
 import type { Finding } from '../src/checks/finding.ts';
 
 const finding = (check: Finding['check'], selector: string, severity: Finding['severity'] = 'error'): Finding => ({
@@ -28,6 +35,16 @@ describe('newFindings', () => {
       finding('text-clipped', 'li', 'info'),
     ];
     assert.deepStrictEqual(newFindings(current, baseline), [finding('content-spill', 'p'), finding('text-overlap', 'p')]);
+  });
+
+  test('truncationCount counts text-clipped info findings only', () => {
+    const findings = [
+      finding('text-clipped', 'a', 'info'),
+      finding('text-clipped', 'b', 'info'),
+      finding('text-clipped', 'c'),
+      finding('content-spill', 'd', 'info'),
+    ];
+    assert.equal(truncationCount(findings), 2);
   });
 
   test('errorCounts counts errors per check', () => {

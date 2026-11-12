@@ -43,6 +43,8 @@ export interface MutationEntry {
   survived: boolean | null;
   /** New error findings per check; null when not applicable or not rendered. */
   newErrors: ErrorCounts | null;
+  /** text-clipped info findings (ellipsis or line clamp) in the case; null when not rendered. */
+  truncations: number | null;
   files: CaseFiles | null;
 }
 
@@ -52,7 +54,14 @@ export interface StressSummary {
   candidate: string;
   fixture: string;
   versions: { playwright: string; chromium: string };
-  baseline: { status: LoadStatus; errors: number; viewport: Viewport; files: CaseFiles };
+  baseline: {
+    status: LoadStatus;
+    errors: number;
+    /** text-clipped info findings at baseline; null when the baseline did not render. */
+    truncations: number | null;
+    viewport: Viewport;
+    files: CaseFiles;
+  };
   mutations: MutationEntry[];
   totals: {
     mutations: number;
@@ -73,6 +82,11 @@ export function newFindings(findings: Finding[], baseline: Finding[]): Finding[]
   return findings.filter(
     (finding) => finding.severity === 'error' && !known.has(`${finding.check} ${finding.selector}`),
   );
+}
+
+/** Deliberate truncations: text-clipped info findings (ellipsis or line clamp). */
+export function truncationCount(findings: Finding[]): number {
+  return findings.filter((finding) => finding.check === 'text-clipped' && finding.severity === 'info').length;
 }
 
 export function errorCounts(findings: Finding[]): ErrorCounts {
@@ -146,6 +160,7 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
   const baselineQuery = candidateQuery(brief, candidate, fixtureName);
   const baseline = await renderCase(browser, origin, baselineQuery, baselineViewport);
   const bornBroken = baseline.findings.filter((finding) => finding.severity === 'error');
+  const baselineTruncations = baseline.status === 'ok' ? truncationCount(baseline.findings) : null;
   const baselineFiles = await save('baseline', baseline, {
     case: 'baseline',
     brief,
@@ -156,6 +171,7 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
     status: baseline.status,
     error: baseline.error,
     bornBroken,
+    truncations: baselineTruncations,
     findings: baseline.findings,
   });
 
@@ -164,7 +180,16 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
     const kind = mutationKind(id);
     const changed = isContentMutation(id) ? applyContentMutation(fixture, fields, id).changed : null;
     if (changed !== null && changed.length === 0) {
-      mutations.push({ id, kind, applicable: false, status: 'not-applicable', survived: null, newErrors: null, files: null });
+      mutations.push({
+        id,
+        kind,
+        applicable: false,
+        status: 'not-applicable',
+        survived: null,
+        newErrors: null,
+        truncations: null,
+        files: null,
+      });
       continue;
     }
     const viewport = viewportFor(id);
@@ -174,6 +199,7 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
     const fresh = renderedOk ? newFindings(rendered.findings, baseline.findings) : [];
     const survived = renderedOk && fresh.length === 0;
     const newErrors = renderedOk ? errorCounts(fresh) : null;
+    const truncations = renderedOk ? truncationCount(rendered.findings) : null;
     const files = await save(id, rendered, {
       case: id,
       brief,
@@ -187,10 +213,11 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
       error: rendered.error,
       survived,
       newErrors,
+      truncations,
       newFindings: fresh,
       findings: rendered.findings,
     });
-    mutations.push({ id, kind, applicable: true, status: rendered.status, survived, newErrors, files });
+    mutations.push({ id, kind, applicable: true, status: rendered.status, survived, newErrors, truncations, files });
   }
 
   const applicable = mutations.filter((entry) => entry.applicable).length;
@@ -201,7 +228,13 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
     candidate,
     fixture: fixtureName,
     versions: { playwright: playwrightVersion, chromium: browser.version() },
-    baseline: { status: baseline.status, errors: bornBroken.length, viewport: baselineViewport, files: baselineFiles },
+    baseline: {
+      status: baseline.status,
+      errors: bornBroken.length,
+      truncations: baselineTruncations,
+      viewport: baselineViewport,
+      files: baselineFiles,
+    },
     mutations,
     totals: {
       mutations: mutations.length,
@@ -217,12 +250,13 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
 
 /** The stress table: one row per mutation, then the survival rate. */
 export function formatStressTable(summary: StressSummary): string {
-  const header = ['mutation', 'status', ...CHECK_NAMES, 'survived'];
+  const header = ['mutation', 'status', ...CHECK_NAMES, 'survived', 'truncations'];
   const rows = summary.mutations.map((entry) => [
     entry.id,
     entry.status,
     ...CHECK_NAMES.map((name) => (entry.newErrors ? String(entry.newErrors[name]) : '-')),
     entry.survived === null ? '-' : entry.survived ? 'yes' : 'no',
+    entry.truncations === null ? '-' : String(entry.truncations),
   ]);
   const widths = header.map((title, column) => Math.max(title.length, ...rows.map((row) => row[column]!.length)));
   const line = (cells: string[]): string =>
@@ -231,7 +265,8 @@ export function formatStressTable(summary: StressSummary): string {
   const rate = totals.survivalRate === null ? 'n/a' : `${Math.round(totals.survivalRate * 100)}%`;
   return [
     `${summary.brief}  ${summary.candidate}`,
-    `baseline: ${baseline.status}, ${baseline.errors} born-broken error${baseline.errors === 1 ? '' : 's'}`,
+    `baseline: ${baseline.status}, ${baseline.errors} born-broken error${baseline.errors === 1 ? '' : 's'}, ` +
+      `${baseline.truncations ?? '-'} truncation${baseline.truncations === 1 ? '' : 's'}`,
     '',
     line(header),
     ...rows.map(line),
