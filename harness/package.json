@@ -8,6 +8,7 @@
     "node": ">=26"
   },
   "scripts": {
+    "briefs:check": "node scripts/briefs-check.ts",
     "check": "node scripts/check.ts",
     "dev": "vite",
     "smoke": "node scripts/smoke.ts",

@@ -1,7 +1,8 @@
 // The mutation registry: ids in run order, kinds and viewports. Pure data,
 // importable from Node and from the app.
 
-import { CONTENT_MUTATION_IDS, type ContentMutationId } from './content.ts';
+import { CONTENT_MUTATION_IDS, applyContentMutation, type ContentMutationId } from './content.ts';
+import type { FieldsMap } from './fields.ts';
 
 export const ENVIRONMENT_MUTATION_IDS = ['viewport-320', 'text-200pct', 'dir-rtl'] as const;
 
@@ -39,4 +40,11 @@ export function mutationKind(id: MutationId): MutationKind {
 
 export function viewportFor(id: MutationId | null): Viewport {
   return id === 'viewport-320' ? { width: 320, height: 800 } : BASELINE_VIEWPORT;
+}
+
+/** Mutations that change something for this fixture; environment mutations always do. */
+export function applicableMutations(fixture: unknown, fields: FieldsMap): MutationId[] {
+  return MUTATION_IDS.filter(
+    (id) => !isContentMutation(id) || applyContentMutation(fixture, fields, id).changed.length > 0,
+  );
 }
