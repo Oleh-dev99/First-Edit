@@ -1,0 +1,13 @@
+{
+  "columns": { "kind": "list", "min": 1, "max": 6 },
+  "columns[].id": { "kind": "id" },
+  "columns[].title": { "kind": "label", "required": true },
+  "columns[].cards": { "kind": "list", "max": 12 },
+  "columns[].cards[].id": { "kind": "id" },
+  "columns[].cards[].title": { "kind": "label", "required": true },
+  "columns[].cards[].tags": { "kind": "list", "max": 4 },
+  "columns[].cards[].tags[]": { "kind": "label", "required": true },
+  "columns[].cards[].assignee": { "kind": "label" },
+  "columns[].cards[].dueDate": { "kind": "fixed" },
+  "columns[].cards[].commentCount": { "kind": "number" }
+}

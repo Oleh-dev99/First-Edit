@@ -1,0 +1,124 @@
+{
+  "columns": [
+    {
+      "id": "backlog",
+      "title": "Backlog",
+      "cards": [
+        {
+          "id": "LS-142",
+          "title": "Audit onboarding emails for tone",
+          "tags": ["Content", "Onboarding", "Q1"],
+          "assignee": "Rhea Castillo",
+          "dueDate": "Jan 22",
+          "commentCount": 2
+        },
+        {
+          "id": "LS-147",
+          "title": "Research export formats teams ask for",
+          "tags": ["Research", "Reporting", "Q1"],
+          "assignee": "Jonas Lindqvist",
+          "dueDate": "Jan 29",
+          "commentCount": 0
+        },
+        {
+          "id": "LS-151",
+          "title": "Draft pricing page copy",
+          "tags": ["Content", "Billing", "Marketing"],
+          "assignee": "Priyanka Desai",
+          "dueDate": "Feb 3",
+          "commentCount": 5
+        }
+      ]
+    },
+    {
+      "id": "in-progress",
+      "title": "In progress",
+      "cards": [
+        {
+          "id": "LS-128",
+          "title": "Redesign the invite teammates flow",
+          "tags": ["Design", "Onboarding", "Growth"],
+          "assignee": "Marco Bellini",
+          "dueDate": "Jan 16",
+          "commentCount": 8
+        },
+        {
+          "id": "LS-133",
+          "title": "Add retry logic to webhook delivery",
+          "tags": ["Backend", "Reliability", "API"],
+          "assignee": "Aiko Tanaka",
+          "dueDate": "Jan 18",
+          "commentCount": 3
+        },
+        {
+          "id": "LS-136",
+          "title": "Keyboard shortcuts for the board view",
+          "tags": ["Frontend", "Accessibility", "Board"],
+          "assignee": "Samuel Okafor",
+          "dueDate": "Jan 20",
+          "commentCount": 1
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "title": "In review",
+      "cards": [
+        {
+          "id": "LS-119",
+          "title": "Fix timezone offset in due date picker",
+          "tags": ["Bug", "Frontend", "Dates"],
+          "assignee": "Elena Petrova",
+          "dueDate": "Jan 14",
+          "commentCount": 4
+        },
+        {
+          "id": "LS-124",
+          "title": "Usage-based billing proposal",
+          "tags": ["Billing", "Strategy", "Finance"],
+          "assignee": "Daniel Mensah",
+          "dueDate": "Jan 15",
+          "commentCount": 12
+        },
+        {
+          "id": "LS-126",
+          "title": "Write help article for recurring tasks",
+          "tags": ["Docs", "Support", "Tasks"],
+          "assignee": "Rhea Castillo",
+          "dueDate": "Jan 17",
+          "commentCount": 0
+        }
+      ]
+    },
+    {
+      "id": "done",
+      "title": "Done",
+      "cards": [
+        {
+          "id": "LS-101",
+          "title": "Migrate attachments to the new storage",
+          "tags": ["Backend", "Infrastructure", "Storage"],
+          "assignee": "Aiko Tanaka",
+          "dueDate": "Jan 8",
+          "commentCount": 6
+        },
+        {
+          "id": "LS-107",
+          "title": "Customer interviews: planning habits",
+          "tags": ["Research", "Interviews", "Q4"],
+          "assignee": "Jonas Lindqvist",
+          "dueDate": "Jan 9",
+          "commentCount": 3
+        },
+        {
+          "id": "LS-112",
+          "title": "Dark mode for the calendar view",
+          "tags": ["Design", "Frontend", "Calendar"],
+          "assignee": "Marco Bellini",
+          "dueDate": "Jan 10",
+          "commentCount": 9
+        }
+      ]
+    }
+  ]
+}
