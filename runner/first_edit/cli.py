@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from pathlib import Path
 
 import httpx
 
@@ -14,12 +15,13 @@ from .briefs import BriefError, list_briefs, load_brief
 from .budget import Budget
 from .doctor import run_doctor
 from .generate import generate, summarize
-from .models import ModelsError, get_model
+from .models import ModelsError, get_model, load_models
 from .node import check_candidate, run_stress
 from .paths import ENV_FILE
 from .prompts import VARIANTS
 from .providers import SetupError, make_provider
 from .stress import format_table, stress
+from .summarize import build_summary, load_candidates, write_outputs
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -44,7 +46,27 @@ def _parser() -> argparse.ArgumentParser:
     which.add_argument("--brief")
     which.add_argument("--all", action="store_true")
     run.add_argument("--variant", choices=VARIANTS, help="default: every variant found")
+
+    report = commands.add_parser("summarize", help="write summary.json, report.md and gallery.html for generated runs")
+    report.add_argument("--out", required=True, type=Path, help="output directory, e.g. results/spike")
+    report.add_argument("--model", action="append", dest="models",
+                        help="a model id; repeat for several (default: every non-mock model in runner/models.toml)")
     return parser
+
+
+def _summarize(args: argparse.Namespace) -> int:
+    entries = load_models()
+    model_ids = args.models or [entry.id for entry in entries.values() if entry.provider != "mock"]
+    for model_id in model_ids:
+        get_model(model_id)  # fails on an unknown id
+    brief_ids = list_briefs(corpus_only=True)
+    candidates = load_candidates(model_ids, brief_ids)
+    summary = build_summary(candidates, model_ids, brief_ids, {e.id: e.describe() for e in entries.values()})
+    for path in write_outputs(candidates, summary, args.out):
+        print(f"wrote {path}")
+    print(f"{len(candidates)} sample(s) of {len(model_ids)} model(s); "
+          f"{sum(len(c.cases) for c in candidates)} case(s) in the gallery")
+    return 0
 
 
 def _brief_ids(args: argparse.Namespace) -> list[str]:
@@ -61,6 +83,8 @@ def main(argv: list[str] | None = None) -> int:
         with httpx.Client(timeout=60) as client:
             return run_doctor(environ=os.environ, client=client)
     try:
+        if args.command == "summarize":
+            return _summarize(args)
         entry = get_model(args.model)
         brief_ids = _brief_ids(args)
         if args.command == "generate":

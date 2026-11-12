@@ -12,7 +12,7 @@ from first_edit.paths import CANDIDATES_DIR, RUNS_DIR
 pytestmark = pytest.mark.e2e
 
 
-def test_mock_reference_end_to_end(capsys: pytest.CaptureFixture[str]) -> None:
+def test_mock_reference_end_to_end(capsys: pytest.CaptureFixture[str], tmp_path) -> None:
     briefs = list_briefs(corpus_only=True)
     assert len(briefs) == 10
 
@@ -33,3 +33,9 @@ def test_mock_reference_end_to_end(capsys: pytest.CaptureFixture[str]) -> None:
     output = capsys.readouterr().out
     assert "candidates: 10  valid: 10  stressed: 10  clean baseline: 10" in output
     assert "at 100%: 10" in output
+
+    assert main(["summarize", "--out", str(tmp_path / "spike"), "--model", "mock-reference"]) == 0
+    report = (tmp_path / "spike" / "report.md").read_text(encoding="utf-8")
+    assert "| mock-reference | plain | 10 | 10 | 0 | 0 | 10 | 0 | 100.0% | 100.0% | 100.0% |" in report
+    gallery = (tmp_path / "spike" / "gallery.html").read_text(encoding="utf-8")
+    assert 'data-section="failing"' in gallery and 'class="card survived"' in gallery
