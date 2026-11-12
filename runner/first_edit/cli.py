@@ -1,14 +1,18 @@
-"""Command line: python -m first_edit <generate|stress> ..."""
+"""Command line: python -m first_edit <doctor|generate|stress|summarize> ..."""
 
 from __future__ import annotations
 
 import argparse
+import os
 import sys
+
+import httpx
 
 from dotenv import load_dotenv
 
 from .briefs import BriefError, list_briefs, load_brief
 from .budget import Budget
+from .doctor import run_doctor
 from .generate import generate, summarize
 from .models import ModelsError, get_model
 from .node import check_candidate, run_stress
@@ -21,6 +25,8 @@ from .stress import format_table, stress
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="python -m first_edit", description="First Edit generation runner.")
     commands = parser.add_subparsers(dest="command", required=True)
+
+    commands.add_parser("doctor", help="check that every configured model is usable (spends no tokens)")
 
     gen = commands.add_parser("generate", help="prompt a model for candidates and gate them")
     gen.add_argument("--model", required=True, help="a model id from runner/models.toml")
@@ -51,6 +57,9 @@ def _brief_ids(args: argparse.Namespace) -> list[str]:
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     load_dotenv(ENV_FILE)
+    if args.command == "doctor":
+        with httpx.Client(timeout=60) as client:
+            return run_doctor(environ=os.environ, client=client)
     try:
         entry = get_model(args.model)
         brief_ids = _brief_ids(args)
