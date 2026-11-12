@@ -1,5 +1,5 @@
 {
-  "productName": "Ledgerly",
+  "productName": "Ledgerloom",
   "links": [
     { "label": "Dashboard", "href": "/dashboard", "active": true },
     { "label": "Invoices", "href": "/invoices", "active": false },

@@ -1,4 +1,4 @@
-/** Props for the nav-header brief: the top navigation bar of a web app. */
+/** The top navigation bar of a web app. */
 export interface Props {
   productName: string;
   links: NavLink[];

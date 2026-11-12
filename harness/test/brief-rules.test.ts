@@ -59,18 +59,32 @@ describe('brief.md', () => {
   });
 
   test('implementation and robustness hints are reported', () => {
-    assert.deepStrictEqual(hintProblems('Use a CSS grid. Long names should wrap; handle empty lists on mobile.'), [
+    assert.deepStrictEqual(hintProblems('Use a CSS grid. Names should wrap; handle empty lists on mobile.'), [
       'brief.md: implementation hint "CSS"',
       'brief.md: implementation hint "grid"',
       'brief.md: robustness hint "wrap"',
-      'brief.md: robustness hint "Long names"',
       'brief.md: robustness hint "empty"',
       'brief.md: robustness hint "mobile"',
     ]);
   });
 
+  test('size words, file names and mentions of imports are reported (rules 8 and 9)', () => {
+    const text = 'A short, one-line title and a few longer notes. See props.ts; imports are allowed.';
+    assert.deepStrictEqual(hintProblems(text, 'props.ts'), [
+      'props.ts: size word "short"',
+      'props.ts: size word "one-line"',
+      'props.ts: size word "few"',
+      'props.ts: size word "longer"',
+      'props.ts: file name "props.ts"',
+      'props.ts: mention of imports "imports"',
+    ]);
+  });
+
   test('a plain product request has no hints', () => {
-    assert.deepStrictEqual(hintProblems('Show each plan with its name, price and features.'), []);
+    assert.deepStrictEqual(
+      hintProblems('It is a full-width page section. Show each plan with its name, price and features at shop.example.com.'),
+      [],
+    );
   });
 });
 

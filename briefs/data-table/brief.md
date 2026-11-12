@@ -11,5 +11,6 @@ currency. The status is one of paid, pending, refunded or failed; give
 each status a distinct look so that problems stand out at a glance. Dates
 arrive already formatted; show them as they are.
 
-The component receives `Props` from props.ts. It only needs to render the
-data; sorting, filtering and row actions are not needed.
+The component receives the props described by the `Props` interface. It
+only needs to render the data; sorting, filtering and row actions are not
+needed.

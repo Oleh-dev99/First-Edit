@@ -68,16 +68,27 @@ const HINTS: { pattern: RegExp; kind: string }[] = [
     kind: 'robustness hint',
   },
   {
-    pattern:
-      /\b(responsive|mobile|small screens?|narrow|long (?:text|names?|words?|labels?|content|values?)|many (?:items|rows|links|entries)|empty|missing)\b/gi,
+    pattern: /\b(responsive|mobile|narrow|many (?:items|rows|links|entries)|empty|missing)\b/gi,
     kind: 'robustness hint',
   },
+  // Rule 9: size words about content are hints in the wrong direction.
+  {
+    pattern: /\b(one-line|short(?:er|est)?|long(?:er|est)?|brief(?:ly)?|small(?:er|est)?|few(?:er|est)?)\b/gi,
+    kind: 'size word',
+  },
+  // Rule 8: no file names and no mention of imports.
+  { pattern: /\b[\w-]+\.(?:tsx?|jsx?|json|md|css|html?)\b/gi, kind: 'file name' },
+  { pattern: /\bimport(?:s|ed|ing)?\b/gi, kind: 'mention of imports' },
 ];
 
-/** Words in a corpus brief that hint at implementation or robustness. */
-export function hintProblems(markdown: string): string[] {
+/**
+ * Words in text sent to models (brief.md, and props.ts with its comments)
+ * that hint at implementation or robustness, size words, file names and
+ * mentions of imports.
+ */
+export function hintProblems(text: string, file = 'brief.md'): string[] {
   return HINTS.flatMap(({ pattern, kind }) =>
-    [...markdown.matchAll(pattern)].map((match) => `brief.md: ${kind} "${match[0]}"`),
+    [...text.matchAll(pattern)].map((match) => `${file}: ${kind} "${match[0]}"`),
   );
 }
 

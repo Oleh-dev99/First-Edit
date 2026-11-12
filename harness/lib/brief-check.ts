@@ -122,7 +122,8 @@ export function checkBriefStatic(id: string): BriefCheck {
     if (words < BRIEF_WORDS.min || words > BRIEF_WORDS.max) {
       result.problems.push(`brief.md has ${words} words; corpus briefs have ${BRIEF_WORDS.min} to ${BRIEF_WORDS.max}`);
     }
-    result.problems.push(...hintProblems(read('brief.md')));
+    result.problems.push(...hintProblems(read('brief.md'), 'brief.md'));
+    result.problems.push(...hintProblems(read('props.ts'), 'props.ts'));
     if (fieldErrors.length === 0) result.problems.push(...listSizeProblems(fixture, fields));
     if (result.applicable !== null && result.applicable < MIN_APPLICABLE) {
       result.problems.push(`${result.applicable} applicable mutations; corpus briefs need at least ${MIN_APPLICABLE}`);

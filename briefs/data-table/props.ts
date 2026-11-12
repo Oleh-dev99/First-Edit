@@ -1,7 +1,7 @@
-/** Props for the data-table brief: the recent orders panel of a store dashboard. */
+/** The recent orders panel of a store dashboard. */
 export interface Props {
   title: string;
-  /** One short line under the title. */
+  /** Shown under the title. */
   summary: string;
   /** ISO 4217 code used for every amount, e.g. "USD". */
   currency: string;
