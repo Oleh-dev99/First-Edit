@@ -3,13 +3,22 @@
 // (wrap-anywhere), the avatar never shrinks and the button spans the card.
 
 interface HelloCardProps {
-  initials: string;
   name: string;
   jobTitle: string;
   bio: string;
 }
 
-export default function HelloCard({ initials, name, jobTitle, bio }: HelloCardProps) {
+/** First letter of the first and last word, e.g. "Maya Okafor" -> "MO". */
+function initialsOf(name: string): string {
+  const words = name.trim().split(/\s+/).filter((word) => word !== '');
+  if (words.length === 0) return '';
+  const first = Array.from(words[0])[0] ?? '';
+  const last = words.length > 1 ? (Array.from(words[words.length - 1])[0] ?? '') : '';
+  return (first + last).toUpperCase();
+}
+
+export default function HelloCard({ name, jobTitle, bio }: HelloCardProps) {
+  const initials = initialsOf(name);
   return (
     <article className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex items-center gap-4">
@@ -17,7 +26,7 @@ export default function HelloCard({ initials, name, jobTitle, bio }: HelloCardPr
           aria-hidden="true"
           className="flex size-14 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-lg font-semibold text-indigo-700"
         >
-          {initials}
+          {initials === '' ? '?' : initials}
         </div>
         <div className="min-w-0">
           <h2 className="text-lg font-semibold text-slate-900 wrap-anywhere">{name}</h2>

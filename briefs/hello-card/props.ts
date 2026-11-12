@@ -1,8 +1,6 @@
 /** Props for the hello-card brief: a user profile card. */
 export interface HelloCardProps {
-  /** Initials shown in the round avatar, for example "MO". */
-  initials: string;
-  /** The person's full name. */
+  /** The person's full name. May be empty. */
   name: string;
   /** Job title shown under the name. */
   jobTitle: string;
