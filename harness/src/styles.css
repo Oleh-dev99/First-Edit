@@ -9,6 +9,45 @@
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+/*
+ * Tailwind v3 compatibility. Models often write v3 class names. Tailwind
+ * v4 removed these (upgrade guide, https://tailwindcss.com/docs/upgrade-guide,
+ * "Removed deprecated utilities"); the ones that affect layout, sizing or
+ * text overflow keep working here, so a candidate is not judged on a class
+ * name. Purely visual removals and renames (the *-opacity-* utilities,
+ * shadow, drop-shadow, blur, backdrop-blur, rounded, outline-none, ring)
+ * are left alone.
+ */
+@utility flex-shrink {
+  flex-shrink: 1;
+}
+
+@utility flex-shrink-* {
+  flex-shrink: --value(integer, [number]);
+}
+
+@utility flex-grow {
+  flex-grow: 1;
+}
+
+@utility flex-grow-* {
+  flex-grow: --value(integer, [number]);
+}
+
+@utility overflow-ellipsis {
+  text-overflow: ellipsis;
+}
+
+@utility decoration-slice {
+  -webkit-box-decoration-break: slice;
+  box-decoration-break: slice;
+}
+
+@utility decoration-clone {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
 body {
   margin: 0;
 }

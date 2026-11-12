@@ -255,6 +255,27 @@ export const LAB_CASES: LabCase[] = [
     expected: {},
   },
 
+  // Tailwind v3 compatibility: removed v3 class names still work (styles.css)
+  {
+    id: 'compat-overflow-ellipsis',
+    check: 'text-clipped',
+    description: '- the v3 class overflow-ellipsis still truncates with an ellipsis (1 info, not an error)',
+    html:
+      `<div class="overflow-ellipsis" style="width:120px; overflow:hidden; white-space:nowrap">` +
+      `This sentence is far too long for its box.</div>`,
+    expected: { 'text-clipped': { info: 1 } },
+  },
+  {
+    id: 'compat-flex-shrink-0',
+    check: 'content-spill',
+    description: '+ the v3 class flex-shrink-0 still stops a 300px panel from shrinking in a 200px row',
+    html:
+      `<div style="display:flex; width:200px; padding:8px; border:1px solid #94a3b8">` +
+      `<div class="flex-shrink-0" style="width:300px; padding:8px; background:#e2e8f0">Fixed panel</div>` +
+      `</div>`,
+    expected: { 'content-spill': { error: 1 } },
+  },
+
   // text-overlap
   {
     id: 'overlap-fixed-row',
