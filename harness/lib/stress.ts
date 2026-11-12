@@ -137,7 +137,8 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
   const fixtureName = 'baseline';
   const { fixture, fields } = loadBrief(brief, fixtureName);
   if (outDir) {
-    await rm(outDir, { recursive: true, force: true });
+    // Retries ride out transient Windows locks (EBUSY) from scanners or open folder windows.
+    await rm(outDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
     await mkdir(outDir, { recursive: true });
   }
 
