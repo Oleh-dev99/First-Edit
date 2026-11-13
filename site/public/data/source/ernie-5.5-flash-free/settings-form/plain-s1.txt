@@ -1,0 +1,192 @@
+import * as React from "react";
+
+export interface Props {
+  title: string;
+  description: string;
+  displayName: TextField;
+  email: TextField;
+  timeZone: SelectField;
+  notifications: NotificationSetting[];
+  saveLabel: string;
+  cancelLabel: string;
+}
+
+export interface TextField {
+  label: string;
+  /** The current value of the input. */
+  value: string;
+  /** Help text shown with the input. */
+  help: string;
+}
+
+export interface SelectField {
+  label: string;
+  /** The value of the selected option. */
+  value: string;
+  options: SelectOption[];
+}
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+export interface NotificationSetting {
+  id: string;
+  label: string;
+  description: string;
+  /** True when the notification is switched on. */
+  enabled: boolean;
+}
+
+const inputClasses =
+  "block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100";
+
+const labelClasses = "block text-sm font-medium text-slate-900";
+const helpClasses = "mt-1.5 text-xs leading-5 text-slate-500";
+
+export default function AccountSettingsForm({
+  title,
+  description,
+  displayName,
+  email,
+  timeZone,
+  notifications,
+  saveLabel,
+  cancelLabel,
+}: Props): React.ReactElement {
+  return (
+    <section className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-200 px-6 py-6 sm:px-8 sm:py-7">
+        <h2 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
+          {title}
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+          {description}
+        </p>
+      </div>
+
+      <form
+        className="space-y-8 px-6 py-6 sm:px-8 sm:py-8"
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <div className="grid gap-6 md:grid-cols-2">
+          <div>
+            <label htmlFor="display-name" className={labelClasses}>
+              {displayName.label}
+            </label>
+            <input
+              id="display-name"
+              name="displayName"
+              type="text"
+              defaultValue={displayName.value}
+              aria-describedby="display-name-help"
+              className={`mt-1.5 ${inputClasses}`}
+            />
+            <p id="display-name-help" className={helpClasses}>
+              {displayName.help}
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="email-address" className={labelClasses}>
+              {email.label}
+            </label>
+            <input
+              id="email-address"
+              name="email"
+              type="email"
+              defaultValue={email.value}
+              aria-describedby="email-address-help"
+              className={`mt-1.5 ${inputClasses}`}
+            />
+            <p id="email-address-help" className={helpClasses}>
+              {email.help}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="time-zone" className={labelClasses}>
+            {timeZone.label}
+          </label>
+          <div className="relative mt-1.5">
+            <select
+              id="time-zone"
+              name="timeZone"
+              defaultValue={timeZone.value}
+              className={`${inputClasses} appearance-none pr-10`}
+            >
+              {timeZone.options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <span
+              className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-slate-400"
+              aria-hidden="true"
+            >
+              ▾
+            </span>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-200 pt-8">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+            <h3 className="text-sm font-semibold text-slate-900">Notifications</h3>
+            <p className="text-xs text-slate-500">
+              Choose which updates reach your inbox.
+            </p>
+          </div>
+
+          <ul className="mt-4 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200">
+            {notifications.map((setting) => (
+              <li
+                key={setting.id}
+                className="flex items-center justify-between gap-4 bg-white px-4 py-4 sm:px-5"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-900">{setting.label}</p>
+                  <p className="mt-0.5 text-sm leading-5 text-slate-500">
+                    {setting.description}
+                  </p>
+                </div>
+
+                <div
+                  role="switch"
+                  aria-checked={setting.enabled}
+                  aria-label={`${setting.label}: ${setting.enabled ? "On" : "Off"}`}
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                    setting.enabled ? "bg-emerald-500" : "bg-slate-200"
+                  }`}
+                >
+                  <span
+                    className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                      setting.enabled ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-end">
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
+          >
+            {cancelLabel}
+          </button>
+          <button
+            type="submit"
+            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
+          >
+            {saveLabel}
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}

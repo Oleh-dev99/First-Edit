@@ -1,0 +1,205 @@
+import * as React from "react";
+
+/** The task board of a project page. */
+export interface Props {
+  columns: Column[];
+}
+
+export interface Column {
+  id: string;
+  title: string;
+  cards: Card[];
+}
+
+export interface Card {
+  id: string;
+  title: string;
+  tags: string[];
+  /** The assignee's name. */
+  assignee: string;
+  /** Already formatted, e.g. "Nov 18". */
+  dueDate: string;
+  commentCount: number;
+}
+
+const TAG_PALETTE = [
+  "border-indigo-200 bg-indigo-50 text-indigo-700",
+  "border-emerald-200 bg-emerald-50 text-emerald-700",
+  "border-amber-200 bg-amber-50 text-amber-700",
+  "border-rose-200 bg-rose-50 text-rose-700",
+  "border-sky-200 bg-sky-50 text-sky-700",
+  "border-violet-200 bg-violet-50 text-violet-700",
+  "border-teal-200 bg-teal-50 text-teal-700",
+  "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700",
+  "border-cyan-200 bg-cyan-50 text-cyan-700",
+  "border-orange-200 bg-orange-50 text-orange-700",
+];
+
+const AVATAR_PALETTE = [
+  "bg-rose-100 text-rose-700",
+  "bg-amber-100 text-amber-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-sky-100 text-sky-700",
+  "bg-violet-100 text-violet-700",
+  "bg-indigo-100 text-indigo-700",
+  "bg-teal-100 text-teal-700",
+  "bg-fuchsia-100 text-fuchsia-700",
+];
+
+function hashString(value: string) {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) % 1000003;
+  }
+
+  return hash;
+}
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "?";
+}
+
+function getTagClass(tag: string) {
+  return TAG_PALETTE[hashString(tag) % TAG_PALETTE.length];
+}
+
+function getAvatarClass(name: string) {
+  return AVATAR_PALETTE[hashString(name) % AVATAR_PALETTE.length];
+}
+
+const ProjectBoard: React.FC<Props> = ({ columns }) => {
+  const totalCards = columns.reduce(
+    (total, column) => total + column.cards.length,
+    0,
+  );
+
+  return (
+    <section
+      className="w-full border-t border-slate-200 bg-slate-50 py-8 sm:py-10"
+      aria-label="Task board"
+    >
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        <header className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-indigo-600">
+              Larkspan
+            </p>
+            <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
+              Project board
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+            <span>{totalCards} tasks</span>
+            <span className="h-1 w-1 rounded-full bg-slate-300" aria-hidden="true" />
+            <span>{columns.length} columns</span>
+          </div>
+        </header>
+
+        <div className="flex gap-4 overflow-x-auto pb-3">
+          {columns.map((column) => (
+            <section
+              key={column.id}
+              className="flex min-w-[272px] flex-1 flex-col rounded-2xl border border-slate-200/80 bg-slate-100/70 p-3"
+              aria-label={column.title}
+            >
+              <div className="flex items-center justify-between gap-2 px-1 pb-3">
+                <h3 className="text-sm font-semibold tracking-tight text-slate-800">
+                  {column.title}
+                </h3>
+                <span
+                  className="inline-flex h-6 min-w-[24px] items-center justify-center rounded-full border border-slate-200 bg-white px-2 text-[11px] font-semibold text-slate-500"
+                  aria-label={`${column.cards.length} cards`}
+                >
+                  {column.cards.length}
+                </span>
+              </div>
+
+              <div className="flex flex-1 flex-col gap-3">
+                {column.cards.map((card) => {
+                  const initials = getInitials(card.assignee);
+                  const avatarClass = getAvatarClass(card.assignee);
+                  const commentLabel =
+                    card.commentCount === 1 ? "comment" : "comments";
+
+                  return (
+                    <article
+                      key={card.id}
+                      className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition-shadow hover:shadow-md"
+                    >
+                      <h4 className="text-sm font-semibold leading-5 text-slate-900">
+                        {card.title}
+                      </h4>
+
+                      {card.tags.length > 0 && (
+                        <div className="mt-2.5 flex flex-wrap gap-1.5">
+                          {card.tags.map((tag, index) => (
+                            <span
+                              key={`${tag}-${index}`}
+                              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getTagClass(tag)}`}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex items-center gap-2">
+                        <span
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${avatarClass}`}
+                          aria-hidden="true"
+                        >
+                          {initials}
+                        </span>
+                        <span className="truncate text-xs font-medium text-slate-600">
+                          {card.assignee}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500">
+                          <span
+                            className="h-1.5 w-1.5 rounded-full bg-indigo-400"
+                            aria-hidden="true"
+                          />
+                          <span className="text-slate-400">Due</span>
+                          <span className="text-slate-600">{card.dueDate}</span>
+                        </span>
+
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                          <span className="relative flex h-4 w-4 items-center justify-center rounded-[4px] border border-slate-300 bg-white text-[8px] font-bold text-slate-500">
+                            {card.commentCount}
+                            <span
+                              className="absolute -bottom-1 left-0.5 h-1 w-1 rotate-45 border-b border-l border-slate-300 bg-white"
+                              aria-hidden="true"
+                            />
+                          </span>
+                          {commentLabel}
+                        </span>
+                      </div>
+                    </article>
+                  );
+                })}
+
+                {column.cards.length === 0 && (
+                  <div className="flex min-h-[96px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/60 px-4 text-center text-xs font-medium text-slate-400">
+                    No cards yet
+                  </div>
+                )}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default ProjectBoard;

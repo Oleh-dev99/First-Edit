@@ -1,0 +1,171 @@
+export interface Props {
+  title: string;
+  description: string;
+  displayName: TextField;
+  email: TextField;
+  timeZone: SelectField;
+  notifications: NotificationSetting[];
+  saveLabel: string;
+  cancelLabel: string;
+}
+
+export interface TextField {
+  label: string;
+  /** The current value of the input. */
+  value: string;
+  /** Help text shown with the input. */
+  help: string;
+}
+
+export interface SelectField {
+  label: string;
+  /** The value of the selected option. */
+  value: string;
+  options: SelectOption[];
+}
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+export interface NotificationSetting {
+  id: string;
+  label: string;
+  description: string;
+  /** True when the notification is switched on. */
+  enabled: boolean;
+}
+
+export default function AccountSettingsForm({
+  title,
+  description,
+  displayName,
+  email,
+  timeZone,
+  notifications,
+  saveLabel,
+  cancelLabel,
+}: Props) {
+  return (
+    <section className="w-full bg-white">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <h2 className="text-2xl font-semibold text-gray-900 break-words">
+          {title}
+        </h2>
+        <p className="mt-2 text-sm text-gray-600 break-words">
+          {description}
+        </p>
+
+        <form className="mt-8 space-y-6">
+          <div className="space-y-2">
+            <label
+              htmlFor="account-display-name"
+              className="block text-sm font-medium text-gray-700"
+            >
+              {displayName.label}
+            </label>
+            <input
+              id="account-display-name"
+              type="text"
+              value={displayName.value}
+              className="block w-full break-words rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+            <p className="mt-1 text-xs text-gray-500 break-words">
+              {displayName.help}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="account-email"
+              className="block text-sm font-medium text-gray-700"
+            >
+              {email.label}
+            </label>
+            <input
+              id="account-email"
+              type="email"
+              value={email.value}
+              className="block w-full break-words rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+            <p className="mt-1 text-xs text-gray-500 break-words">
+              {email.help}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="account-time-zone"
+              className="block text-sm font-medium text-gray-700"
+            >
+              {timeZone.label}
+            </label>
+            <select
+              id="account-time-zone"
+              value={timeZone.value}
+              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+              {timeZone.options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-4">
+            {notifications.map((setting) => (
+              <div
+                key={setting.id}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 border-b border-gray-100 pb-4 pt-4 last:border-b-0 last:pb-0 min-w-0"
+              >
+                <div className="flex flex-col gap-1 min-w-0">
+                  <label
+                    htmlFor={`notification-toggle-${setting.id}`}
+                    className="text-sm font-medium text-gray-900 break-words"
+                  >
+                    {setting.label}
+                  </label>
+                  <p className="text-xs text-gray-600 break-words">
+                    {setting.description}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={setting.enabled}
+                  id={`notification-toggle-${setting.id}`}
+                  className="relative inline-block w-11 h-6 rounded-full bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={[
+                      "absolute inline-block w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200",
+                      setting.enabled ? "translate-x-6" : "translate-x-0.5",
+                    ].join(" ")}
+                  />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 flex flex-col sm:flex-row sm:justify-end gap-3 w-full sm:w-auto">
+            <button
+              type="button"
+              className="w-full sm:w-auto inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 sm:text-sm"
+            >
+              {saveLabel}
+            </button>
+            <button
+              type="button"
+              className="w-full sm:w-auto inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:text-sm"
+            >
+              {cancelLabel}
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  );
+}

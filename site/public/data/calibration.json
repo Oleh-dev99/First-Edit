@@ -1,0 +1,472 @@
+{
+ "schemaVersion": 2,
+ "set": "set-01",
+ "seed": 1,
+ "runs": "results/runs-run2",
+ "partial": false,
+ "labellers": 1,
+ "items": {
+  "total": 215,
+  "labelled": 215,
+  "unlabelled": 0,
+  "primary": 195,
+  "repeats": 20
+ },
+ "labels": {
+  "broken": 73,
+  "fine": 96,
+  "other": 25,
+  "unsure": 1,
+  "unlabelled": 0
+ },
+ "byStratum": {
+  "failed-core": {
+   "size": 35,
+   "drawn": 35,
+   "broken": 28,
+   "fine": 6,
+   "other": 1,
+   "unsure": 0,
+   "unlabelled": 0
+  },
+  "failed-extreme": {
+   "size": 51,
+   "drawn": 40,
+   "broken": 39,
+   "fine": 0,
+   "other": 1,
+   "unsure": 0,
+   "unlabelled": 0
+  },
+  "survived-focus": {
+   "size": 185,
+   "drawn": 60,
+   "broken": 6,
+   "fine": 48,
+   "other": 6,
+   "unsure": 0,
+   "unlabelled": 0
+  },
+  "survived-other": {
+   "size": 411,
+   "drawn": 60,
+   "broken": 0,
+   "fine": 42,
+   "other": 17,
+   "unsure": 1,
+   "unlabelled": 0
+  }
+ },
+ "repeatLabels": {
+  "broken": 12,
+  "fine": 5,
+  "other": 3,
+  "unsure": 0,
+  "unlabelled": 0
+ },
+ "precision": {
+  "all": {
+   "count": 67,
+   "of": 75,
+   "share": 0.8933,
+   "ci95": [
+    0.8034,
+    0.945
+   ]
+  },
+  "core": {
+   "count": 28,
+   "of": 35,
+   "share": 0.8,
+   "ci95": [
+    0.6411,
+    0.8996
+   ]
+  },
+  "extreme": {
+   "count": 39,
+   "of": 40,
+   "share": 0.975,
+   "ci95": [
+    0.8712,
+    0.9956
+   ]
+  },
+  "byCheck": {
+   "page-overflow-x": {
+    "count": 41,
+    "of": 42,
+    "share": 0.9762,
+    "ci95": [
+     0.8768,
+     0.9958
+    ]
+   },
+   "text-clipped": {
+    "count": 11,
+    "of": 12,
+    "share": 0.9167,
+    "ci95": [
+     0.6461,
+     0.9851
+    ]
+   },
+   "content-spill": {
+    "count": 51,
+    "of": 58,
+    "share": 0.8793,
+    "ci95": [
+     0.7712,
+     0.9403
+    ]
+   },
+   "text-overlap": {
+    "count": 17,
+    "of": 18,
+    "share": 0.9444,
+    "ci95": [
+     0.7424,
+     0.9901
+    ]
+   },
+   "off-screen": {
+    "count": 17,
+    "of": 18,
+    "share": 0.9444,
+    "ci95": [
+     0.7424,
+     0.9901
+    ]
+   }
+  }
+ },
+ "missRate": {
+  "all": {
+   "count": 6,
+   "of": 119,
+   "share": 0.0504,
+   "ci95": [
+    0.0233,
+    0.1056
+   ]
+  },
+  "survived-focus": {
+   "count": 6,
+   "of": 60,
+   "share": 0.1,
+   "ci95": [
+    0.0466,
+    0.2015
+   ]
+  },
+  "survived-other": {
+   "count": 0,
+   "of": 59,
+   "share": 0.0,
+   "ci95": [
+    0.0,
+    0.0611
+   ]
+  }
+ },
+ "recall": {
+  "estimate": 0.8077,
+  "reason": null,
+  "strata": {
+   "failed-core": {
+    "size": 35,
+    "rated": 35,
+    "broken": 28,
+    "estimatedBroken": 28.0
+   },
+   "failed-extreme": {
+    "size": 51,
+    "rated": 40,
+    "broken": 39,
+    "estimatedBroken": 49.725
+   },
+   "survived-focus": {
+    "size": 185,
+    "rated": 60,
+    "broken": 6,
+    "estimatedBroken": 18.5
+   },
+   "survived-other": {
+    "size": 411,
+    "rated": 59,
+    "broken": 0,
+    "estimatedBroken": 0.0
+   }
+  },
+  "estimatedBroken": {
+   "failedBySuite": 77.725,
+   "passedBySuite": 18.5
+  }
+ },
+ "other": {
+  "count": 25,
+  "failedBySuite": 2
+ },
+ "unsure": 1,
+ "selfConsistency": {
+  "count": 18,
+  "of": 20,
+  "share": 0.9,
+  "ci95": [
+   0.699,
+   0.9721
+  ],
+  "differing": [
+   {
+    "item": "i053",
+    "repeat": "i008",
+    "first": "fine",
+    "second": "other"
+   },
+   {
+    "item": "i137",
+    "repeat": "i088",
+    "first": "other",
+    "second": "fine"
+   }
+  ]
+ },
+ "disagreements": {
+  "failedNotBroken": [
+   "i040",
+   "i063",
+   "i064",
+   "i100",
+   "i105",
+   "i137",
+   "i173",
+   "i174"
+  ],
+  "passedBroken": [
+   "i028",
+   "i077",
+   "i151",
+   "i155",
+   "i200",
+   "i214"
+  ]
+ },
+ "harness": {
+  "items": 215,
+  "changed": 0,
+  "missingRuns": 0
+ },
+ "guided": {
+  "file": "labels/set-01.guided.json",
+  "reason": "discussed with an adviser before labelling",
+  "items": [
+   "i001",
+   "i013",
+   "i018",
+   "i068",
+   "i069",
+   "i076",
+   "i083",
+   "i084",
+   "i109"
+  ],
+  "cases": [
+   "i001",
+   "i013",
+   "i018",
+   "i022",
+   "i068",
+   "i069",
+   "i083",
+   "i084",
+   "i109"
+  ],
+  "byStratum": {
+   "failed-core": 5,
+   "failed-extreme": 4,
+   "survived-focus": 0,
+   "survived-other": 0
+  }
+ },
+ "unguided": {
+  "items": {
+   "primary": 186,
+   "repeats": 19
+  },
+  "labels": {
+   "broken": 64,
+   "fine": 96,
+   "other": 25,
+   "unsure": 1,
+   "unlabelled": 0
+  },
+  "precision": {
+   "all": {
+    "count": 58,
+    "of": 66,
+    "share": 0.8788,
+    "ci95": [
+     0.7786,
+     0.9373
+    ]
+   },
+   "core": {
+    "count": 23,
+    "of": 30,
+    "share": 0.7667,
+    "ci95": [
+     0.5907,
+     0.8821
+    ]
+   },
+   "extreme": {
+    "count": 35,
+    "of": 36,
+    "share": 0.9722,
+    "ci95": [
+     0.8583,
+     0.9951
+    ]
+   },
+   "byCheck": {
+    "page-overflow-x": {
+     "count": 37,
+     "of": 38,
+     "share": 0.9737,
+     "ci95": [
+      0.8651,
+      0.9953
+     ]
+    },
+    "text-clipped": {
+     "count": 10,
+     "of": 11,
+     "share": 0.9091,
+     "ci95": [
+      0.6226,
+      0.9838
+     ]
+    },
+    "content-spill": {
+     "count": 45,
+     "of": 52,
+     "share": 0.8654,
+     "ci95": [
+      0.7473,
+      0.9332
+     ]
+    },
+    "text-overlap": {
+     "count": 15,
+     "of": 16,
+     "share": 0.9375,
+     "ci95": [
+      0.7167,
+      0.9889
+     ]
+    },
+    "off-screen": {
+     "count": 15,
+     "of": 16,
+     "share": 0.9375,
+     "ci95": [
+      0.7167,
+      0.9889
+     ]
+    }
+   }
+  },
+  "missRate": {
+   "all": {
+    "count": 6,
+    "of": 119,
+    "share": 0.0504,
+    "ci95": [
+     0.0233,
+     0.1056
+    ]
+   },
+   "survived-focus": {
+    "count": 6,
+    "of": 60,
+    "share": 0.1,
+    "ci95": [
+     0.0466,
+     0.2015
+    ]
+   },
+   "survived-other": {
+    "count": 0,
+    "of": 59,
+    "share": 0.0,
+    "ci95": [
+     0.0,
+     0.0611
+    ]
+   }
+  },
+  "recall": {
+   "estimate": 0.8051,
+   "reason": null,
+   "strata": {
+    "failed-core": {
+     "size": 35,
+     "rated": 30,
+     "broken": 23,
+     "estimatedBroken": 26.8333
+    },
+    "failed-extreme": {
+     "size": 51,
+     "rated": 36,
+     "broken": 35,
+     "estimatedBroken": 49.5833
+    },
+    "survived-focus": {
+     "size": 185,
+     "rated": 60,
+     "broken": 6,
+     "estimatedBroken": 18.5
+    },
+    "survived-other": {
+     "size": 411,
+     "rated": 59,
+     "broken": 0,
+     "estimatedBroken": 0.0
+    }
+   },
+   "estimatedBroken": {
+    "failedBySuite": 76.4167,
+    "passedBySuite": 18.5
+   }
+  },
+  "other": {
+   "count": 25,
+   "failedBySuite": 2
+  },
+  "unsure": 1,
+  "selfConsistency": {
+   "count": 17,
+   "of": 19,
+   "share": 0.8947,
+   "ci95": [
+    0.6861,
+    0.9706
+   ],
+   "differing": [
+    {
+     "item": "i053",
+     "repeat": "i008",
+     "first": "fine",
+     "second": "other"
+    },
+    {
+     "item": "i137",
+     "repeat": "i088",
+     "first": "other",
+     "second": "fine"
+    }
+   ]
+  }
+ },
+ "adjudication": null
+}

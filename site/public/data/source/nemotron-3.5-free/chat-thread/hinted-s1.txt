@@ -1,0 +1,112 @@
+tsx
+export interface Props {
+  contact: Contact;
+  messages: Message[];
+  composer: Composer;
+}
+
+export interface Contact {
+  name: string;
+  /** e.g. "Active now" */
+  status: string;
+}
+
+/** "me" is the signed-in support agent, "them" the contact. */
+export type Sender = 'me' | 'them';
+
+export interface Message {
+  id: string;
+  from: Sender;
+  author: string;
+  text: string;
+  /** Already formatted, e.g. "9:41 AM". */
+  time: string;
+}
+
+export interface Composer {
+  placeholder: string;
+  sendLabel: string;
+}
+
+export default function ChatThread({
+  contact,
+  messages,
+  composer,
+}: Props) {
+  const initials = contact.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('')
+    .slice(0, 2) || '?';
+
+  return (
+    <div className="flex flex-col w-full max-w-md border border-gray-200 rounded-lg bg-white shadow-sm">
+      <header className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 bg-white">
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-700">
+          {initials}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold text-gray-900 leading-tight">
+            {contact.name}
+          </div>
+          <div className="text-xs text-gray-500">{contact.status}</div>
+        </div>
+      </header>
+
+      <main className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+        {messages.length === 0 ? (
+          <div className="text-center text-xs text-gray-400">
+            No messages yet.
+          </div>
+        ) : (
+          messages.map((message) => (
+            <div key={message.id} className="flex w-full flex-col gap-1">
+              {message.from === 'me' ? (
+                <div className="flex justify-end">
+                  <div className="max-w-[75%] ml-auto rounded-xl rounded-tl-none bg-blue-600 p-3 text-white text-sm leading-relaxed break-words shadow-sm">
+                    <div className="text-xs font-medium text-blue-100 mb-1">
+                      {message.author}
+                    </div>
+                    <div className="whitespace-pre-wrap">{message.text}</div>
+                    <div className="mt-1 text-xs text-blue-200 text-right">
+                      {message.time}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-start">
+                  <div className="max-w-[75%] mr-auto rounded-xl rounded-tr-none bg-gray-100 p-3 text-gray-900 text-sm leading-relaxed break-words border border-gray-200 shadow-sm">
+                    <div className="text-xs font-medium text-gray-500 mb-1">
+                      {message.author}
+                    </div>
+                    <div className="whitespace-pre-wrap">{message.text}</div>
+                    <div className="mt-1 text-xs text-gray-400 text-right">
+                      {message.time}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </main>
+
+      <footer className="border-t border-gray-200 bg-white px-4 py-3">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            placeholder={composer.placeholder}
+            className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          <button
+            type="button"
+            className="shrink-0 bg-blue-600 text-white text-xs font-medium px-3 py-2 rounded hover:bg-blue-700"
+          >
+            {composer.sendLabel}
+          </button>
+        </div>
+      </footer>
+    </div>
+  );
+}

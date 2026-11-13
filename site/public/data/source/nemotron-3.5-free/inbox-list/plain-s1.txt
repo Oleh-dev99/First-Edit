@@ -1,0 +1,112 @@
+export interface Props {
+  folderTitle: string;
+  unreadCount: number;
+  messages: InboxMessage[];
+}
+
+export interface InboxMessage {
+  id: string;
+  sender: string;
+  subject: string;
+  /** The opening text of the message. */
+  preview: string;
+  /** Already formatted, e.g. "9:41 AM" or "Yesterday". */
+  time: string;
+  unread: boolean;
+  labels: string[];
+  hasAttachment: boolean;
+}
+
+export default function InboxMessageList({
+  folderTitle,
+  unreadCount,
+  messages,
+}: Props) {
+  return (
+    <section className="flex flex-col h-full w-full min-w-0 border-l border-slate-200 bg-white">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50 shrink-0">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">{folderTitle}</h2>
+          <p className="text-xs text-slate-500">
+            {unreadCount} unread message{unreadCount !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <span
+          className={`inline-flex items-center justify-center rounded-full bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white shrink-0 ${unreadCount === 0 ? "hidden" : ""}`}
+          aria-label={`${unreadCount} unread`}
+        >
+          {unreadCount}
+        </span>
+      </header>
+      <ul className="flex-1 overflow-y-auto divide-y divide-slate-100">
+        {messages.map((message) => {
+          const unread = message.unread;
+          return (
+            <li
+              key={message.id}
+              className={`flex items-center px-4 py-3 shrink-0 ${unread ? "bg-blue-50" : "bg-white"}`}
+              role="button"
+              tabIndex={-1}
+              aria-label={`Message from ${message.sender}: ${message.subject}`}
+            >
+              {unread && (
+                <span
+                  className="flex-shrink-0 h-2 w-2 rounded-full bg-blue-600 mr-3"
+                  aria-hidden="true"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-baseline justify-between gap-2 mb-0.5">
+                  <span className={`text-sm ${unread ? "font-semibold text-slate-900" : "font-medium text-slate-600"}`}>
+                    {message.sender}
+                  </span>
+                  <span className={`text-xs ${unread ? "font-semibold text-blue-600" : "text-slate-400"} shrink-0`}>
+                    {message.time}
+                  </span>
+                </div>
+                <div className="mb-0.5">
+                  <span className={`text-sm ${unread ? "font-semibold text-slate-800" : "font-medium text-slate-600"}`}>
+                    {message.subject}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-500 truncate">{message.preview}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {message.labels.map((label) => (
+                    <span
+                      key={label}
+                      className="inline-flex items-center rounded-md border border-slate-200 bg-slate-100 px-1.5 py-0 text-[10px] font-medium text-slate-600"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                  {message.hasAttachment && (
+                    <span
+                      className="inline-flex items-center rounded-md border border-slate-200 bg-slate-100 px-1.5 py-0 text-[10px] font-medium text-slate-600"
+                      title="Attachment"
+                    >
+                      <svg
+                        className="mr-1 h-3 w-3 text-slate-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
+                      </svg>
+                      Attachment
+                    </span>
+                  )}
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}

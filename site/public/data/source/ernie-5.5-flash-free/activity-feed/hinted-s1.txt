@@ -1,0 +1,191 @@
+import type { ReactElement } from "react";
+
+/** A filter chip shown in the activity feed header. */
+export interface Filter {
+  id: string;
+  label: string;
+  /** True for the selected filter. */
+  active: boolean;
+}
+
+/** A single entry in the activity feed. */
+export interface ActivityEvent {
+  id: string;
+  /** The name of the person who did something. */
+  actor: string;
+  /** What they did, e.g. "commented on". */
+  action: string;
+  /** The name of what they did it to, e.g. a task. */
+  target: string;
+  /** Already formatted for display, e.g. "2 hours ago". */
+  time: string;
+  /** What the actor wrote, or null when they left no comment. */
+  comment: string | null;
+}
+
+/** The activity feed of a team workspace. */
+export interface Props {
+  title: string;
+  filters: Filter[];
+  /** Newest first. */
+  events: ActivityEvent[];
+}
+
+const AVATAR_TONES = [
+  "bg-indigo-100 text-indigo-700 ring-indigo-200",
+  "bg-emerald-100 text-emerald-700 ring-emerald-200",
+  "bg-amber-100 text-amber-800 ring-amber-200",
+  "bg-sky-100 text-sky-700 ring-sky-200",
+  "bg-rose-100 text-rose-700 ring-rose-200",
+  "bg-violet-100 text-violet-700 ring-violet-200",
+  "bg-teal-100 text-teal-700 ring-teal-200",
+  "bg-orange-100 text-orange-800 ring-orange-200",
+];
+
+function initialsOf(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "?";
+  const firstWord = words[0] ?? "";
+  const lastWord = words.length > 1 ? words[words.length - 1] ?? "" : "";
+  const first = Array.from(firstWord)[0] ?? "";
+  const last = lastWord === firstWord ? "" : Array.from(lastWord)[0] ?? "";
+  return (first + last).toUpperCase() || "?";
+}
+
+function toneFor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    hash = (hash * 31 + name.charCodeAt(i)) % 100003;
+  }
+  return AVATAR_TONES[hash % AVATAR_TONES.length] ?? AVATAR_TONES[0] ?? "";
+}
+
+function Avatar({ name }: { name: string }): ReactElement {
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex h-9 w-9 shrink-0 select-none items-center justify-center rounded-full text-[11px] font-semibold uppercase tracking-wide ring-1 sm:h-10 sm:w-10 sm:text-xs ${toneFor(
+        name,
+      )}`}
+    >
+      <span className="truncate px-1 leading-none">{initialsOf(name)}</span>
+    </span>
+  );
+}
+
+function FilterChip({ filter }: { filter: Filter }): ReactElement {
+  return (
+    <li className="min-w-0">
+      <span
+        aria-current={filter.active ? "true" : undefined}
+        className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium ${
+          filter.active
+            ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+            : "border-slate-200 bg-white text-slate-600"
+        }`}
+      >
+        <span
+          aria-hidden="true"
+          className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+            filter.active ? "bg-white" : "bg-slate-300"
+          }`}
+        />
+        <span className="min-w-0 break-words">{filter.label}</span>
+      </span>
+    </li>
+  );
+}
+
+function ActivityRow({
+  event,
+  isLast,
+}: {
+  event: ActivityEvent;
+  isLast: boolean;
+}): ReactElement {
+  const comment = typeof event.comment === "string" ? event.comment.trim() : "";
+  const hasComment = comment.length > 0;
+
+  return (
+    <li className="flex gap-3 pb-6 last:pb-0 sm:gap-4">
+      <div className="flex shrink-0 flex-col items-center">
+        <Avatar name={event.actor} />
+        {!isLast && (
+          <span
+            aria-hidden="true"
+            className="mt-2 w-px flex-1 rounded-full bg-slate-200"
+          />
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1 pt-0.5">
+        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+          <p className="min-w-0 break-words text-[15px] leading-relaxed text-slate-600">
+            <span className="font-semibold text-slate-900">{event.actor}</span>{" "}
+            <span>{event.action}</span>{" "}
+            <span className="font-medium text-slate-700">{event.target}</span>
+          </p>
+          <span className="shrink-0 text-xs font-medium text-slate-400 sm:text-right">
+            {event.time}
+          </span>
+        </div>
+
+        {hasComment && (
+          <figure className="mt-3 rounded-l-md rounded-r-xl border-l-2 border-slate-300 bg-slate-50 px-4 py-3">
+            <blockquote className="break-words text-sm leading-relaxed text-slate-700">
+              {comment}
+            </blockquote>
+          </figure>
+        )}
+      </div>
+    </li>
+  );
+}
+
+export default function ActivityFeed({
+  title,
+  filters,
+  events,
+}: Props): ReactElement {
+  const safeFilters = Array.isArray(filters) ? filters : [];
+  const safeEvents = Array.isArray(events) ? events : [];
+
+  return (
+    <section aria-labelledby="activity-feed-title" className="w-full bg-white">
+      <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+        <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between lg:gap-8">
+          <h2
+            id="activity-feed-title"
+            className="min-w-0 break-words text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl"
+          >
+            {title}
+          </h2>
+
+          <ul className="flex min-w-0 flex-wrap items-center gap-2">
+            {safeFilters.map((filter) => (
+              <FilterChip key={filter.id} filter={filter} />
+            ))}
+          </ul>
+        </div>
+
+        <div className="pt-6">
+          {safeEvents.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
+              No activity yet. Updates from your team will show up here.
+            </p>
+          ) : (
+            <ol className="list-none">
+              {safeEvents.map((event, index) => (
+                <ActivityRow
+                  key={event.id}
+                  event={event}
+                  isLast={index === safeEvents.length - 1}
+                />
+              ))}
+            </ol>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}

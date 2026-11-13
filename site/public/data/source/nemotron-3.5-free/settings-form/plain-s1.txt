@@ -1,0 +1,142 @@
+export interface Props {
+  title: string;
+  description: string;
+  displayName: TextField;
+  email: TextField;
+  timeZone: SelectField;
+  notifications: NotificationSetting[];
+  saveLabel: string;
+  cancelLabel: string;
+}
+
+export interface TextField {
+  label: string;
+  /** The current value of the input. */
+  value: string;
+  /** Help text shown with the input. */
+  help: string;
+}
+
+export interface SelectField {
+  label: string;
+  /** The value of the selected option. */
+  value: string;
+  options: SelectOption[];
+}
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+export interface NotificationSetting {
+  id: string;
+  label: string;
+  description: string;
+  /** True when the notification is switched on. */
+  enabled: boolean;
+}
+
+export default function AccountSettingsForm(props: Props) {
+  const {
+    title,
+    description,
+    displayName,
+    email,
+    timeZone,
+    notifications,
+    saveLabel,
+    cancelLabel,
+  } = props;
+
+  return (
+    <section className="w-full space-y-6">
+      <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+      <p className="text-sm text-gray-600">{description}</p>
+
+      <form className="space-y-6">
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <label htmlFor="display-name" className="block text-sm font-medium text-gray-700">
+              {displayName.label}
+            </label>
+            <input
+              id="display-name"
+              type="text"
+              value={displayName.value}
+              readOnly
+              className="block w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
+            />
+            <p className="text-xs text-gray-500">{displayName.help}</p>
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="email-address" className="block text-sm font-medium text-gray-700">
+              {email.label}
+            </label>
+            <input
+              id="email-address"
+              type="email"
+              value={email.value}
+              readOnly
+              className="block w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
+            />
+            <p className="text-xs text-gray-500">{email.help}</p>
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="time-zone" className="block text-sm font-medium text-gray-700">
+              {timeZone.label}
+            </label>
+            <select
+              id="time-zone"
+              value={timeZone.value}
+              readOnly
+              className="block w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
+            >
+              {timeZone.options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {notifications.map((setting) => (
+            <div
+              key={setting.id}
+              className="flex items-center justify-between gap-3 p-3 rounded border border-gray-200 bg-white"
+            >
+              <div className="space-y-1">
+                <label
+                  htmlFor={`notification-${setting.id}`}
+                  className="text-sm font-medium text-gray-700"
+                >
+                  {setting.label}
+                </label>
+                <p className="text-xs text-gray-500">{setting.description}</p>
+              </div>
+              <input
+                id={`notification-${setting.id}`}
+                type="checkbox"
+                checked={setting.enabled}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button type="button" className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm">
+            {saveLabel}
+          </button>
+          <button type="button" className="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm">
+            {cancelLabel}
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}

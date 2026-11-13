@@ -1,0 +1,200 @@
+import { useId } from "react";
+
+export interface Props {
+  title: string;
+  description: string;
+  displayName: TextField;
+  email: TextField;
+  timeZone: SelectField;
+  notifications: NotificationSetting[];
+  saveLabel: string;
+  cancelLabel: string;
+}
+
+export interface TextField {
+  label: string;
+  /** The current value of the input. */
+  value: string;
+  /** Help text shown with the input. */
+  help: string;
+}
+
+export interface SelectField {
+  label: string;
+  /** The value of the selected option. */
+  value: string;
+  options: SelectOption[];
+}
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+export interface NotificationSetting {
+  id: string;
+  label: string;
+  description: string;
+  /** True when the notification is switched on. */
+  enabled: boolean;
+}
+
+export default function AccountSettingsForm({
+  title,
+  description,
+  displayName,
+  email,
+  timeZone,
+  notifications,
+  saveLabel,
+  cancelLabel,
+}: Props) {
+  const uid = useId();
+  const headingId = `${uid}-heading`;
+  const displayNameId = `${uid}-display-name`;
+  const displayNameHelpId = `${uid}-display-name-help`;
+  const emailId = `${uid}-email`;
+  const emailHelpId = `${uid}-email-help`;
+  const timeZoneId = `${uid}-time-zone`;
+
+  return (
+    <section
+      aria-labelledby={headingId}
+      className="w-full min-w-0 bg-white text-slate-900"
+    >
+      <div className="flex w-full min-w-0 flex-col gap-8 px-4 py-6 sm:gap-10 sm:px-6 sm:py-8 lg:px-8">
+        <header className="min-w-0">
+          <h2
+            id={headingId}
+            className="text-balance break-words text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl"
+          >
+            {title}
+          </h2>
+          <p className="mt-2 max-w-3xl text-pretty break-words text-sm leading-6 text-slate-600 sm:text-base">
+            {description}
+          </p>
+        </header>
+
+        <div className="grid min-w-0 grid-cols-1 items-start gap-5 sm:grid-cols-2 sm:gap-6">
+          <div className="min-w-0">
+            <label
+              htmlFor={displayNameId}
+              className="block break-words text-sm font-medium leading-5 text-slate-900"
+            >
+              {displayName.label}
+            </label>
+            <input
+              id={displayNameId}
+              name="display-name"
+              type="text"
+              autoComplete="name"
+              defaultValue={displayName.value}
+              aria-describedby={displayNameHelpId}
+              className="mt-2 block w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-base leading-6 text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 motion-reduce:transition-none sm:text-sm"
+            />
+            <p
+              id={displayNameHelpId}
+              className="mt-1.5 break-words text-xs leading-5 text-slate-500"
+            >
+              {displayName.help}
+            </p>
+          </div>
+
+          <div className="min-w-0">
+            <label
+              htmlFor={emailId}
+              className="block break-words text-sm font-medium leading-5 text-slate-900"
+            >
+              {email.label}
+            </label>
+            <input
+              id={emailId}
+              name="email"
+              type="email"
+              autoComplete="email"
+              defaultValue={email.value}
+              aria-describedby={emailHelpId}
+              className="mt-2 block w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-base leading-6 text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 motion-reduce:transition-none sm:text-sm"
+            />
+            <p
+              id={emailHelpId}
+              className="mt-1.5 break-words text-xs leading-5 text-slate-500"
+            >
+              {email.help}
+            </p>
+          </div>
+        </div>
+
+        <div className="min-w-0">
+          <label
+            htmlFor={timeZoneId}
+            className="block break-words text-sm font-medium leading-5 text-slate-900"
+          >
+            {timeZone.label}
+          </label>
+          <select
+            id={timeZoneId}
+            name="time-zone"
+            defaultValue={timeZone.value}
+            className="mt-2 block w-full min-w-0 rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-9 text-base leading-6 text-slate-950 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 motion-reduce:transition-none sm:text-sm"
+          >
+            {timeZone.options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <ul className="min-w-0 space-y-3">
+          {notifications.map((setting) => (
+            <li
+              key={setting.id}
+              className="flex min-w-0 items-start justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:items-center sm:gap-4"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="break-words text-sm font-medium leading-5 text-slate-900">
+                  {setting.label}
+                </p>
+                <p className="mt-1 break-words text-sm leading-6 text-slate-600">
+                  {setting.description}
+                </p>
+              </div>
+
+              <span
+                role="switch"
+                aria-checked={setting.enabled}
+                aria-label={setting.label}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full ${
+                  setting.enabled ? "bg-indigo-600" : "bg-slate-300"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 motion-reduce:transition-none ${
+                    setting.enabled ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="flex min-w-0 flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+          <button
+            type="button"
+            className="inline-flex w-full min-w-0 max-w-full items-center justify-center break-words rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-sm font-semibold leading-5 text-slate-700 shadow-sm outline-none transition hover:bg-slate-50 focus-visible:ring-4 focus-visible:ring-slate-300/50 motion-reduce:transition-none sm:w-auto"
+          >
+            {cancelLabel}
+          </button>
+          <button
+            type="button"
+            className="inline-flex w-full min-w-0 max-w-full items-center justify-center break-words rounded-xl bg-indigo-600 px-4 py-2.5 text-center text-sm font-semibold leading-5 text-white shadow-sm outline-none transition hover:bg-indigo-500 focus-visible:ring-4 focus-visible:ring-indigo-500/30 motion-reduce:transition-none sm:w-auto"
+          >
+            {saveLabel}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}

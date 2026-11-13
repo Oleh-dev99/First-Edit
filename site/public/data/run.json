@@ -1,0 +1,2768 @@
+{
+ "schemaVersion": 1,
+ "source": {
+  "run": "results/run2",
+  "runs": "results/runs-run2",
+  "summarySchema": 3
+ },
+ "status": {
+  "finished": [],
+  "models": 5,
+  "preliminary": true
+ },
+ "suite": {
+  "version": "v1",
+  "stressSummaries": 39,
+  "recorded": 39,
+  "versions": {
+   "v1": 39
+  },
+  "commits": {
+   "ba2bb3b": 39
+  }
+ },
+ "models": [
+  {
+   "id": "ernie-5.5-flash-free",
+   "provider": "openai-compatible",
+   "model": "baidu/ernie-5.5-flash-preview:free",
+   "reportedModels": [
+    "baidu/ernie-5.5-flash-preview:free"
+   ],
+   "calls": {
+    "first": "2026-11-13T00:45:50+00:00",
+    "last": "2026-11-13T12:03:14+00:00"
+   },
+   "finished": false
+  },
+  {
+   "id": "nemotron-3.5-free",
+   "provider": "openai-compatible",
+   "model": "nvidia/nemotron-3.5-super-vl:free",
+   "reportedModels": [
+    "nvidia/nemotron-3.5-super-vl:free"
+   ],
+   "calls": {
+    "first": "2026-11-13T01:04:55+00:00",
+    "last": "2026-11-13T01:23:49+00:00"
+   },
+   "finished": false
+  },
+  {
+   "id": "gemma-4-31b-free",
+   "provider": "openai-compatible",
+   "model": "google/gemma-4-31b-it:free",
+   "reportedModels": [],
+   "calls": {
+    "first": null,
+    "last": null
+   },
+   "finished": false
+  },
+  {
+   "id": "nemotron-3-ultra-free",
+   "provider": "openai-compatible",
+   "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+   "reportedModels": [],
+   "calls": {
+    "first": null,
+    "last": null
+   },
+   "finished": false
+  },
+  {
+   "id": "north-mini-code-free",
+   "provider": "openai-compatible",
+   "model": "cohere/north-mini-code:free",
+   "reportedModels": [],
+   "calls": {
+    "first": null,
+    "last": null
+   },
+   "finished": false
+  }
+ ],
+ "cases": [
+  {
+   "id": "text-long",
+   "tier": "core",
+   "description": "longer text, as after translation"
+  },
+  {
+   "id": "text-longword",
+   "tier": "core",
+   "description": "a 30-letter word"
+  },
+  {
+   "id": "text-unbroken",
+   "tier": "extreme",
+   "description": "a 60-letter word"
+  },
+  {
+   "id": "text-empty",
+   "tier": "core",
+   "description": "optional text left empty"
+  },
+  {
+   "id": "list-0",
+   "tier": "core",
+   "description": "empty lists"
+  },
+  {
+   "id": "list-1",
+   "tier": "core",
+   "description": "lists with one item"
+  },
+  {
+   "id": "list-many",
+   "tier": "core",
+   "description": "lists ten times longer"
+  },
+  {
+   "id": "number-large",
+   "tier": "core",
+   "description": "very large numbers"
+  },
+  {
+   "id": "viewport-320",
+   "tier": "core",
+   "description": "phone width"
+  },
+  {
+   "id": "text-200pct",
+   "tier": "core",
+   "description": "text at 200% size"
+  },
+  {
+   "id": "dir-rtl",
+   "tier": "core",
+   "description": "right-to-left page"
+  },
+  {
+   "id": "text-long@320",
+   "tier": "core",
+   "description": "longer text, as after translation, phone width"
+  },
+  {
+   "id": "text-longword@320",
+   "tier": "core",
+   "description": "a 30-letter word, phone width"
+  },
+  {
+   "id": "text-unbroken@320",
+   "tier": "extreme",
+   "description": "a 60-letter word, phone width"
+  },
+  {
+   "id": "text-empty@320",
+   "tier": "core",
+   "description": "optional text left empty, phone width"
+  },
+  {
+   "id": "list-0@320",
+   "tier": "core",
+   "description": "empty lists, phone width"
+  },
+  {
+   "id": "list-1@320",
+   "tier": "core",
+   "description": "lists with one item, phone width"
+  },
+  {
+   "id": "list-many@320",
+   "tier": "core",
+   "description": "lists ten times longer, phone width"
+  },
+  {
+   "id": "number-large@320",
+   "tier": "core",
+   "description": "very large numbers, phone width"
+  }
+ ],
+ "checks": [
+  "page-overflow-x",
+  "text-clipped",
+  "content-spill",
+  "text-overlap",
+  "off-screen"
+ ],
+ "briefs": [
+  "activity-feed",
+  "chat-thread",
+  "checkout-summary",
+  "confirm-dialog",
+  "data-table",
+  "day-agenda",
+  "hero-section",
+  "inbox-list",
+  "invoice-summary",
+  "kanban-board",
+  "nav-header",
+  "pricing-table",
+  "product-grid",
+  "settings-form",
+  "sidebar-nav",
+  "site-footer",
+  "stat-tiles",
+  "tabs-panel",
+  "team-directory",
+  "testimonial-grid"
+ ],
+ "groups": [
+  {
+   "model": "ernie-5.5-flash-free",
+   "variant": "plain",
+   "pooled": false,
+   "candidates": 12,
+   "valid": 12,
+   "invalid": 0,
+   "invalidByRule": {},
+   "apiErrors": 0,
+   "missingBriefs": [
+    "confirm-dialog",
+    "day-agenda",
+    "invoice-summary",
+    "sidebar-nav",
+    "site-footer",
+    "tabs-panel",
+    "team-directory",
+    "testimonial-grid"
+   ],
+   "notStressed": 0,
+   "cleanBaseline": 12,
+   "bornBroken": 0,
+   "baselineCrash": 0,
+   "brokeOnce": {
+    "core": {
+     "count": 8,
+     "of": 12,
+     "share": 0.6667,
+     "ci95": [
+      0.3906,
+      0.8619
+     ]
+    },
+    "all": {
+     "count": 12,
+     "of": 12,
+     "share": 1.0,
+     "ci95": [
+      0.7575,
+      1.0
+     ]
+    }
+   },
+   "failureRate": {
+    "core": {
+     "failed": 11,
+     "applicable": 190,
+     "rate": 0.0579,
+     "ci95": [
+      0.0326,
+      0.1007
+     ]
+    },
+    "extreme": {
+     "failed": 18,
+     "applicable": 24,
+     "rate": 0.75,
+     "ci95": [
+      0.551,
+      0.88
+     ]
+    },
+    "all": {
+     "failed": 29,
+     "applicable": 214,
+     "rate": 0.1355,
+     "ci95": [
+      0.096,
+      0.1878
+     ]
+    }
+   },
+   "survival": {
+    "core": {
+     "candidates": 12,
+     "mean": 0.942,
+     "min": 0.8667,
+     "max": 1.0
+    },
+    "extreme": {
+     "candidates": 12,
+     "mean": 0.25,
+     "min": 0.0,
+     "max": 0.5
+    },
+    "all": {
+     "candidates": 12,
+     "mean": 0.8648,
+     "min": 0.7647,
+     "max": 0.9474
+    }
+   },
+   "cases": {
+    "applicable": 214,
+    "failed": 29,
+    "renderErrors": 0,
+    "timeouts": 0,
+    "rate": 0.1355,
+    "ci95": [
+     0.096,
+     0.1878
+    ]
+   },
+   "failedByCase": {
+    "text-long": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "text-longword": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "text-unbroken": {
+     "tier": "extreme",
+     "failed": 6,
+     "applicable": 12,
+     "rate": 0.5,
+     "ci95": [
+      0.2538,
+      0.7462
+     ]
+    },
+    "text-empty": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "list-0": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "list-1": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "list-many": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "number-large": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 8,
+     "rate": 0.125,
+     "ci95": [
+      0.0224,
+      0.4709
+     ]
+    },
+    "viewport-320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "text-200pct": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 12,
+     "rate": 0.0833,
+     "ci95": [
+      0.0149,
+      0.3539
+     ]
+    },
+    "dir-rtl": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "text-long@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "text-longword@320": {
+     "tier": "core",
+     "failed": 6,
+     "applicable": 12,
+     "rate": 0.5,
+     "ci95": [
+      0.2538,
+      0.7462
+     ]
+    },
+    "text-unbroken@320": {
+     "tier": "extreme",
+     "failed": 12,
+     "applicable": 12,
+     "rate": 1.0,
+     "ci95": [
+      0.7575,
+      1.0
+     ]
+    },
+    "text-empty@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "list-0@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "list-1@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "list-many@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "number-large@320": {
+     "tier": "core",
+     "failed": 3,
+     "applicable": 8,
+     "rate": 0.375,
+     "ci95": [
+      0.1368,
+      0.6943
+     ]
+    }
+   },
+   "failedByCheck": {
+    "page-overflow-x": 13,
+    "text-clipped": 13,
+    "content-spill": 23,
+    "text-overlap": 6,
+    "off-screen": 1
+   },
+   "truncations": {
+    "total": 285,
+    "renderedCases": 226,
+    "perCase": 1.26
+   },
+   "contentHidden": {
+    "total": 13,
+    "measuredCases": 125,
+    "casesWithHidden": 9,
+    "perCase": 0.1
+   },
+   "tokens": {
+    "input": 11628,
+    "cachedInput": 0,
+    "output": 138500,
+    "reasoning": 120854
+   },
+   "cost": {
+    "usd": 0.0,
+    "actualUsd": 0.0,
+    "estimatedUsd": 0.0,
+    "callsWithActualCost": 12
+   }
+  },
+  {
+   "model": "ernie-5.5-flash-free",
+   "variant": "hinted",
+   "pooled": false,
+   "candidates": 11,
+   "valid": 9,
+   "invalid": 2,
+   "invalidByRule": {
+    "empty": 2,
+    "reasoning-exhausted": 2,
+    "truncated": 2
+   },
+   "apiErrors": 0,
+   "missingBriefs": [
+    "checkout-summary",
+    "confirm-dialog",
+    "day-agenda",
+    "invoice-summary",
+    "sidebar-nav",
+    "site-footer",
+    "tabs-panel",
+    "team-directory",
+    "testimonial-grid"
+   ],
+   "notStressed": 0,
+   "cleanBaseline": 9,
+   "bornBroken": 0,
+   "baselineCrash": 0,
+   "brokeOnce": {
+    "core": {
+     "count": 3,
+     "of": 9,
+     "share": 0.3333,
+     "ci95": [
+      0.1206,
+      0.6458
+     ]
+    },
+    "all": {
+     "count": 5,
+     "of": 9,
+     "share": 0.5556,
+     "ci95": [
+      0.2667,
+      0.8112
+     ]
+    }
+   },
+   "failureRate": {
+    "core": {
+     "failed": 4,
+     "applicable": 143,
+     "rate": 0.028,
+     "ci95": [
+      0.0109,
+      0.0697
+     ]
+    },
+    "extreme": {
+     "failed": 6,
+     "applicable": 18,
+     "rate": 0.3333,
+     "ci95": [
+      0.1628,
+      0.5625
+     ]
+    },
+    "all": {
+     "failed": 10,
+     "applicable": 161,
+     "rate": 0.0621,
+     "ci95": [
+      0.0341,
+      0.1105
+     ]
+    }
+   },
+   "survival": {
+    "core": {
+     "candidates": 9,
+     "mean": 0.9698,
+     "min": 0.8462,
+     "max": 1.0
+    },
+    "extreme": {
+     "candidates": 9,
+     "mean": 0.6667,
+     "min": 0.0,
+     "max": 1.0
+    },
+    "all": {
+     "candidates": 9,
+     "mean": 0.9355,
+     "min": 0.8,
+     "max": 1.0
+    }
+   },
+   "cases": {
+    "applicable": 161,
+    "failed": 10,
+    "renderErrors": 0,
+    "timeouts": 0,
+    "rate": 0.0621,
+    "ci95": [
+     0.0341,
+     0.1105
+    ]
+   },
+   "failedByCase": {
+    "text-long": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "text-longword": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "text-unbroken": {
+     "tier": "extreme",
+     "failed": 1,
+     "applicable": 9,
+     "rate": 0.1111,
+     "ci95": [
+      0.0199,
+      0.435
+     ]
+    },
+    "text-empty": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "list-0": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "list-1": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "list-many": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "number-large": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 5,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.4345
+     ]
+    },
+    "viewport-320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "text-200pct": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "dir-rtl": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "text-long@320": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 9,
+     "rate": 0.1111,
+     "ci95": [
+      0.0199,
+      0.435
+     ]
+    },
+    "text-longword@320": {
+     "tier": "core",
+     "failed": 3,
+     "applicable": 9,
+     "rate": 0.3333,
+     "ci95": [
+      0.1206,
+      0.6458
+     ]
+    },
+    "text-unbroken@320": {
+     "tier": "extreme",
+     "failed": 5,
+     "applicable": 9,
+     "rate": 0.5556,
+     "ci95": [
+      0.2667,
+      0.8112
+     ]
+    },
+    "text-empty@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "list-0@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "list-1@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "list-many@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "number-large@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 5,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.4345
+     ]
+    }
+   },
+   "failedByCheck": {
+    "page-overflow-x": 5,
+    "text-clipped": 3,
+    "content-spill": 10,
+    "text-overlap": 0,
+    "off-screen": 3
+   },
+   "truncations": {
+    "total": 3,
+    "renderedCases": 170,
+    "perCase": 0.02
+   },
+   "contentHidden": {
+    "total": 0,
+    "measuredCases": 94,
+    "casesWithHidden": 0,
+    "perCase": 0.0
+   },
+   "tokens": {
+    "input": 11075,
+    "cachedInput": 9472,
+    "output": 191295,
+    "reasoning": 176981
+   },
+   "cost": {
+    "usd": 0.0,
+    "actualUsd": 0.0,
+    "estimatedUsd": 0.0,
+    "callsWithActualCost": 11
+   }
+  },
+  {
+   "model": "nemotron-3.5-free",
+   "variant": "plain",
+   "pooled": false,
+   "candidates": 10,
+   "valid": 9,
+   "invalid": 1,
+   "invalidByRule": {
+    "parse": 1
+   },
+   "apiErrors": 0,
+   "missingBriefs": [
+    "activity-feed",
+    "checkout-summary",
+    "confirm-dialog",
+    "day-agenda",
+    "invoice-summary",
+    "sidebar-nav",
+    "site-footer",
+    "tabs-panel",
+    "team-directory",
+    "testimonial-grid"
+   ],
+   "notStressed": 0,
+   "cleanBaseline": 9,
+   "bornBroken": 0,
+   "baselineCrash": 0,
+   "brokeOnce": {
+    "core": {
+     "count": 6,
+     "of": 9,
+     "share": 0.6667,
+     "ci95": [
+      0.3542,
+      0.8794
+     ]
+    },
+    "all": {
+     "count": 9,
+     "of": 9,
+     "share": 1.0,
+     "ci95": [
+      0.7009,
+      1.0
+     ]
+    }
+   },
+   "failureRate": {
+    "core": {
+     "failed": 14,
+     "applicable": 145,
+     "rate": 0.0966,
+     "ci95": [
+      0.0584,
+      0.1555
+     ]
+    },
+    "extreme": {
+     "failed": 15,
+     "applicable": 18,
+     "rate": 0.8333,
+     "ci95": [
+      0.6078,
+      0.9416
+     ]
+    },
+    "all": {
+     "failed": 29,
+     "applicable": 163,
+     "rate": 0.1779,
+     "ci95": [
+      0.1268,
+      0.2438
+     ]
+    }
+   },
+   "survival": {
+    "core": {
+     "candidates": 9,
+     "mean": 0.8956,
+     "min": 0.5385,
+     "max": 1.0
+    },
+    "extreme": {
+     "candidates": 9,
+     "mean": 0.1667,
+     "min": 0.0,
+     "max": 0.5
+    },
+    "all": {
+     "candidates": 9,
+     "mean": 0.8152,
+     "min": 0.4667,
+     "max": 0.9474
+    }
+   },
+   "cases": {
+    "applicable": 163,
+    "failed": 29,
+    "renderErrors": 0,
+    "timeouts": 0,
+    "rate": 0.1779,
+    "ci95": [
+     0.1268,
+     0.2438
+    ]
+   },
+   "failedByCase": {
+    "text-long": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 9,
+     "rate": 0.1111,
+     "ci95": [
+      0.0199,
+      0.435
+     ]
+    },
+    "text-longword": {
+     "tier": "core",
+     "failed": 2,
+     "applicable": 9,
+     "rate": 0.2222,
+     "ci95": [
+      0.0632,
+      0.5474
+     ]
+    },
+    "text-unbroken": {
+     "tier": "extreme",
+     "failed": 6,
+     "applicable": 9,
+     "rate": 0.6667,
+     "ci95": [
+      0.3542,
+      0.8794
+     ]
+    },
+    "text-empty": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "list-0": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "list-1": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "list-many": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 9,
+     "rate": 0.1111,
+     "ci95": [
+      0.0199,
+      0.435
+     ]
+    },
+    "number-large": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "viewport-320": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 9,
+     "rate": 0.1111,
+     "ci95": [
+      0.0199,
+      0.435
+     ]
+    },
+    "text-200pct": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 9,
+     "rate": 0.1111,
+     "ci95": [
+      0.0199,
+      0.435
+     ]
+    },
+    "dir-rtl": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "text-long@320": {
+     "tier": "core",
+     "failed": 2,
+     "applicable": 9,
+     "rate": 0.2222,
+     "ci95": [
+      0.0632,
+      0.5474
+     ]
+    },
+    "text-longword@320": {
+     "tier": "core",
+     "failed": 5,
+     "applicable": 9,
+     "rate": 0.5556,
+     "ci95": [
+      0.2667,
+      0.8112
+     ]
+    },
+    "text-unbroken@320": {
+     "tier": "extreme",
+     "failed": 9,
+     "applicable": 9,
+     "rate": 1.0,
+     "ci95": [
+      0.7009,
+      1.0
+     ]
+    },
+    "text-empty@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "list-0@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "list-1@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "list-many@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
+    },
+    "number-large@320": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 6,
+     "rate": 0.1667,
+     "ci95": [
+      0.0301,
+      0.5635
+     ]
+    }
+   },
+   "failedByCheck": {
+    "page-overflow-x": 17,
+    "text-clipped": 0,
+    "content-spill": 15,
+    "text-overlap": 8,
+    "off-screen": 15
+   },
+   "truncations": {
+    "total": 97,
+    "renderedCases": 172,
+    "perCase": 0.56
+   },
+   "contentHidden": {
+    "total": 32,
+    "measuredCases": 95,
+    "casesWithHidden": 7,
+    "perCase": 0.34
+   },
+   "tokens": {
+    "input": 9825,
+    "cachedInput": 0,
+    "output": 58441,
+    "reasoning": 49250
+   },
+   "cost": {
+    "usd": 0.0,
+    "actualUsd": 0.0,
+    "estimatedUsd": 0.0,
+    "callsWithActualCost": 10
+   }
+  },
+  {
+   "model": "nemotron-3.5-free",
+   "variant": "hinted",
+   "pooled": false,
+   "candidates": 10,
+   "valid": 9,
+   "invalid": 1,
+   "invalidByRule": {
+    "parse": 1
+   },
+   "apiErrors": 0,
+   "missingBriefs": [
+    "activity-feed",
+    "checkout-summary",
+    "confirm-dialog",
+    "day-agenda",
+    "invoice-summary",
+    "sidebar-nav",
+    "site-footer",
+    "tabs-panel",
+    "team-directory",
+    "testimonial-grid"
+   ],
+   "notStressed": 0,
+   "cleanBaseline": 8,
+   "bornBroken": 0,
+   "baselineCrash": 1,
+   "brokeOnce": {
+    "core": {
+     "count": 2,
+     "of": 8,
+     "share": 0.25,
+     "ci95": [
+      0.0715,
+      0.5907
+     ]
+    },
+    "all": {
+     "count": 8,
+     "of": 8,
+     "share": 1.0,
+     "ci95": [
+      0.6756,
+      1.0
+     ]
+    }
+   },
+   "failureRate": {
+    "core": {
+     "failed": 6,
+     "applicable": 128,
+     "rate": 0.0469,
+     "ci95": [
+      0.0217,
+      0.0985
+     ]
+    },
+    "extreme": {
+     "failed": 12,
+     "applicable": 16,
+     "rate": 0.75,
+     "ci95": [
+      0.505,
+      0.8982
+     ]
+    },
+    "all": {
+     "failed": 18,
+     "applicable": 144,
+     "rate": 0.125,
+     "ci95": [
+      0.0806,
+      0.1889
+     ]
+    }
+   },
+   "survival": {
+    "core": {
+     "candidates": 8,
+     "mean": 0.9539,
+     "min": 0.7647,
+     "max": 1.0
+    },
+    "extreme": {
+     "candidates": 8,
+     "mean": 0.25,
+     "min": 0.0,
+     "max": 0.5
+    },
+    "all": {
+     "candidates": 8,
+     "mean": 0.8742,
+     "min": 0.6842,
+     "max": 0.9474
+    }
+   },
+   "cases": {
+    "applicable": 144,
+    "failed": 18,
+    "renderErrors": 0,
+    "timeouts": 0,
+    "rate": 0.125,
+    "ci95": [
+     0.0806,
+     0.1889
+    ]
+   },
+   "failedByCase": {
+    "text-long": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "text-longword": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 8,
+     "rate": 0.125,
+     "ci95": [
+      0.0224,
+      0.4709
+     ]
+    },
+    "text-unbroken": {
+     "tier": "extreme",
+     "failed": 4,
+     "applicable": 8,
+     "rate": 0.5,
+     "ci95": [
+      0.2152,
+      0.7848
+     ]
+    },
+    "text-empty": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "list-0": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-1": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "list-many": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "number-large": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "viewport-320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "text-200pct": {
+     "tier": "core",
+     "failed": 2,
+     "applicable": 8,
+     "rate": 0.25,
+     "ci95": [
+      0.0715,
+      0.5907
+     ]
+    },
+    "dir-rtl": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "text-long@320": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 8,
+     "rate": 0.125,
+     "ci95": [
+      0.0224,
+      0.4709
+     ]
+    },
+    "text-longword@320": {
+     "tier": "core",
+     "failed": 2,
+     "applicable": 8,
+     "rate": 0.25,
+     "ci95": [
+      0.0715,
+      0.5907
+     ]
+    },
+    "text-unbroken@320": {
+     "tier": "extreme",
+     "failed": 8,
+     "applicable": 8,
+     "rate": 1.0,
+     "ci95": [
+      0.6756,
+      1.0
+     ]
+    },
+    "text-empty@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "list-0@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-1@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "list-many@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 8,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3244
+     ]
+    },
+    "number-large@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    }
+   },
+   "failedByCheck": {
+    "page-overflow-x": 12,
+    "text-clipped": 0,
+    "content-spill": 17,
+    "text-overlap": 9,
+    "off-screen": 3
+   },
+   "truncations": {
+    "total": 0,
+    "renderedCases": 152,
+    "perCase": 0.0
+   },
+   "contentHidden": {
+    "total": 0,
+    "measuredCases": 84,
+    "casesWithHidden": 0,
+    "perCase": 0.0
+   },
+   "tokens": {
+    "input": 10305,
+    "cachedInput": 0,
+    "output": 81236,
+    "reasoning": 70747
+   },
+   "cost": {
+    "usd": 0.0,
+    "actualUsd": 0.0,
+    "estimatedUsd": 0.0,
+    "callsWithActualCost": 10
+   }
+  },
+  {
+   "model": "all models",
+   "variant": "plain",
+   "pooled": true,
+   "candidates": 22,
+   "valid": 21,
+   "invalid": 1,
+   "invalidByRule": {
+    "parse": 1
+   },
+   "apiErrors": 0,
+   "missingBriefs": [
+    "confirm-dialog",
+    "day-agenda",
+    "invoice-summary",
+    "sidebar-nav",
+    "site-footer",
+    "tabs-panel",
+    "team-directory",
+    "testimonial-grid"
+   ],
+   "notStressed": 0,
+   "cleanBaseline": 21,
+   "bornBroken": 0,
+   "baselineCrash": 0,
+   "brokeOnce": {
+    "core": {
+     "count": 14,
+     "of": 21,
+     "share": 0.6667,
+     "ci95": [
+      0.4537,
+      0.8281
+     ]
+    },
+    "all": {
+     "count": 21,
+     "of": 21,
+     "share": 1.0,
+     "ci95": [
+      0.8454,
+      1.0
+     ]
+    }
+   },
+   "failureRate": {
+    "core": {
+     "failed": 25,
+     "applicable": 335,
+     "rate": 0.0746,
+     "ci95": [
+      0.0511,
+      0.1078
+     ]
+    },
+    "extreme": {
+     "failed": 33,
+     "applicable": 42,
+     "rate": 0.7857,
+     "ci95": [
+      0.6406,
+      0.8829
+     ]
+    },
+    "all": {
+     "failed": 58,
+     "applicable": 377,
+     "rate": 0.1538,
+     "ci95": [
+      0.1209,
+      0.1937
+     ]
+    }
+   },
+   "survival": {
+    "core": {
+     "candidates": 21,
+     "mean": 0.9221,
+     "min": 0.5385,
+     "max": 1.0
+    },
+    "extreme": {
+     "candidates": 21,
+     "mean": 0.2143,
+     "min": 0.0,
+     "max": 0.5
+    },
+    "all": {
+     "candidates": 21,
+     "mean": 0.8435,
+     "min": 0.4667,
+     "max": 0.9474
+    }
+   },
+   "cases": {
+    "applicable": 377,
+    "failed": 58,
+    "renderErrors": 0,
+    "timeouts": 0,
+    "rate": 0.1538,
+    "ci95": [
+     0.1209,
+     0.1937
+    ]
+   },
+   "failedByCase": {
+    "text-long": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 21,
+     "rate": 0.0476,
+     "ci95": [
+      0.0085,
+      0.2267
+     ]
+    },
+    "text-longword": {
+     "tier": "core",
+     "failed": 2,
+     "applicable": 21,
+     "rate": 0.0952,
+     "ci95": [
+      0.0265,
+      0.2891
+     ]
+    },
+    "text-unbroken": {
+     "tier": "extreme",
+     "failed": 12,
+     "applicable": 21,
+     "rate": 0.5714,
+     "ci95": [
+      0.3655,
+      0.7553
+     ]
+    },
+    "text-empty": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 21,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1546
+     ]
+    },
+    "list-0": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 17,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1843
+     ]
+    },
+    "list-1": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 21,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1546
+     ]
+    },
+    "list-many": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 21,
+     "rate": 0.0476,
+     "ci95": [
+      0.0085,
+      0.2267
+     ]
+    },
+    "number-large": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 14,
+     "rate": 0.0714,
+     "ci95": [
+      0.0127,
+      0.3147
+     ]
+    },
+    "viewport-320": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 21,
+     "rate": 0.0476,
+     "ci95": [
+      0.0085,
+      0.2267
+     ]
+    },
+    "text-200pct": {
+     "tier": "core",
+     "failed": 2,
+     "applicable": 21,
+     "rate": 0.0952,
+     "ci95": [
+      0.0265,
+      0.2891
+     ]
+    },
+    "dir-rtl": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 21,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1546
+     ]
+    },
+    "text-long@320": {
+     "tier": "core",
+     "failed": 2,
+     "applicable": 21,
+     "rate": 0.0952,
+     "ci95": [
+      0.0265,
+      0.2891
+     ]
+    },
+    "text-longword@320": {
+     "tier": "core",
+     "failed": 11,
+     "applicable": 21,
+     "rate": 0.5238,
+     "ci95": [
+      0.3237,
+      0.7166
+     ]
+    },
+    "text-unbroken@320": {
+     "tier": "extreme",
+     "failed": 21,
+     "applicable": 21,
+     "rate": 1.0,
+     "ci95": [
+      0.8454,
+      1.0
+     ]
+    },
+    "text-empty@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 21,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1546
+     ]
+    },
+    "list-0@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 17,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1843
+     ]
+    },
+    "list-1@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 21,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1546
+     ]
+    },
+    "list-many@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 21,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1546
+     ]
+    },
+    "number-large@320": {
+     "tier": "core",
+     "failed": 4,
+     "applicable": 14,
+     "rate": 0.2857,
+     "ci95": [
+      0.1172,
+      0.5465
+     ]
+    }
+   },
+   "failedByCheck": {
+    "page-overflow-x": 30,
+    "text-clipped": 13,
+    "content-spill": 38,
+    "text-overlap": 14,
+    "off-screen": 16
+   },
+   "truncations": {
+    "total": 382,
+    "renderedCases": 398,
+    "perCase": 0.96
+   },
+   "contentHidden": {
+    "total": 45,
+    "measuredCases": 220,
+    "casesWithHidden": 16,
+    "perCase": 0.2
+   },
+   "tokens": {
+    "input": 21453,
+    "cachedInput": 0,
+    "output": 196941,
+    "reasoning": 170104
+   },
+   "cost": {
+    "usd": 0.0,
+    "actualUsd": 0.0,
+    "estimatedUsd": 0.0,
+    "callsWithActualCost": 22
+   }
+  },
+  {
+   "model": "all models",
+   "variant": "hinted",
+   "pooled": true,
+   "candidates": 21,
+   "valid": 18,
+   "invalid": 3,
+   "invalidByRule": {
+    "empty": 2,
+    "parse": 1,
+    "reasoning-exhausted": 2,
+    "truncated": 2
+   },
+   "apiErrors": 0,
+   "missingBriefs": [
+    "checkout-summary",
+    "confirm-dialog",
+    "day-agenda",
+    "invoice-summary",
+    "sidebar-nav",
+    "site-footer",
+    "tabs-panel",
+    "team-directory",
+    "testimonial-grid"
+   ],
+   "notStressed": 0,
+   "cleanBaseline": 17,
+   "bornBroken": 0,
+   "baselineCrash": 1,
+   "brokeOnce": {
+    "core": {
+     "count": 5,
+     "of": 17,
+     "share": 0.2941,
+     "ci95": [
+      0.1328,
+      0.5313
+     ]
+    },
+    "all": {
+     "count": 13,
+     "of": 17,
+     "share": 0.7647,
+     "ci95": [
+      0.5274,
+      0.9044
+     ]
+    }
+   },
+   "failureRate": {
+    "core": {
+     "failed": 10,
+     "applicable": 271,
+     "rate": 0.0369,
+     "ci95": [
+      0.0202,
+      0.0666
+     ]
+    },
+    "extreme": {
+     "failed": 18,
+     "applicable": 34,
+     "rate": 0.5294,
+     "ci95": [
+      0.3674,
+      0.6855
+     ]
+    },
+    "all": {
+     "failed": 28,
+     "applicable": 305,
+     "rate": 0.0918,
+     "ci95": [
+      0.0643,
+      0.1295
+     ]
+    }
+   },
+   "survival": {
+    "core": {
+     "candidates": 17,
+     "mean": 0.9623,
+     "min": 0.7647,
+     "max": 1.0
+    },
+    "extreme": {
+     "candidates": 17,
+     "mean": 0.4706,
+     "min": 0.0,
+     "max": 1.0
+    },
+    "all": {
+     "candidates": 17,
+     "mean": 0.9066,
+     "min": 0.6842,
+     "max": 1.0
+    }
+   },
+   "cases": {
+    "applicable": 305,
+    "failed": 28,
+    "renderErrors": 0,
+    "timeouts": 0,
+    "rate": 0.0918,
+    "ci95": [
+     0.0643,
+     0.1295
+    ]
+   },
+   "failedByCase": {
+    "text-long": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 17,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1843
+     ]
+    },
+    "text-longword": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 17,
+     "rate": 0.0588,
+     "ci95": [
+      0.0105,
+      0.2698
+     ]
+    },
+    "text-unbroken": {
+     "tier": "extreme",
+     "failed": 5,
+     "applicable": 17,
+     "rate": 0.2941,
+     "ci95": [
+      0.1328,
+      0.5313
+     ]
+    },
+    "text-empty": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 17,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1843
+     ]
+    },
+    "list-0": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 14,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2153
+     ]
+    },
+    "list-1": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 17,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1843
+     ]
+    },
+    "list-many": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 17,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1843
+     ]
+    },
+    "number-large": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 11,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2588
+     ]
+    },
+    "viewport-320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 17,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1843
+     ]
+    },
+    "text-200pct": {
+     "tier": "core",
+     "failed": 2,
+     "applicable": 17,
+     "rate": 0.1176,
+     "ci95": [
+      0.0329,
+      0.3434
+     ]
+    },
+    "dir-rtl": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 17,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1843
+     ]
+    },
+    "text-long@320": {
+     "tier": "core",
+     "failed": 2,
+     "applicable": 17,
+     "rate": 0.1176,
+     "ci95": [
+      0.0329,
+      0.3434
+     ]
+    },
+    "text-longword@320": {
+     "tier": "core",
+     "failed": 5,
+     "applicable": 17,
+     "rate": 0.2941,
+     "ci95": [
+      0.1328,
+      0.5313
+     ]
+    },
+    "text-unbroken@320": {
+     "tier": "extreme",
+     "failed": 13,
+     "applicable": 17,
+     "rate": 0.7647,
+     "ci95": [
+      0.5274,
+      0.9044
+     ]
+    },
+    "text-empty@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 17,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1843
+     ]
+    },
+    "list-0@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 14,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2153
+     ]
+    },
+    "list-1@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 17,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1843
+     ]
+    },
+    "list-many@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 17,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.1843
+     ]
+    },
+    "number-large@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 11,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2588
+     ]
+    }
+   },
+   "failedByCheck": {
+    "page-overflow-x": 17,
+    "text-clipped": 3,
+    "content-spill": 27,
+    "text-overlap": 9,
+    "off-screen": 6
+   },
+   "truncations": {
+    "total": 3,
+    "renderedCases": 322,
+    "perCase": 0.01
+   },
+   "contentHidden": {
+    "total": 0,
+    "measuredCases": 178,
+    "casesWithHidden": 0,
+    "perCase": 0.0
+   },
+   "tokens": {
+    "input": 21380,
+    "cachedInput": 9472,
+    "output": 272531,
+    "reasoning": 247728
+   },
+   "cost": {
+    "usd": 0.0,
+    "actualUsd": 0.0,
+    "estimatedUsd": 0.0,
+    "callsWithActualCost": 21
+   }
+  }
+ ],
+ "hintEffect": {
+  "perModel": {
+   "ernie-5.5-flash-free": {
+    "pairs": 9,
+    "bothBroke": 3,
+    "plainOnly": 3,
+    "hintedOnly": 0,
+    "neither": 3,
+    "p": 0.25
+   },
+   "nemotron-3.5-free": {
+    "pairs": 7,
+    "bothBroke": 1,
+    "plainOnly": 4,
+    "hintedOnly": 0,
+    "neither": 2,
+    "p": 0.125
+   },
+   "gemma-4-31b-free": {
+    "pairs": 0,
+    "bothBroke": 0,
+    "plainOnly": 0,
+    "hintedOnly": 0,
+    "neither": 0,
+    "p": 1.0
+   },
+   "nemotron-3-ultra-free": {
+    "pairs": 0,
+    "bothBroke": 0,
+    "plainOnly": 0,
+    "hintedOnly": 0,
+    "neither": 0,
+    "p": 1.0
+   },
+   "north-mini-code-free": {
+    "pairs": 0,
+    "bothBroke": 0,
+    "plainOnly": 0,
+    "hintedOnly": 0,
+    "neither": 0,
+    "p": 1.0
+   }
+  },
+  "pooled": {
+   "pairs": 16,
+   "bothBroke": 4,
+   "plainOnly": 7,
+   "hintedOnly": 0,
+   "neither": 5,
+   "p": 0.0156
+  }
+ },
+ "sensitivity": {
+  "plain": [
+   {
+    "removed": null,
+    "count": 14,
+    "of": 21,
+    "share": 0.6667,
+    "ci95": [
+     0.4537,
+     0.8281
+    ]
+   },
+   {
+    "removed": "text-long",
+    "count": 14,
+    "of": 21,
+    "share": 0.6667,
+    "ci95": [
+     0.4537,
+     0.8281
+    ]
+   },
+   {
+    "removed": "text-longword",
+    "count": 8,
+    "of": 21,
+    "share": 0.381,
+    "ci95": [
+     0.2075,
+     0.5912
+    ]
+   },
+   {
+    "removed": "text-empty",
+    "count": 14,
+    "of": 21,
+    "share": 0.6667,
+    "ci95": [
+     0.4537,
+     0.8281
+    ]
+   },
+   {
+    "removed": "list-0",
+    "count": 14,
+    "of": 21,
+    "share": 0.6667,
+    "ci95": [
+     0.4537,
+     0.8281
+    ]
+   },
+   {
+    "removed": "list-1",
+    "count": 14,
+    "of": 21,
+    "share": 0.6667,
+    "ci95": [
+     0.4537,
+     0.8281
+    ]
+   },
+   {
+    "removed": "list-many",
+    "count": 14,
+    "of": 21,
+    "share": 0.6667,
+    "ci95": [
+     0.4537,
+     0.8281
+    ]
+   },
+   {
+    "removed": "number-large",
+    "count": 13,
+    "of": 21,
+    "share": 0.619,
+    "ci95": [
+     0.4088,
+     0.7925
+    ]
+   },
+   {
+    "removed": "viewport-320",
+    "count": 13,
+    "of": 21,
+    "share": 0.619,
+    "ci95": [
+     0.4088,
+     0.7925
+    ]
+   },
+   {
+    "removed": "text-200pct",
+    "count": 13,
+    "of": 21,
+    "share": 0.619,
+    "ci95": [
+     0.4088,
+     0.7925
+    ]
+   },
+   {
+    "removed": "dir-rtl",
+    "count": 14,
+    "of": 21,
+    "share": 0.6667,
+    "ci95": [
+     0.4537,
+     0.8281
+    ]
+   }
+  ],
+  "hinted": [
+   {
+    "removed": null,
+    "count": 5,
+    "of": 17,
+    "share": 0.2941,
+    "ci95": [
+     0.1328,
+     0.5313
+    ]
+   },
+   {
+    "removed": "text-long",
+    "count": 5,
+    "of": 17,
+    "share": 0.2941,
+    "ci95": [
+     0.1328,
+     0.5313
+    ]
+   },
+   {
+    "removed": "text-longword",
+    "count": 3,
+    "of": 17,
+    "share": 0.1765,
+    "ci95": [
+     0.0619,
+     0.4103
+    ]
+   },
+   {
+    "removed": "text-empty",
+    "count": 5,
+    "of": 17,
+    "share": 0.2941,
+    "ci95": [
+     0.1328,
+     0.5313
+    ]
+   },
+   {
+    "removed": "list-0",
+    "count": 5,
+    "of": 17,
+    "share": 0.2941,
+    "ci95": [
+     0.1328,
+     0.5313
+    ]
+   },
+   {
+    "removed": "list-1",
+    "count": 5,
+    "of": 17,
+    "share": 0.2941,
+    "ci95": [
+     0.1328,
+     0.5313
+    ]
+   },
+   {
+    "removed": "list-many",
+    "count": 5,
+    "of": 17,
+    "share": 0.2941,
+    "ci95": [
+     0.1328,
+     0.5313
+    ]
+   },
+   {
+    "removed": "number-large",
+    "count": 5,
+    "of": 17,
+    "share": 0.2941,
+    "ci95": [
+     0.1328,
+     0.5313
+    ]
+   },
+   {
+    "removed": "viewport-320",
+    "count": 5,
+    "of": 17,
+    "share": 0.2941,
+    "ci95": [
+     0.1328,
+     0.5313
+    ]
+   },
+   {
+    "removed": "text-200pct",
+    "count": 5,
+    "of": 17,
+    "share": 0.2941,
+    "ci95": [
+     0.1328,
+     0.5313
+    ]
+   },
+   {
+    "removed": "dir-rtl",
+    "count": 5,
+    "of": 17,
+    "share": 0.2941,
+    "ci95": [
+     0.1328,
+     0.5313
+    ]
+   }
+  ]
+ },
+ "decisions": {
+  "models": [],
+  "lines": null
+ },
+ "survivalByBrief": {
+  "plain": {
+   "activity-feed": {
+    "ernie-5.5-flash-free": "14/15 core, 1/2 extreme",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "chat-thread": {
+    "ernie-5.5-flash-free": "15/15 core, 1/2 extreme",
+    "nemotron-3.5-free": "15/15 core, 0/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "checkout-summary": {
+    "ernie-5.5-flash-free": "13/15 core, 0/2 extreme",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "confirm-dialog": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "data-table": {
+    "ernie-5.5-flash-free": "17/17 core, 1/2 extreme",
+    "nemotron-3.5-free": "17/17 core, 1/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "day-agenda": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "hero-section": {
+    "ernie-5.5-flash-free": "16/17 core, 0/2 extreme",
+    "nemotron-3.5-free": "14/17 core, 0/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "inbox-list": {
+    "ernie-5.5-flash-free": "17/17 core, 1/2 extreme",
+    "nemotron-3.5-free": "17/17 core, 1/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "invoice-summary": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "kanban-board": {
+    "ernie-5.5-flash-free": "15/17 core, 0/2 extreme",
+    "nemotron-3.5-free": "16/17 core, 0/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "nav-header": {
+    "ernie-5.5-flash-free": "12/13 core, 1/2 extreme",
+    "nemotron-3.5-free": "7/13 core, 0/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "pricing-table": {
+    "ernie-5.5-flash-free": "15/17 core, 0/2 extreme",
+    "nemotron-3.5-free": "15/17 core, 0/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "product-grid": {
+    "ernie-5.5-flash-free": "16/17 core, 0/2 extreme",
+    "nemotron-3.5-free": "16/17 core, 0/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "settings-form": {
+    "ernie-5.5-flash-free": "15/15 core, 1/2 extreme",
+    "nemotron-3.5-free": "14/15 core, 1/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "sidebar-nav": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "site-footer": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "stat-tiles": {
+    "ernie-5.5-flash-free": "14/15 core, 0/2 extreme",
+    "nemotron-3.5-free": "invalid",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "tabs-panel": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "team-directory": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "testimonial-grid": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   }
+  },
+  "hinted": {
+   "activity-feed": {
+    "ernie-5.5-flash-free": "15/15 core, 2/2 extreme",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "chat-thread": {
+    "ernie-5.5-flash-free": "15/15 core, 1/2 extreme",
+    "nemotron-3.5-free": "baseline crash",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "checkout-summary": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "confirm-dialog": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "data-table": {
+    "ernie-5.5-flash-free": "17/17 core, 2/2 extreme",
+    "nemotron-3.5-free": "17/17 core, 1/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "day-agenda": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "hero-section": {
+    "ernie-5.5-flash-free": "16/17 core, 1/2 extreme",
+    "nemotron-3.5-free": "17/17 core, 1/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "inbox-list": {
+    "ernie-5.5-flash-free": "invalid",
+    "nemotron-3.5-free": "17/17 core, 1/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "invoice-summary": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "kanban-board": {
+    "ernie-5.5-flash-free": "17/17 core, 2/2 extreme",
+    "nemotron-3.5-free": "17/17 core, 0/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "nav-header": {
+    "ernie-5.5-flash-free": "11/13 core, 1/2 extreme",
+    "nemotron-3.5-free": "13/13 core, 0/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "pricing-table": {
+    "ernie-5.5-flash-free": "16/17 core, 0/2 extreme",
+    "nemotron-3.5-free": "13/17 core, 0/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "product-grid": {
+    "ernie-5.5-flash-free": "17/17 core, 2/2 extreme",
+    "nemotron-3.5-free": "invalid",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "settings-form": {
+    "ernie-5.5-flash-free": "15/15 core, 1/2 extreme",
+    "nemotron-3.5-free": "15/15 core, 1/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "sidebar-nav": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "site-footer": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "stat-tiles": {
+    "ernie-5.5-flash-free": "invalid",
+    "nemotron-3.5-free": "13/15 core, 0/2 extreme",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "tabs-panel": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "team-directory": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   },
+   "testimonial-grid": {
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
+    "gemma-4-31b-free": "-",
+    "nemotron-3-ultra-free": "-",
+    "north-mini-code-free": "-"
+   }
+  }
+ },
+ "totals": {
+  "candidates": 43,
+  "tokens": {
+   "input": 42833,
+   "cachedInput": 9472,
+   "output": 469472,
+   "reasoning": 417832
+  },
+  "costUsd": 0.0
+ }
+}

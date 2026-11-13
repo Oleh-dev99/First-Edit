@@ -1,0 +1,182 @@
+export type Sender = 'me' | 'them';
+
+export interface Contact {
+  name: string;
+  /** e.g. "Active now" */
+  status: string;
+}
+
+export interface Message {
+  id: string;
+  from: Sender;
+  author: string;
+  text: string;
+  /** Already formatted, e.g. "9:41 AM". */
+  time: string;
+}
+
+export interface Composer {
+  placeholder: string;
+  sendLabel: string;
+}
+
+/** The conversation view of a customer support chat app. */
+export interface Props {
+  contact: Contact;
+  messages: Message[];
+  composer: Composer;
+}
+
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) {
+    return Array.from(parts[0]).slice(0, 2).join('').toUpperCase();
+  }
+  const first = Array.from(parts[0])[0] ?? '';
+  const last = Array.from(parts[parts.length - 1])[0] ?? '';
+  return (first + last).toUpperCase();
+}
+
+function Avatar({ name, tone }: { name: string; tone: 'contact' | 'agent' | 'them' }) {
+  const tones: Record<'contact' | 'agent' | 'them', string> = {
+    contact: 'h-10 w-10 bg-emerald-600 text-sm text-white shadow-sm shadow-emerald-600/25',
+    agent: 'h-7 w-7 bg-emerald-100 text-[10px] text-emerald-700 ring-1 ring-inset ring-emerald-200',
+    them: 'h-7 w-7 bg-slate-200 text-[10px] text-slate-600 ring-1 ring-inset ring-slate-300',
+  };
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex shrink-0 select-none items-center justify-center rounded-full font-semibold tracking-wide ${tones[tone]}`}
+    >
+      {initialsOf(name)}
+    </span>
+  );
+}
+
+function MessageRow({ message }: { message: Message }) {
+  const isMe = message.from === 'me';
+
+  return (
+    <li
+      className={`flex w-full items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
+    >
+      <Avatar name={message.author} tone={isMe ? 'agent' : 'them'} />
+
+      <div
+        className={`flex min-w-0 max-w-[86%] flex-col sm:max-w-[76%] ${
+          isMe ? 'items-end' : 'items-start'
+        }`}
+      >
+        <div
+          className={`min-w-0 rounded-2xl px-3.5 py-2.5 shadow-sm ${
+            isMe
+              ? 'rounded-br-md bg-emerald-600 text-white shadow-emerald-600/20'
+              : 'rounded-bl-md border border-slate-200 bg-white text-slate-800'
+          }`}
+        >
+          <p
+            className={`truncate text-[11px] font-semibold ${
+              isMe ? 'text-emerald-50' : 'text-slate-500'
+            }`}
+          >
+            {message.author}
+          </p>
+          <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed [overflow-wrap:anywhere]">
+            {message.text}
+          </p>
+          <div
+            className={`mt-1.5 flex items-center gap-1 text-[11px] ${
+              isMe ? 'justify-end text-emerald-100' : 'text-slate-400'
+            }`}
+          >
+            <time dateTime={message.time}>{message.time}</time>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+export default function ChatThread({ contact, messages, composer }: Props) {
+  const hasMessages = messages.length > 0;
+
+  return (
+    <section
+      aria-label={`Conversation with ${contact.name}`}
+      className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-sm"
+    >
+      {/* Contact header */}
+      <header className="flex shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 py-3">
+        <Avatar name={contact.name} tone="contact" />
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-sm font-semibold text-slate-900">
+            {contact.name}
+          </h2>
+          <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-slate-500">
+            <span
+              aria-hidden="true"
+              className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"
+            />
+            <span className="truncate">{contact.status}</span>
+          </p>
+        </div>
+      </header>
+
+      {/* Messages */}
+      {hasMessages ? (
+        <ul
+          role="log"
+          aria-live="polite"
+          aria-label="Messages"
+          className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain bg-slate-50 px-3 py-4 sm:px-5"
+        >
+          {messages.map((message) => (
+            <MessageRow key={message.id} message={message} />
+          ))}
+        </ul>
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 overflow-y-auto bg-slate-50 px-4 py-10 text-center">
+          <p className="text-sm font-medium text-slate-600">No messages yet</p>
+          <p className="max-w-[22rem] text-xs text-slate-400">
+            Replies you send to {contact.name} will show up here.
+          </p>
+        </div>
+      )}
+
+      {/* Composer */}
+      <div className="shrink-0 border-t border-slate-200 bg-white px-3 py-3 sm:px-4">
+        <div className="flex items-end gap-2">
+          <label htmlFor="pinecall-composer" className="sr-only">
+            {composer.placeholder}
+          </label>
+          <input
+            id="pinecall-composer"
+            type="text"
+            placeholder={composer.placeholder}
+            aria-label={composer.placeholder}
+            className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
+          />
+          <button
+            type="button"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-emerald-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-600/25 transition-colors hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:ring-offset-2"
+          >
+            <span>{composer.sendLabel}</span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.7}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4 shrink-0"
+            >
+              <path d="M3.2 10 16.5 4 11 17l-2.1-5.4L3.2 10Z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -1,0 +1,123 @@
+import React from "react";
+
+export interface Plan {
+  name: string;
+  monthlyPrice: number;
+  description: string;
+  features: string[];
+  ctaLabel: string;
+  badge?: string;
+  highlighted: boolean;
+}
+
+export interface Props {
+  heading: string;
+  subheading: string;
+  currency: string;
+  plans: Plan[];
+}
+
+function formatPrice(amount: number, currency: string): string {
+  const hasFraction = !Number.isInteger(amount);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: hasFraction ? 2 : 0,
+    maximumFractionDigits: hasFraction ? 2 : 0,
+  }).format(amount);
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+export default function PricingSection({ heading, subheading, currency, plans }: Props) {
+  return (
+    <section className="w-full bg-slate-50 px-4 py-20 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            {heading}
+          </h2>
+          <p className="mt-4 text-lg leading-8 text-slate-600">{subheading}</p>
+        </div>
+
+        <div className="mt-16 grid grid-cols-1 items-center gap-8 lg:grid-cols-3">
+          {plans.map((plan) => {
+            const dark = plan.highlighted;
+            return (
+              <div
+                key={plan.name}
+                className={
+                  "relative flex flex-col rounded-3xl p-8 shadow-sm transition hover:shadow-lg " +
+                  (dark
+                    ? "bg-slate-900 text-white ring-1 ring-slate-900 lg:-my-4 lg:py-12"
+                    : "bg-white text-slate-900 ring-1 ring-slate-200")
+                }
+              >
+                {plan.badge ? (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white shadow">
+                    {plan.badge}
+                  </span>
+                ) : null}
+
+                <h3 className="text-xl font-semibold">{plan.name}</h3>
+                <p className={dark ? "mt-2 text-sm text-slate-300" : "mt-2 text-sm text-slate-600"}>
+                  {plan.description}
+                </p>
+
+                <div className="mt-6 flex items-end gap-1">
+                  <span className="text-4xl font-bold tracking-tight">
+                    {formatPrice(plan.monthlyPrice, currency)}
+                  </span>
+                  <span
+                    className={dark ? "mb-1 text-sm text-slate-400" : "mb-1 text-sm text-slate-500"}
+                  >
+                    {plan.monthlyPrice === 0 ? "forever" : "/month"}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  className={
+                    "mt-6 w-full rounded-lg px-4 py-3 text-sm font-semibold transition " +
+                    (dark
+                      ? "bg-indigo-500 text-white hover:bg-indigo-400"
+                      : "bg-slate-900 text-white hover:bg-slate-700")
+                  }
+                >
+                  {plan.ctaLabel}
+                </button>
+
+                <ul className="mt-8 space-y-4">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <CheckIcon
+                        className={
+                          dark
+                            ? "h-5 w-5 flex-none text-indigo-400"
+                            : "h-5 w-5 flex-none text-indigo-600"
+                        }
+                      />
+                      <span className={dark ? "text-sm text-slate-200" : "text-sm text-slate-600"}>
+                        {feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -1,0 +1,113 @@
+import React from "react";
+
+export interface Props {
+  folderTitle: string;
+  unreadCount: number;
+  messages: InboxMessage[];
+}
+
+export interface InboxMessage {
+  id: string;
+  sender: string;
+  subject: string;
+  /** The opening text of the message. */
+  preview: string;
+  /** Already formatted, e.g. "9:41 AM" or "Yesterday". */
+  time: string;
+  unread: boolean;
+  labels: string[];
+  hasAttachment: boolean;
+}
+
+export default function InboxMessageList({
+  folderTitle,
+  unreadCount,
+  messages,
+}: Props): React.ReactNode {
+  return (
+    <section className="w-full min-w-0">
+      <div className="border-b border-gray-200 bg-white px-4 py-3 flex flex-wrap items-center gap-2 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <h2 className="text-sm font-semibold text-gray-900 break-words">
+            {folderTitle}
+          </h2>
+          <span
+            className={`min-w-0 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs break-words ${
+              unreadCount > 0
+                ? "border-blue-100 bg-blue-50 text-blue-700"
+                : "border-gray-200 bg-gray-100 text-gray-600"
+            }`}
+          >
+            {unreadCount} unread
+          </span>
+        </div>
+      </div>
+      <ul className="divide-y divide-gray-200 min-w-0" role="list">
+        {messages.map((message) => {
+          const unread = message.unread;
+
+          return (
+            <li
+              key={message.id}
+              className={`flex flex-col gap-2 px-4 py-3 min-w-0 ${
+                unread
+                  ? "bg-blue-50 border-l-4 border-l-blue-600 text-gray-900"
+                  : "bg-white text-gray-700"
+              }`}
+            >
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
+                <div className="min-w-0 flex flex-wrap items-center gap-1.5">
+                  {unread && (
+                    <span
+                      className="inline-block h-1.5 w-1.5 rounded-full bg-blue-600"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <div className="min-w-0 text-sm font-medium break-words">
+                    {message.sender}
+                  </div>
+                  {message.hasAttachment && (
+                    <span
+                      className="flex items-center gap-1 rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-600"
+                      aria-label="Attachment"
+                    >
+                      📎
+                    </span>
+                  )}
+                </div>
+                <div className="min-w-0 text-xs text-gray-400 break-words">
+                  {message.time}
+                </div>
+              </div>
+              <h3
+                className={`text-sm font-semibold break-words ${
+                  unread ? "text-gray-900" : "text-gray-600"
+                }`}
+              >
+                {message.subject}
+              </h3>
+              <div className="flex flex-wrap gap-1.5 min-w-0">
+                {message.labels.map((label, index) => (
+                  <span
+                    key={`${message.id}-${index}`}
+                    className="inline-block min-w-0 break-words rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-600"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+              <p className="text-sm text-gray-500 break-words">
+                {message.preview}
+              </p>
+            </li>
+          );
+        })}
+        {messages.length === 0 && (
+          <li className="px-4 py-3 text-sm text-gray-500">
+            No messages
+          </li>
+        )}
+      </ul>
+    </section>
+  );
+}

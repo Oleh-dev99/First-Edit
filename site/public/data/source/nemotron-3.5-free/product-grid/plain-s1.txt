@@ -1,0 +1,176 @@
+export interface Props {
+  heading: string;
+  resultsSummary: string;
+  currency: string;
+  products: Product[];
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  image: ProductImage;
+  price: number;
+  originalPrice?: number;
+  rating: number;
+  reviewCount: number;
+  tags: string[];
+  ctaLabel: string;
+}
+
+export interface ProductImage {
+  src: string;
+  alt: string;
+}
+
+const starPath =
+  "M12 .587 15.655 8.155 22 9.24 15.936 15.068 18.5 22.5 12 19.27 5.5 22.5 8.064 15.068 2 9.24 8.345 8.155z";
+
+const filledStar = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className="text-amber-400 shrink-0"
+    aria-hidden="true"
+  >
+    <path d={starPath} />
+  </svg>
+);
+
+const emptyStar = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    className="text-amber-200 shrink-0"
+    aria-hidden="true"
+  >
+    <path d={starPath} />
+  </svg>
+);
+
+const halfStar = (starId: string) => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    className="text-amber-400 shrink-0"
+    aria-hidden="true"
+  >
+    <defs>
+      <clipPath id={starId}>
+        <path d={starPath} />
+      </clipPath>
+    </defs>
+    <rect
+      x="0"
+      y="0"
+      width="12"
+      height="24"
+      fill="currentColor"
+      clipPath={`url(#${starId})`}
+    />
+  </svg>
+);
+
+export default function ProductListing({
+  heading,
+  resultsSummary,
+  currency,
+  products,
+}: Props) {
+  const formatPrice = (amount: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
+      amount,
+    );
+
+  return (
+    <section className="w-full bg-stone-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-stone-900">{heading}</h2>
+          <p className="mt-1 text-sm text-stone-500">{resultsSummary}</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {products.map((product) => {
+            const fullStars = Math.floor(product.rating);
+            const hasHalfStar = product.rating % 1 >= 0.5;
+            const emptyStars =
+              5 - fullStars - (hasHalfStar ? 1 : 0);
+            const starId = `half-star-${product.id}`;
+
+            return (
+              <article
+                key={product.id}
+                className="flex flex-col h-full rounded-xl border border-stone-200 bg-white shadow-sm hover:shadow-md transition-shadow duration-200"
+              >
+                <div className="aspect-[4/3] rounded-t-xl overflow-hidden bg-stone-100">
+                  <img
+                    src={product.image.src}
+                    alt={product.image.alt}
+                    className="w-full h-full object-cover"
+                    decoding="async"
+                  />
+                </div>
+
+                <div className="flex-1 p-4 flex flex-col gap-2">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-sm font-semibold text-stone-900">
+                      {formatPrice(product.price)}
+                    </span>
+                    {product.originalPrice !== undefined &&
+                      product.originalPrice > product.price && (
+                        <span className="text-sm text-stone-500 line-through">
+                          {formatPrice(product.originalPrice)}
+                        </span>
+                      )}
+                  </div>
+
+                  <h3 className="text-sm font-medium text-stone-800">
+                    {product.name}
+                  </h3>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: fullStars }, (_, i) => (
+                      <span key={i}>{filledStar()}</span>
+                    ))}
+                    {hasHalfStar && <span>{halfStar(starId)}</span>}
+                    {Array.from({ length: emptyStars }, (_, i) => (
+                      <span key={i}>{emptyStar()}</span>
+                    ))}
+                    <span className="ml-1 text-xs text-stone-500">
+                      ({product.reviewCount})
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {product.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-xs rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-stone-600"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="mt-auto flex w-full items-center justify-center gap-2 rounded-md bg-stone-900 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {product.ctaLabel}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}

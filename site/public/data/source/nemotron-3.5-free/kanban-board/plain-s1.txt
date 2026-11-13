@@ -1,0 +1,90 @@
+import * as React from "react";
+
+interface Props {
+  columns: Column[];
+}
+
+interface Column {
+  id: string;
+  title: string;
+  cards: Card[];
+}
+
+interface Card {
+  id: string;
+  title: string;
+  tags: string[];
+  assignee: string;
+  dueDate: string;
+  commentCount: number;
+}
+
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join("");
+}
+
+export default function ProjectBoard({ columns }: Props) {
+  return (
+    <section className="w-full bg-slate-50 py-12">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap gap-4">
+          {columns.map((column) => (
+            <div
+              key={column.id}
+              className="flex-1 min-w-[280px] max-w-[320px] flex flex-col border border-slate-200 rounded-xl bg-white shadow-sm"
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 rounded-t-xl bg-slate-50">
+                <h2 className="text-sm font-semibold text-slate-900 tracking-tight">
+                  {column.title}
+                </h2>
+                <span className="text-xs font-medium text-slate-400">
+                  {column.cards.length}
+                </span>
+              </div>
+              <div className="p-5 space-y-3">
+                {column.cards.map((card) => (
+                  <div
+                    key={card.id}
+                    className="p-4 border border-slate-200 rounded-lg bg-white"
+                  >
+                    <h3 className="text-sm font-medium text-slate-900 leading-snug mb-2">
+                      {card.title}
+                    </h3>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {card.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2.5 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                      <div className="w-6 h-6 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-slate-600 font-medium">
+                        {initials(card.assignee)}
+                      </div>
+                      <span className="text-slate-700 font-medium">
+                        {card.assignee}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                      <span className="text-slate-600">{card.dueDate}</span>
+                      <span className="w-px h-3 bg-slate-300 mx-1" />
+                      <span>{card.commentCount} comments</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

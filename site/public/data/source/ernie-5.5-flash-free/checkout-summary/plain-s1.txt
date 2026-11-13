@@ -1,0 +1,201 @@
+/**
+ * Checkout order summary — the last step of checkout at Thistlecombe.
+ * Self-sized panel intended to sit beside the payment details.
+ */
+
+export interface Props {
+  title: string;
+  /** ISO 4217 code used for every amount, e.g. "USD". */
+  currency: string;
+  items: OrderItem[];
+  promo: PromoField;
+  subtotal: number;
+  shipping: number;
+  tax: number;
+  total: number;
+  /** A note to the customer, e.g. about delivery or returns. */
+  note: string;
+  /** Label of the pay button. */
+  payLabel: string;
+}
+
+export interface OrderItem {
+  id: string;
+  image: ItemImage;
+  name: string;
+  /** The chosen variant, e.g. "Size M · Olive". */
+  variant: string;
+  quantity: number;
+  /** Price of the line: unit price times quantity. */
+  price: number;
+}
+
+export interface ItemImage {
+  src: string;
+  alt: string;
+}
+
+export interface PromoField {
+  label: string;
+  placeholder: string;
+  /** Label of the button that applies the code. */
+  applyLabel: string;
+}
+
+function formatMoney(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `${currency} ${amount.toFixed(2)}`;
+  }
+}
+
+export default function OrderSummary({
+  title,
+  currency,
+  items,
+  promo,
+  subtotal,
+  shipping,
+  tax,
+  total,
+  note,
+  payLabel,
+}: Props) {
+  const money = (amount: number) => formatMoney(amount, currency);
+  const units = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  const totals: Array<{ label: string; value: number }> = [
+    { label: "Subtotal", value: subtotal },
+    { label: "Shipping", value: shipping },
+    { label: "Tax", value: tax },
+  ];
+
+  return (
+    <aside
+      aria-label={title}
+      className="w-full max-w-[28rem] self-start overflow-hidden rounded-2xl border border-stone-200 bg-white text-stone-900 shadow-[0_1px_2px_rgba(28,25,23,0.06),0_8px_24px_-16px_rgba(28,25,23,0.25)]"
+    >
+      {/* Title */}
+      <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-stone-200 px-5 py-4 sm:px-6">
+        <h2 className="text-lg font-semibold tracking-tight text-stone-900">{title}</h2>
+        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-stone-500">
+          {items.length} {items.length === 1 ? "line" : "lines"} · {units}{" "}
+          {units === 1 ? "unit" : "units"}
+        </p>
+      </header>
+
+      {/* Items */}
+      <ul className="divide-y divide-stone-200/80 px-5 sm:px-6">
+        {items.map((item) => (
+          <li key={item.id} className="flex gap-4 py-4">
+            <div className="relative shrink-0">
+              <img
+                src={item.image.src}
+                alt={item.image.alt}
+                loading="lazy"
+                className="h-16 w-16 rounded-lg bg-stone-100 object-cover ring-1 ring-inset ring-stone-200 sm:h-[4.5rem] sm:w-[4.5rem]"
+              />
+              <span className="absolute -right-2 -top-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-stone-900 px-1.5 text-[11px] font-semibold leading-none tabular-nums text-white ring-2 ring-white">
+                {item.quantity}
+              </span>
+            </div>
+
+            <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium leading-snug text-stone-900">{item.name}</p>
+                <p className="mt-0.5 text-sm leading-snug text-stone-500">{item.variant}</p>
+                <p className="mt-1.5 text-xs font-medium uppercase tracking-[0.08em] text-stone-500">
+                  Qty {item.quantity}
+                </p>
+              </div>
+              <p className="shrink-0 text-sm font-semibold tabular-nums text-stone-900">
+                {money(item.price)}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {/* Promo code */}
+      <div className="border-t border-stone-200 px-5 py-5 sm:px-6">
+        <label htmlFor="checkout-promo-code" className="block text-sm font-medium text-stone-900">
+          {promo.label}
+        </label>
+        <div className="mt-2 flex items-stretch gap-2">
+          <input
+            id="checkout-promo-code"
+            name="promoCode"
+            type="text"
+            autoComplete="off"
+            placeholder={promo.placeholder}
+            className="min-w-0 flex-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 shadow-[inset_0_1px_1px_rgba(28,25,23,0.03)] placeholder:text-stone-400 focus:border-[#2f4f3f] focus:outline-none focus:ring-2 focus:ring-[#2f4f3f]/20"
+          />
+          <button
+            type="button"
+            className="shrink-0 rounded-lg border border-stone-300 bg-stone-50 px-4 py-2 text-sm font-medium text-stone-800 transition-colors hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-[#2f4f3f]/30"
+          >
+            {promo.applyLabel}
+          </button>
+        </div>
+      </div>
+
+      {/* Amounts */}
+      <dl className="space-y-2.5 border-t border-stone-200 px-5 py-5 text-sm sm:px-6">
+        {totals.map((row) => (
+          <div key={row.label} className="flex items-baseline justify-between gap-4">
+            <dt className="text-stone-600">{row.label}</dt>
+            <dd className="tabular-nums text-stone-900">{money(row.value)}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {/* Total */}
+      <div className="border-t-2 border-stone-900/10 bg-stone-50 px-5 py-4 sm:px-6">
+        <div className="flex items-baseline justify-between gap-4">
+          <p className="text-base font-semibold tracking-tight text-stone-900">Total</p>
+          <p className="text-2xl font-semibold tabular-nums tracking-tight text-stone-900">
+            {money(total)}
+          </p>
+        </div>
+        <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.12em] text-stone-500">
+          All amounts in {currency}
+        </p>
+      </div>
+
+      {/* Note + pay */}
+      <div className="px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
+        <p className="flex gap-2.5 rounded-lg bg-[#2f4f3f]/5 px-3 py-2.5 text-xs leading-relaxed text-stone-600 ring-1 ring-inset ring-[#2f4f3f]/10">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 20 20"
+            fill="none"
+            className="mt-px h-4 w-4 shrink-0 text-[#2f4f3f]"
+          >
+            <circle cx="10" cy="10" r="7.25" stroke="currentColor" strokeWidth="1.5" />
+            <path
+              d="M10 9v4.5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+            <circle cx="10" cy="6.5" r="0.9" fill="currentColor" />
+          </svg>
+          <span>{note}</span>
+        </p>
+
+        <button
+          type="button"
+          className="mt-4 flex w-full items-center justify-center rounded-xl bg-[#2f4f3f] px-4 py-3.5 text-sm font-semibold tracking-wide text-white shadow-sm transition-colors hover:bg-[#26402f] focus:outline-none focus:ring-2 focus:ring-[#2f4f3f]/40 focus:ring-offset-2"
+        >
+          {payLabel}
+        </button>
+      </div>
+    </aside>
+  );
+}

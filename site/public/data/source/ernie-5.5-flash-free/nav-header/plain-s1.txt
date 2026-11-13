@@ -1,0 +1,108 @@
+/** The top navigation bar of a web app. */
+export interface Props {
+  productName: string;
+  links: NavLink[];
+  /** Label of the primary call-to-action button. */
+  ctaLabel: string;
+  /** The signed-in user. */
+  user: User;
+}
+
+export interface NavLink {
+  label: string;
+  /** Where the link points, e.g. "/reports". */
+  href: string;
+  /** True for the link to the current page. */
+  active: boolean;
+}
+
+export interface User {
+  name: string;
+  email: string;
+}
+
+/** "Priya Raman" -> "PR". */
+function initialsFrom(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return parts
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+}
+
+export default function AppHeader({ productName, links, ctaLabel, user }: Props) {
+  const brandMark = productName.trim().charAt(0).toUpperCase() || "L";
+  const initials = initialsFrom(user.name);
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center gap-x-5 gap-y-3 px-4 py-3 sm:px-6 lg:h-16 lg:flex-nowrap lg:gap-x-6 lg:py-0">
+        {/* Brand */}
+        <a
+          href="/"
+          aria-label={`${productName} home`}
+          className="order-1 flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-600"
+        >
+          <span
+            aria-hidden="true"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-[13px] font-bold text-white"
+          >
+            {brandMark}
+          </span>
+          <span className="text-[15px] font-semibold tracking-tight text-slate-900 sm:text-base">
+            {productName}
+          </span>
+        </a>
+
+        {/* Primary action + signed-in user */}
+        <div className="order-2 ml-auto flex items-center gap-3 sm:gap-4 lg:order-3">
+          <button
+            type="button"
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          >
+            {ctaLabel}
+          </button>
+
+          <span aria-hidden="true" className="hidden h-6 w-px bg-slate-200 sm:block" />
+
+          <div className="flex items-center gap-2.5">
+            <span
+              aria-hidden="true"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-700"
+            >
+              {initials}
+            </span>
+            <span className="hidden min-w-0 flex-col leading-tight sm:flex">
+              <span className="max-w-[11rem] truncate text-sm font-medium text-slate-900">{user.name}</span>
+              <span className="max-w-[11rem] truncate text-xs text-slate-500">{user.email}</span>
+            </span>
+            <span className="sr-only sm:hidden">Signed in as {user.name}</span>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav
+          aria-label="Main"
+          className="order-3 -mx-1 flex w-full min-w-0 items-center gap-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:order-2 lg:mx-0 lg:w-auto lg:flex-1 lg:px-0"
+        >
+          {links.map((link) => (
+            <a
+              key={`${link.href}-${link.label}`}
+              href={link.href}
+              aria-current={link.active ? "page" : undefined}
+              className={[
+                "whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600",
+                link.active
+                  ? "bg-slate-100 font-semibold text-slate-900"
+                  : "font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900",
+              ].join(" ")}
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+    </header>
+  );
+}

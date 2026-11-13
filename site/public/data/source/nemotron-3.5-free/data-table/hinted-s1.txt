@@ -1,0 +1,108 @@
+interface Props {
+  title: string;
+  summary: string;
+  currency: string;
+  orders: Order[];
+}
+
+type OrderStatus = 'paid' | 'pending' | 'refunded' | 'failed';
+
+interface Order {
+  id: string;
+  customerName: string;
+  email: string;
+  status: OrderStatus;
+  amount: number;
+  date: string;
+}
+
+function statusBadgeClass(status: OrderStatus): string {
+  const base =
+    "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border";
+
+  switch (status) {
+    case 'paid':
+      return `${base} bg-green-50 text-green-700 border-green-100`;
+    case 'pending':
+      return `${base} bg-yellow-50 text-yellow-700 border-yellow-100`;
+    case 'refunded':
+      return `${base} bg-orange-50 text-orange-700 border-orange-100`;
+    case 'failed':
+      return `${base} bg-red-50 text-red-700 border-red-100`;
+  }
+}
+
+export default function RecentOrders({ title, summary, currency, orders }: Props) {
+  const formatAmount = (amount: number): string =>
+    new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+
+  return (
+    <section className="w-full border border-gray-200 rounded-lg bg-white shadow-sm">
+      <div className="px-4 py-3 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        <p className="mt-1 text-sm text-gray-600">{summary}</p>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-full text-sm border-collapse">
+          <thead>
+            <tr className="border-b border-gray-200 bg-gray-50">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Order number
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Customer
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Payment status
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date
+              </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Amount
+              </th>
+            </tr>
+          </thead>
+
+          <tbody className="divide-y divide-gray-200">
+            {orders.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-500">
+                  No recent orders.
+                </td>
+              </tr>
+            ) : (
+              orders.map((order) => (
+                <tr key={order.id}>
+                  <td className="px-4 py-4 text-gray-900 break-words">
+                    {order.id}
+                  </td>
+                  <td className="px-4 py-4 break-words">
+                    <div className="font-medium text-gray-900 break-words">
+                      {order.customerName}
+                    </div>
+                    <div className="mt-0.5 text-sm text-gray-500 break-words">
+                      {order.email}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 break-words">
+                    <span className={statusBadgeClass(order.status)}>
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 text-gray-900 break-words">
+                    {order.date}
+                  </td>
+                  <td className="px-4 py-4 text-right font-medium tabular-nums text-gray-900">
+                    {formatAmount(order.amount)}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}

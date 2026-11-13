@@ -1,0 +1,135 @@
+export type OrderStatus = 'paid' | 'pending' | 'refunded' | 'failed';
+
+export interface Order {
+  /** Order number shown to staff, e.g. "#10482". */
+  id: string;
+  customerName: string;
+  email: string;
+  status: OrderStatus;
+  /** Order total, in the panel's currency. */
+  amount: number;
+  /** Already formatted for display, e.g. "Nov 11, 2026". */
+  date: string;
+}
+
+/** The recent orders panel of a store dashboard. */
+export interface Props {
+  title: string;
+  /** Shown under the title. */
+  summary: string;
+  /** ISO 4217 code used for every amount, e.g. "USD". */
+  currency: string;
+  orders: Order[];
+}
+
+const statusStyles: Record<
+  OrderStatus,
+  { badge: string; dot: string; label: string }
+> = {
+  paid: {
+    badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    dot: "bg-emerald-500",
+    label: "Paid",
+  },
+  pending: {
+    badge: "border-amber-200 bg-amber-50 text-amber-700",
+    dot: "bg-amber-500",
+    label: "Pending",
+  },
+  refunded: {
+    badge: "border-sky-200 bg-sky-50 text-sky-700",
+    dot: "bg-sky-500",
+    label: "Refunded",
+  },
+  failed: {
+    badge: "border-rose-300 bg-rose-100 text-rose-800",
+    dot: "bg-rose-500",
+    label: "Failed",
+  },
+};
+
+export default function RecentOrdersPanel({
+  title,
+  summary,
+  currency,
+  orders,
+}: Props) {
+  const formatAmount = (amount: number) =>
+    new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+    }).format(amount);
+
+  return (
+    <section className="w-full rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-200 px-5 py-4 sm:px-6 sm:py-5">
+        <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">{title}</h2>
+        <p className="mt-1 text-sm text-slate-500">{summary}</p>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-collapse text-sm">
+          <thead>
+            <tr className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th scope="col" className="px-5 py-3 font-semibold sm:px-6">
+                Order
+              </th>
+              <th scope="col" className="px-5 py-3 font-semibold sm:px-6">
+                Customer
+              </th>
+              <th scope="col" className="px-5 py-3 font-semibold sm:px-6">
+                Payment status
+              </th>
+              <th scope="col" className="px-5 py-3 font-semibold sm:px-6">
+                Date
+              </th>
+              <th scope="col" className="px-5 py-3 text-right font-semibold sm:px-6">
+                Amount
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {orders.map((order) => {
+              const status = statusStyles[order.status];
+
+              return (
+                <tr key={order.id} className="hover:bg-slate-50/70">
+                  <td className="whitespace-nowrap px-5 py-4 font-mono text-sm font-medium text-slate-900 sm:px-6">
+                    {order.id}
+                  </td>
+                  <td className="px-5 py-4 sm:px-6">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-slate-900">
+                        {order.customerName}
+                      </span>
+                      <span className="mt-0.5 text-xs text-slate-500">
+                        {order.email}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 sm:px-6">
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${status.badge}`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${status.dot}`}
+                        aria-hidden="true"
+                      />
+                      {status.label}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-4 text-slate-600 sm:px-6">
+                    {order.date}
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-4 text-right font-medium tabular-nums text-slate-900 sm:px-6">
+                    {formatAmount(order.amount)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}

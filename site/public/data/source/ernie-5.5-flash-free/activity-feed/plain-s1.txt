@@ -1,0 +1,143 @@
+import React from "react";
+
+export interface Props {
+  title: string;
+  filters: Filter[];
+  /** Newest first. */
+  events: ActivityEvent[];
+}
+
+export interface Filter {
+  id: string;
+  label: string;
+  /** True for the selected filter. */
+  active: boolean;
+}
+
+export interface ActivityEvent {
+  id: string;
+  /** The name of the person who did something. */
+  actor: string;
+  /** What they did, e.g. "commented on". */
+  action: string;
+  /** The name of what they did it to, e.g. a task. */
+  target: string;
+  /** Already formatted for display, e.g. "2 hours ago". */
+  time: string;
+  /** What the actor wrote, or null when they left no comment. */
+  comment: string | null;
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+  return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+}
+
+export default function ActivityFeed({ title, filters, events }: Props) {
+  return (
+    <React.Fragment>
+      <section className="w-full bg-white" aria-labelledby="activity-feed-title">
+        <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+          <header className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2
+                id="activity-feed-title"
+                className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl"
+              >
+                {title}
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Updates from across your workspace, newest first.
+              </p>
+            </div>
+
+            <div
+              className="flex flex-wrap gap-2"
+              role="group"
+              aria-label="Filter activity"
+            >
+              {filters.map((filter) => (
+                <button
+                  key={filter.id}
+                  type="button"
+                  aria-pressed={filter.active}
+                  className={[
+                    "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+                    filter.active
+                      ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50",
+                  ].join(" ")}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          </header>
+
+          <div className="mt-7 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            {events.length === 0 ? (
+              <div className="px-6 py-12 text-center">
+                <p className="text-sm font-medium text-slate-700">No activity yet</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Updates from your team will appear here.
+                </p>
+              </div>
+            ) : (
+              <ol className="divide-y divide-slate-100">
+                {events.map((event) => (
+                  <li key={event.id} className="px-4 py-5 sm:px-6 sm:py-6">
+                    <div className="flex gap-3 sm:gap-4">
+                      <div className="flex-none">
+                        <div
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600 ring-1 ring-slate-200 sm:h-11 sm:w-11"
+                          aria-hidden="true"
+                        >
+                          {getInitials(event.actor)}
+                        </div>
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                          <p className="break-words text-sm leading-6 text-slate-600 sm:text-base">
+                            <span className="font-semibold text-slate-900">
+                              {event.actor}
+                            </span>{" "}
+                            <span>{event.action}</span>{" "}
+                            <span className="font-medium text-slate-900">
+                              {event.target}
+                            </span>
+                          </p>
+                          <span className="shrink-0 text-xs text-slate-400 sm:text-right sm:text-sm">
+                            {event.time}
+                          </span>
+                        </div>
+
+                        {event.comment ? (
+                          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <p className="whitespace-pre-line break-words text-sm leading-6 text-slate-700">
+                              <span aria-hidden="true" className="text-slate-400">
+                                “
+                              </span>
+                              {event.comment}
+                              <span aria-hidden="true" className="text-slate-400">
+                                ”
+                              </span>
+                            </p>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </div>
+      </section>
+    </React.Fragment>
+  );
+}

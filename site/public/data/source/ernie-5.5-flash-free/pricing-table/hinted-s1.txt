@@ -1,0 +1,194 @@
+interface Plan {
+  /** Plan name, e.g. "Team". */
+  name: string;
+  /** Price per month, in the section's currency. */
+  monthlyPrice: number;
+  /** Who the plan is for. */
+  description: string;
+  /** Included features, in display order. */
+  features: string[];
+  /** Label of the plan's call-to-action button. */
+  ctaLabel: string;
+  /** Optional badge label, e.g. "Most popular". */
+  badge?: string;
+  /** True for the plan to recommend. */
+  highlighted: boolean;
+}
+
+/** The pricing section of a marketing page. */
+interface Props {
+  heading: string;
+  subheading: string;
+  /** ISO 4217 code used for every price, e.g. "USD". */
+  currency: string;
+  plans: Plan[];
+}
+
+function formatPrice(amount: number, currency: string): string {
+  const fractionDigits = Number.isInteger(amount) ? 0 : 2;
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
+    }).format(amount);
+  } catch {
+    // Fallback for unknown currency codes or environments without Intl.
+    return `${currency} ${amount}`;
+  }
+}
+
+const CHECK_PATH = "M4 10.5 8 14.5 16 5.5";
+
+export default function PricingSection({ heading, subheading, currency, plans }: Props) {
+  return (
+    <section
+      aria-labelledby="pricing-heading"
+      className="w-full bg-slate-50 px-4 py-16 sm:px-6 lg:px-8 lg:py-24"
+    >
+      <div className="mx-auto w-full max-w-6xl">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2
+            id="pricing-heading"
+            className="text-3xl font-bold tracking-tight text-balance break-words text-slate-900 sm:text-4xl"
+          >
+            {heading}
+          </h2>
+          <p className="mt-4 text-base leading-7 text-pretty break-words text-slate-600 sm:text-lg">
+            {subheading}
+          </p>
+        </div>
+
+        <div className="mt-12 grid items-stretch gap-6 sm:mt-16 [grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr))]">
+          {plans.map((plan, index) => {
+            const isHighlighted = plan.highlighted;
+            const price = formatPrice(plan.monthlyPrice, currency);
+            const features = Array.isArray(plan.features) ? plan.features : [];
+            const hasFeatures = features.length > 0;
+
+            const cardClass = [
+              "relative flex h-full flex-col overflow-hidden rounded-2xl border p-6 transition-shadow sm:p-8",
+              isHighlighted
+                ? "border-slate-900 bg-slate-900 text-white shadow-xl shadow-slate-900/25 ring-2 ring-indigo-500"
+                : "border-slate-200 bg-white text-slate-900 shadow-sm hover:shadow-md",
+            ].join(" ");
+
+            const buttonClass = [
+              "flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold leading-snug transition-colors",
+              "focus-visible:outline-2 focus-visible:outline-offset-2",
+              isHighlighted
+                ? "bg-white text-slate-900 hover:bg-slate-100 focus-visible:outline-white"
+                : "bg-slate-900 text-white hover:bg-slate-800 focus-visible:outline-slate-900",
+            ].join(" ");
+
+            return (
+              <article key={`${plan.name}-${index}`} className={cardClass}>
+                {isHighlighted ? (
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-400 via-violet-400 to-fuchsia-400"
+                  />
+                ) : null}
+
+                {plan.badge ? (
+                  <span
+                    className={[
+                      "inline-flex max-w-full items-center rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase",
+                      isHighlighted ? "bg-indigo-500 text-white" : "bg-indigo-50 text-indigo-700",
+                    ].join(" ")}
+                  >
+                    <span className="break-words">{plan.badge}</span>
+                  </span>
+                ) : null}
+
+                <div className={plan.badge ? "mt-5" : ""}>
+                  <h3 className="text-lg font-semibold tracking-tight break-words sm:text-xl">
+                    {plan.name}
+                  </h3>
+                  <p
+                    className={[
+                      "mt-2 text-sm leading-6 text-pretty break-words",
+                      isHighlighted ? "text-slate-300" : "text-slate-600",
+                    ].join(" ")}
+                  >
+                    {plan.description}
+                  </p>
+                </div>
+
+                <div className="mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  <span className="min-w-0 text-3xl font-bold tracking-tight break-words tabular-nums sm:text-4xl">
+                    {price}
+                  </span>
+                  <span
+                    className={[
+                      "text-sm font-medium",
+                      isHighlighted ? "text-slate-400" : "text-slate-500",
+                    ].join(" ")}
+                  >
+                    / month
+                  </span>
+                </div>
+
+                <div
+                  aria-hidden="true"
+                  className={[
+                    "my-6 h-px w-full",
+                    isHighlighted ? "bg-white/10" : "bg-slate-200",
+                  ].join(" ")}
+                />
+
+                {hasFeatures ? (
+                  <ul className="space-y-3">
+                    {features.map((feature, featureIndex) => (
+                      <li
+                        key={`${featureIndex}-${feature}`}
+                        className="flex items-start gap-3"
+                      >
+                        <span
+                          className={[
+                            "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
+                            isHighlighted
+                              ? "bg-indigo-500/20 text-indigo-300"
+                              : "bg-indigo-50 text-indigo-600",
+                          ].join(" ")}
+                        >
+                          <svg
+                            viewBox="0 0 20 20"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2.5}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                            className="h-3 w-3"
+                          >
+                            <path d={CHECK_PATH} />
+                          </svg>
+                        </span>
+                        <span
+                          className={[
+                            "min-w-0 text-sm leading-6 break-words",
+                            isHighlighted ? "text-slate-200" : "text-slate-700",
+                          ].join(" ")}
+                        >
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+
+                <div className="mt-auto pt-8">
+                  <button type="button" className={buttonClass}>
+                    <span className="text-center break-words">{plan.ctaLabel}</span>
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
