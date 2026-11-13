@@ -40,7 +40,12 @@ for (const labCase of LAB_CASES) {
       assert.deepStrictEqual(actual, expected);
       if (labCase.culprits !== undefined) {
         const overflow = findings.find((finding) => finding.check === 'page-overflow-x');
-        assert.equal((overflow?.detail.culprits as string[] | undefined)?.length, labCase.culprits, 'page-overflow-x culprits');
+        const culprits = overflow?.detail.culprits as string[] | undefined;
+        if (typeof labCase.culprits === 'number') {
+          assert.equal(culprits?.length, labCase.culprits, 'page-overflow-x culprits');
+        } else {
+          assert.deepStrictEqual(culprits, labCase.culprits, 'page-overflow-x culprits');
+        }
       }
     } finally {
       await context.close();

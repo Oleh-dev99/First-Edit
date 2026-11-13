@@ -23,8 +23,11 @@ export interface LabCase {
   knownFailure?: string;
   /** Text direction of the page; "rtl" sets dir="rtl" on <html>. */
   dir?: 'rtl';
-  /** The expected number of page-overflow-x culprits, when the case pins them. */
-  culprits?: number;
+  /**
+   * The expected page-overflow-x culprits, when the case pins them: their
+   * number, or their selectors in order.
+   */
+  culprits?: number | string[];
 }
 
 export const DEFAULT_VIEWPORT: Viewport = { width: 800, height: 600 };
@@ -142,6 +145,35 @@ export const LAB_CASES: LabCase[] = [
       `<div style="position:fixed; top:40px; left:0; width:500px; height:20px; background:#fecaca"></div>`,
     expected: { 'page-overflow-x': { error: 1 } },
     culprits: 2,
+  },
+  {
+    id: 'overflow-text-culprit',
+    check: 'page-overflow-x',
+    description: '+ a word wider than the viewport runs out of its paragraph; the paragraph is named as the culprit',
+    viewport: NARROW,
+    html: `<div><p style="margin:0; font-size:16px">Release ${TOKEN}</p></div>`,
+    expected: { 'page-overflow-x': { error: 1 } },
+    culprits: ['#fe-root > div:nth-child(1) > p:nth-child(1)'],
+  },
+  {
+    id: 'overflow-image-culprit',
+    check: 'page-overflow-x',
+    description: '+ a 600px image widens the page; the image is named as the culprit',
+    viewport: NARROW,
+    html: `<div><img alt="" src="${image(600, 40, '#94a3b8')}" style="display:block; width:600px; max-width:none; height:40px"></div>`,
+    expected: { 'page-overflow-x': { error: 1 } },
+    culprits: ['#fe-root > div:nth-child(1) > img:nth-child(1)'],
+  },
+  {
+    id: 'overflow-text-furthest-first',
+    check: 'page-overflow-x',
+    description: '+ a heading whose word reaches furthest is named before a 400px row that passes the edge too',
+    viewport: NARROW,
+    html:
+      `<h2 style="margin:0; font-size:20px">${TOKEN}</h2>` +
+      `<div style="width:400px; height:20px"></div>`,
+    expected: { 'page-overflow-x': { error: 1 } },
+    culprits: ['#fe-root > h2:nth-child(1)', '#fe-root > div:nth-child(2)'],
   },
 
   // text-clipped
