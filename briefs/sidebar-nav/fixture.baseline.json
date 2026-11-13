@@ -1,0 +1,35 @@
+{
+  "workspaceName": "Mossbank Design Co.",
+  "sections": [
+    {
+      "title": "Workspace",
+      "links": [
+        { "label": "Home", "href": "/home", "count": null, "active": false },
+        { "label": "Inbox", "href": "/inbox", "count": 12, "active": false },
+        { "label": "My tasks", "href": "/tasks", "count": 5, "active": true },
+        { "label": "Calendar", "href": "/calendar", "count": null, "active": false }
+      ]
+    },
+    {
+      "title": "Projects",
+      "links": [
+        { "label": "Website relaunch", "href": "/projects/website-relaunch", "count": 8, "active": false },
+        { "label": "Harbour Hotel signage", "href": "/projects/harbour-signage", "count": null, "active": false },
+        { "label": "Brand refresh", "href": "/projects/brand-refresh", "count": 3, "active": false },
+        { "label": "Spring catalogue", "href": "/projects/spring-catalogue", "count": null, "active": false }
+      ]
+    },
+    {
+      "title": "Admin",
+      "links": [
+        { "label": "Members", "href": "/admin/members", "count": 24, "active": false },
+        { "label": "Billing", "href": "/admin/billing", "count": null, "active": false },
+        { "label": "Settings", "href": "/admin/settings", "count": null, "active": false }
+      ]
+    }
+  ],
+  "user": {
+    "name": "Ines Carvalho",
+    "role": "Product designer"
+  }
+}

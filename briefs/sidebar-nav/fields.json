@@ -1,0 +1,12 @@
+{
+  "workspaceName": { "kind": "label", "required": true },
+  "sections": { "kind": "list", "min": 1, "max": 6 },
+  "sections[].title": { "kind": "label" },
+  "sections[].links": { "kind": "list", "min": 1, "max": 10 },
+  "sections[].links[].label": { "kind": "label", "required": true },
+  "sections[].links[].href": { "kind": "fixed" },
+  "sections[].links[].count": { "kind": "number" },
+  "sections[].links[].active": { "kind": "fixed" },
+  "user.name": { "kind": "label", "required": true },
+  "user.role": { "kind": "label" }
+}
