@@ -1,4 +1,4 @@
-"""Command line: python -m first_edit <doctor|generate|stress|summarize|run-next|cli-probe|label-set|label> ..."""
+"""Command line: python -m first_edit <doctor|generate|stress|summarize|run-next|cli-probe|label-set|label|calibrate> ..."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 
 from .briefs import BriefError, list_briefs, load_brief
 from .budget import Budget
+from .calibrate import calibrate
 from .doctor import run_doctor
 from .generate import generate, summarize
 from .labelset import build_label_set, format_composition, load_label_set, write_label_set
@@ -86,6 +87,12 @@ def _parser() -> argparse.ArgumentParser:
     label = commands.add_parser("label", help="start the blind labelling tool on 127.0.0.1 (docs/LABELLING.md)")
     label.add_argument("--set", required=True, type=Path, dest="set_path", help="a label set, e.g. labels/set-01.json")
     label.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"the local port (default {DEFAULT_PORT})")
+
+    cal = commands.add_parser("calibrate", help="compare the suite's verdicts with a set's labels (docs/LABELLING.md)")
+    cal.add_argument("--set", required=True, type=Path, dest="set_path", help="a label set, e.g. labels/set-01.json")
+    cal.add_argument("--runs", required=True, type=Path, help="the stress results the set was drawn from")
+    cal.add_argument("--out", required=True, type=Path, help="output directory, e.g. results/calibration")
+    cal.add_argument("--partial", action="store_true", help="run before every item has a label, and say so")
     return parser
 
 
@@ -193,6 +200,10 @@ def main(argv: list[str] | None = None) -> int:
             return _cli_probe(args.model)
         if args.command == "label-set":
             return _label_set(args)
+        if args.command == "calibrate":
+            for path in calibrate(args.set_path, load_label_set(args.set_path), args.runs, args.out, partial=args.partial):
+                print(f"wrote {path}")
+            return 0
         if args.command == "label":
             serve(open_tool(args.set_path, load_label_set(args.set_path), port=args.port))
             return 0
