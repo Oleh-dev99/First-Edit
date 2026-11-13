@@ -297,9 +297,11 @@ stress suite. Suite v1 is the suite as of step 10, plus the step 11
 change to page-overflow-x culprits, which changes detail only. It is
 frozen (D-044): from step 11 on, only bug fixes change it, and each fix
 is recorded in docs/DECISIONS.md with its lab case and its effect on
-results. A fix keeps the version; a change of design would start suite
-v2. Every stress summary records the suite it ran (`"suite": "v1"`),
-and so does report.md.
+results. A fix bumps the patch number (v1.1, v1.2); a change of design
+would start suite v2. Every stress summary records the suite it ran
+(`"suite": "v1"`) and the harness commit (the short hash of HEAD and
+whether the working tree had changes), and report.md lists both.
+summarize reads v1 and its patches.
 
 ## Checks (v0)
 A check is a plain DOM function `(root: Element) => Finding[]` with no
@@ -498,6 +500,8 @@ cleanly. Bump schemaVersion on any incompatible change.
 {
   "schemaVersion": 3,
   "suite": "v1",                       // the stress suite (D-044)
+  "harness": { "commit": "<short hash>" | null, "dirty": true | false | null },
+                                       // null without git
   "brief": "hello-card",
   "candidate": "_samples/hello-card/brittle",
   "fixture": "baseline",
@@ -547,7 +551,10 @@ python -m first_edit generate --model <id> [--brief <id> | --all]
 python -m first_edit stress --model <id> [--brief <id> | --all]
   [--variant plain|hinted]
 python -m first_edit doctor
-python -m first_edit summarize --out <dir> [--model <id> ...]
+python -m first_edit summarize --out <dir> [--model <id> ...] [--runs-dir <dir>]
+  [--plan <file>]
+python -m first_edit run-next [--dry-run] [--plan <file>]
+python -m first_edit cli-probe --model <claude-cli model id>
 ```
 
 --all means every corpus brief (sample: false). The default variant is
@@ -579,6 +586,10 @@ price = { input = 0.0, output = 0.0 }  # USD per million tokens, optional
   provider type (D-023). Keys live in .env; .env.example lists the names.
 - mock: replies with the brief's reference candidate inside one tsx code
   fence, with no network.
+- claude-cli: runs the installed Claude Code command line once per sample
+  (see claude-cli provider). `model` is the command line's alias (haiku,
+  sonnet, opus) and `params = { effort = "medium" }` is required; there
+  is no base URL, key or price.
 - A model id matches [a-z0-9][a-z0-9._-]* and is used in paths.
 
 ### Prompt
@@ -752,6 +763,88 @@ doctor cannot detect region blocking: a model can be listed and usable
 here and still answer every call with HTTP 403 ("not available in your
 region"), as inkling-2-small-free did in step 8. Only a call shows it.
 
+### claude-cli provider (D-047)
+Claude models can run through Claude Code's command line on the owner's
+subscription instead of the API. Each sample runs `claude` (found with
+shutil.which) once, non-interactively:
+- from a new empty temporary directory outside the repository;
+- `--print --output-format json --max-turns 1 --no-session-persistence`;
+- `--model <alias>` from the models file and `--effort <effort>` from its
+  params (medium for every model);
+- `--system-prompt-file` with our system message, written to a temporary
+  file, so Claude Code's own system prompt is replaced;
+- `--tools ""` (no built-in tools) and `--disallowedTools "mcp__*"` (no
+  MCP tools);
+- `--safe-mode` when the installed version has it, so CLAUDE.md, skills,
+  plugins, hooks and MCP servers do not load;
+- the user message on stdin, never on the command line;
+- an environment without Claude Code's session variables (CLAUDECODE,
+  CLAUDE_CODE_*, CLAUDE_EFFORT ...), Anthropic settings and API keys
+  (CLAUDE_CONFIG_DIR stays, it locates the login), plus
+  CLAUDE_CODE_DISABLE_ATTACHMENTS, CLAUDE_CODE_DISABLE_CLAUDE_MDS and
+  CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS set to 1.
+
+The cached response is the command line's JSON output with the version,
+effort and safe mode. generation.json records provider "claude-cli", the
+model the command line reports, token usage (from modelUsage, its totals),
+and a `cli` block with the version, effort, safe mode and the command
+line's own cost figure as `costUsdEstimate`; actualCostUsd stays null,
+because the subscription is not billed per call. A reply that reports the
+plan's usage limit stops the job (nothing is retried); any other failure
+is an API error. The doctor checks that the command line is installed and
+signed in, and with which method: anything but claude.ai would bill an API
+account.
+
+`python -m first_edit cli-probe --model <id>` is the isolation probe: one
+call through the same code path with our system prompt and a user message
+that asks the model to list every tool it can call and to quote every
+instruction it was given. It saves the reply to results/cli-probe/. In
+step 12 the probe showed context we cannot remove with a subscription
+login (see Known gaps), so the Claude jobs were not run.
+
+### Run queue
+runner/plan.toml lists the jobs of a run in order (D-048):
+
+```
+runs_dir = "results/runs-run2"     # where the stress results go
+out = "results/run2"               # where summarize writes
+
+[[job]]
+model = "gemma-4-31b-free"         # a model id from runner/models.toml
+variants = ["plain", "hinted"]
+briefs = "all"                     # or a list of brief ids
+samples = 1                        # per brief and variant
+parallel = false                   # optional: jobs marked parallel may run two at a time
+only_if_blocked = []               # optional: a fallback, run only if one of these is blocked
+```
+
+`python -m first_edit run-next` makes one pass through the queue:
+- A sample is done when its generation.json says "generated" for the
+  current cache key; run-next generates only the samples that are not
+  done, brief by brief (plain and hinted of one brief together), so
+  finished work is never repeated and a stopped job leaves complete pairs.
+- A free model's job stops when the daily ledger allows no more, and the
+  later free jobs wait too. A claude-cli job stops when the plan's usage
+  limit is reached. Nothing is retried in a loop.
+- Two-sample probe: if a model's first two samples both fail with a
+  rate-limit, availability or region error (HTTP 403, 404, 429, 502 or
+  503, or a message saying the model is unavailable or not available in
+  the region), the model is marked blocked and never called again; a job
+  with `only_if_blocked` naming it becomes active. The state is kept in
+  <runs_dir>/queue-state.json.
+- It stresses every valid candidate of the queue's models that has no
+  stress result in runs_dir, or one older than its Component.tsx.
+- It re-runs summarize into `out`, with the decision lines covering the
+  models whose queued jobs are all finished (not blocked, every sample
+  generated, every valid candidate stressed).
+- It prints what it did, what remains per job, the blocked models, the
+  finished models and when it can continue (for free models, the next
+  00:00 UTC).
+
+`--dry-run` prints the samples done and to do per job and calls, stresses
+and writes nothing. run-next is safe to run any number of times; it never
+re-runs a sample to get a better result and never clears the cache.
+
 ### Stress
 `python -m first_edit stress [--runs-dir <dir>]` runs `npm run stress`
 on every valid candidate, writing to the runs directory (default
@@ -806,6 +899,26 @@ Per model and variant:
   content
 - tokens (input, cached input, output, of which reasoning) and cost: the
   reported cost where there is one, else the estimate
+
+The hint effect, paired: per model and pooled over models, the briefs
+(and samples) where the plain and the hinted candidate both have a clean
+baseline, counted by whether each broke in a core case: both, plain only,
+hinted only, neither. p is an exact two-sided McNemar test on the
+discordant pairs, a binomial test of plain only against hinted only at
+1/2 (two times the smaller tail, capped at 1; 1 without discordant pairs).
+
+The decision lines (D-049), each met or not met, over the models whose
+queued jobs are all finished (summarize --plan, or run-next):
+- a. Coverage: every model and variant has at least 15 clean-baseline
+  candidates.
+- b. Hint effect: the pooled paired test has p below 0.05.
+- c. Model effect: at least two models whose plain core "broke at least
+  once" 95% intervals do not overlap.
+Without a plan they are not evaluated, and with no finished model they
+say so.
+
+Models run through the Claude Code command line are named in report.md
+and gallery.html with a note that this is not the raw API (D-047).
 
 Per variant, pooled over every model in the report, the headline
 sensitivity (D-045): the core headline recomputed with one case family
@@ -908,6 +1021,16 @@ Found in step 10:
   other items of that list break the same way is not new. Elements
   without classes share keys more easily.
 
+Found in step 12:
+- The claude-cli route is not fully isolated with a subscription login.
+  The command line puts "You are a Claude agent, built on Anthropic's
+  Claude Agent SDK." in front of our system prompt, and adds a reminder
+  with the account's email address and today's date to the first user
+  message. CLAUDE_CODE_DISABLE_ATTACHMENTS removed a reminder about
+  tokens, but no documented setting removes the rest; `--bare`, which
+  drops reminders, cannot use the subscription login. The Claude jobs
+  are held back until the owner decides (D-047).
+
 Closed in step 5: a visibly boxed element spilling out of its boxed
 parent (for example a tag pill out of a card) is now caught by
 content-spill (D-014). Empty states are out of scope rather than a gap
@@ -933,7 +1056,7 @@ and replaced elements.
 8. Spike on free models (done)
 9. Post-spike changes and re-stress (done)
 10. Tiers and check refinements; re-stress (done)
-11. Suite v1 frozen; ten more briefs (20 in total)
+11. Suite v1 frozen; ten more briefs (20 in total) (done)
 12. Second run on 20 briefs with more models; decide on the comparison
 13. Published multi-model run, with more briefs if step 12 calls for
     them

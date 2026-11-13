@@ -339,3 +339,43 @@ problem), while another sample of the same brief and model is
 correlated with the first and mostly repeats what it showed. The Wilson
 interval treats every candidate as independent, so candidates from more
 briefs make it more honest than more samples of the same briefs.
+
+## D-047 Claude models through the Claude Code command line (2026-11-13)
+Claude models may run through the Claude Code command line (`claude -p`)
+on the owner's subscription instead of the API: provider claude-cli,
+with our system prompt replacing Claude Code's own, every built-in and
+MCP tool disabled, one turn, effort medium and --safe-mode. This is not
+the raw API, and it is disclosed wherever results are shown (report.md
+and gallery.html). Before a run, an isolation probe through the same code
+path must show no tools and nothing beyond our system prompt. In step 12
+it did not: the command line puts an identity line ("You are a Claude
+agent, built on Anthropic's Claude Agent SDK.") in front of our system
+prompt and adds a reminder with the account's email address and the date,
+and no documented setting removes them with a subscription login
+(`--bare` would, but it needs an API key). The owner chose to run the
+Claude models, but under this rule they were not run: their jobs stay in
+runner/plan.toml, commented out, until the owner accepts this context or
+it can be removed.
+
+## D-048 The run queue; one sample per brief and variant (2026-11-13)
+Runs are driven by runner/plan.toml and `run-next`. A run that spans
+several days within the free tier's daily allowance then resumes where it
+stopped, never repeats a finished sample and never re-rolls one, and a
+model whose first two samples fail with a rate-limit, availability or
+region error is set aside for a fallback instead of eating the allowance.
+The second run takes one sample per brief and variant: with 20 briefs a
+model contributes 20 plain and 20 hinted candidates, and plain and hinted
+of the same brief form the pairs of the hint test. Briefs, not repeated
+samples, are the unit of evidence (D-046).
+
+## D-049 Three decision lines, fixed before the second run's data (2026-11-13)
+The decision on the comparison rests on three lines, reported met or not
+met for the models whose queued jobs are all finished:
+a. coverage: every model and variant has at least 15 clean-baseline
+   candidates;
+b. hint effect: an exact two-sided McNemar test on the plain and hinted
+   pairs, pooled over models, has p below 0.05;
+c. model effect: at least two models whose plain core "broke at least
+   once" 95% Wilson intervals do not overlap.
+They were fixed before any of the second run's numbers existed, so that
+the numbers cannot shape the lines that judge them.

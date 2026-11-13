@@ -82,6 +82,13 @@ Models so far (all through OpenRouter, https://openrouter.ai/api/v1):
 | ernie-5.5-flash-free | baidu/ernie-5.5-flash-preview:free | 2026-11-13 | step 8 spike: plain and hinted, 1 sample, 10 briefs; params { max_tokens = 32000 }; spike only, not for publication (D-030) |
 | nemotron-3.5-free | nvidia/nemotron-3.5-super-vl:free | 2026-11-13 | step 8 spike: plain and hinted, 1 sample, 10 briefs; params { max_tokens = 32000 }; spike only, not for publication (D-030) |
 | inkling-2-small-free | thinkingmachines/inkling-2-small:free | 2026-11-13 | step 8 spike: dropped after 2 API errors (HTTP 403, not available in this region); no candidates |
+| ernie-5.5-flash-free | baidu/ernie-5.5-flash-preview:free | queued 2026-11-13 | step 12 second run: plain and hinted, 1 sample, the ten step 11 briefs (runner/plan.toml) |
+| nemotron-3.5-free | nvidia/nemotron-3.5-super-vl:free | queued 2026-11-13 | step 12 second run: plain and hinted, 1 sample, the ten step 11 briefs |
+| gemma-4-31b-free | google/gemma-4-31b-it:free | queued 2026-11-13 | step 12 second run: plain and hinted, 1 sample, 20 briefs |
+| nemotron-3-ultra-free | nvidia/nemotron-3-ultra-550b-a55b:free | queued 2026-11-13 | step 12 second run: plain and hinted, 1 sample, 20 briefs |
+| north-mini-code-free | cohere/north-mini-code:free | queued 2026-11-13 | step 12 second run: plain and hinted, 1 sample, 20 briefs |
+| particle-1-free | particle-ai/particle-1:free | queued 2026-11-13 | step 12 fallback: runs only if gemma-4-31b-free, nemotron-3-ultra-free or north-mini-code-free is blocked |
+| cc-haiku, cc-sonnet, cc-opus | claude-cli aliases haiku, sonnet, opus (Claude Code 2.1.229, effort medium) | 2026-11-13 | step 12: not run; two isolation probe calls of cc-haiku only (D-047). Through the owner's subscription, not the API, if ever run |
 
 Free variants (ids ending in ":free") are not the published comparison
 (D-030). A published run uses the paid endpoints and records the above
