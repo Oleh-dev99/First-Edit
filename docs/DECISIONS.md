@@ -404,3 +404,22 @@ with how many of them the suite failed, instead of being forced into
 broken, which would count them as misses of checks that never looked for
 them, or into fine, which would hide them. In the rates, "other" counts as
 not broken.
+
+## D-052 An ellipsis is fine; one that hides something essential is "other" (2026-11-13)
+Text shortened with an ellipsis is labelled fine. Truncation is a
+deliberate way to handle long content, and the suite records it as info,
+not as an error (D-005), so a label of broken would make the label and the
+suite disagree by definition, not by detection. An ellipsis that hides
+something essential is a real problem but not one the checks look for, so
+it is labelled "other" (D-051), with a note saying what it hides. set-01
+was labelled under this rule before the labelling tool's first screen
+stated it; the first screen states it for later sets.
+
+## D-053 The screen-edge marker is part of blind labelling (2026-11-13)
+When a picture is wider than its screen, the labelling tool draws a dashed
+red line at the screen's edge and hatches the part past it. Without it, a
+labeller cannot tell from a full-page screenshot whether the page scrolls
+sideways. The marker is accepted for blind labels: it comes only from the
+picture's width and the case's screen width, so it shows nothing the
+picture does not, and it is drawn by the same rule on every item, whatever
+the suite found.

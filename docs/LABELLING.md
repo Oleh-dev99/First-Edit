@@ -22,13 +22,29 @@ already shows does not.
 | key | label | meaning | example |
 |---|---|---|---|
 | 1 | broken | content is cut off, spills out of its box, overlaps other content, is pushed off the screen, or the page scrolls sideways | a 30-letter word runs out of its card and over the price next to it |
-| 2 | fine | none of that; awkward wrapping and words broken across lines are fine | a long name now wraps onto three lines, and its card grows to hold it |
-| 3 | other | something else looks wrong (a squeezed column, missing content, a collapsed element), but not the kinds above | a table column squeezed so narrow that every word is split across several lines, with nothing overflowing |
+| 2 | fine | none of that; awkward wrapping, words broken across lines and text shortened with an ellipsis are fine | a long name now wraps onto three lines, and its card grows to hold it |
+| 3 | other | something else looks wrong (a squeezed column, missing content, a collapsed element), but not the kinds above; also an ellipsis that hides something essential, with a note saying what it hides | a table column squeezed so narrow that every word is split across several lines, with nothing overflowing |
 | 4 | unsure | cannot tell | a list ten times longer makes the picture 19,000 px tall, and the change cannot be found even when zoomed in |
 
 Each item can also carry a free-text note. "other" is a label of its own
 (D-051), so problems that the suite does not try to catch are counted
 instead of being forced into broken or fine.
+
+## Rules the labels follow
+Two rules settle what the question and the labels leave open. set-01 was
+labelled under both.
+
+- **Ellipsis (D-052).** Text shortened with an ellipsis ("…") counts as
+  fine: truncation is a deliberate way to handle long content, and the
+  suite records it as info, not as an error (D-005). If the ellipsis hides
+  something essential, the label is "other", with a note saying what it
+  hides. The tool's first screen states this rule from set-02 on; set-01
+  was labelled under it before it was on that screen.
+- **Screen-edge marker (D-053).** When a picture is wider than its
+  screen, the tool marks the screen's edge (see What the labeller sees).
+  The marker is accepted for a blind label: it comes only from the
+  picture's width and the case's screen width, and it is drawn by the same
+  rule on every item, whatever the suite found.
 
 ## What the labeller sees
 - The two clean screenshots, never the annotated ones, at one shared
@@ -43,7 +59,7 @@ instead of being forced into broken or fine.
   line marks the screen's edge and the part past it is hatched: that part
   can only be seen by scrolling the page sideways. The line comes from the
   picture's width and the case's screen width alone, so it shows nothing
-  that the picture does not.
+  that the picture does not (D-053).
 
 The labeller does not see the model, the variant, the sample, the suite's
 verdict, its checks or findings, outlines, or the stratum the item was
@@ -113,7 +129,8 @@ screenshot paths and their screen widths, and, for a repeat, the item it
 repeats. label-set never overwrites a set: labels refer to its item ids.
 
 set-01 was drawn on 2026-11-13 from results/runs-run2, which then held 39
-stressed candidates of two free models (38 with a clean baseline):
+stressed candidates of two free models (38 with a clean baseline), and
+labelled by the owner the same day:
 
 | stratum | size | drawn |
 |---|---|---|
@@ -165,9 +182,18 @@ counts as not broken.
   calibrate also warns when a run was stressed again since the set was
   built, because the findings would then not match what was labelled.
 
-Limits: a set has one labeller; the cases of one candidate are not
-independent, while a Wilson interval assumes they are; and the case
-descriptions are shown, so a labeller may learn that some changes (a
-60-letter word) mostly come with failures in a set, by its composition.
 Calibration changes nothing by itself: a fix to the suite is a bug fix with
 its own lab case and patch number (D-044).
+
+## Limitations
+- **One labeller.** Each set has one labeller, so the labels carry that
+  person's judgement. Self-consistency on the repeats measures how stable
+  it is, not whether another person would agree.
+- **Cases are not independent.** Items from one candidate share its code,
+  and items from one brief share its design, while the Wilson intervals
+  assume every item is independent. The intervals are therefore narrower
+  than they should be.
+- **The case description is visible while labelling.** The labeller reads
+  the change in plain words above every pair. It says what to look for,
+  and through the set's composition a labeller may learn that some changes
+  (a 60-letter word) mostly come with failures.
