@@ -1,0 +1,14 @@
+{
+  "title": { "kind": "label", "required": true },
+  "filters": { "kind": "list", "min": 1, "max": 8 },
+  "filters[].id": { "kind": "id" },
+  "filters[].label": { "kind": "label", "required": true },
+  "filters[].active": { "kind": "fixed" },
+  "events": { "kind": "list", "max": 30 },
+  "events[].id": { "kind": "id" },
+  "events[].actor": { "kind": "label", "required": true },
+  "events[].action": { "kind": "label", "required": true },
+  "events[].target": { "kind": "label", "required": true },
+  "events[].time": { "kind": "fixed" },
+  "events[].comment": { "kind": "prose" }
+}

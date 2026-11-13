@@ -1,0 +1,51 @@
+{
+  "title": "Activity",
+  "filters": [
+    { "id": "all", "label": "All activity", "active": true },
+    { "id": "comments", "label": "Comments", "active": false },
+    { "id": "status", "label": "Status changes", "active": false },
+    { "id": "files", "label": "Files", "active": false }
+  ],
+  "events": [
+    {
+      "id": "ev-2041",
+      "actor": "Tomás Ferreira",
+      "action": "commented on",
+      "target": "Checkout redesign",
+      "time": "12 minutes ago",
+      "comment": "The new address step reads much better. Can we keep the order total visible on the payment step too?"
+    },
+    {
+      "id": "ev-2039",
+      "actor": "Hana Yoshida",
+      "action": "completed",
+      "target": "Fix invoice rounding",
+      "time": "48 minutes ago",
+      "comment": null
+    },
+    {
+      "id": "ev-2036",
+      "actor": "Priya Nair",
+      "action": "attached a file to",
+      "target": "Q4 roadmap review",
+      "time": "2 hours ago",
+      "comment": "Slides for Thursday are attached. The hiring plan is on the last two pages."
+    },
+    {
+      "id": "ev-2030",
+      "actor": "Daniel Osei",
+      "action": "created",
+      "target": "Onboarding email sequence",
+      "time": "Yesterday at 4:12 PM",
+      "comment": null
+    },
+    {
+      "id": "ev-2027",
+      "actor": "Lena Brandt",
+      "action": "reopened",
+      "target": "Search results pagination",
+      "time": "Yesterday at 10:05 AM",
+      "comment": "Still seeing duplicate results on page 2 after sorting by date."
+    }
+  ]
+}
