@@ -1,0 +1,51 @@
+{
+  "dateLabel": "Thursday, 19 November",
+  "events": [
+    {
+      "id": "evt-301",
+      "start": "9:00 AM",
+      "end": "9:15 AM",
+      "title": "Daily stand-up",
+      "location": "Room 4B, Harbour floor",
+      "attendees": ["Ana Silva", "Ben Okafor", "Chen Wei", "Dara Byrne", "Elif Demir"],
+      "tag": { "label": "Team", "color": "blue" }
+    },
+    {
+      "id": "evt-302",
+      "start": "10:00 AM",
+      "end": "11:30 AM",
+      "title": "Quarterly planning review",
+      "location": "Main boardroom",
+      "attendees": ["Ana Silva", "Grace Mwangi", "Henrik Olsen", "Isabel Torres", "Jamal Haddad", "Kenji Sato"],
+      "tag": { "label": "Planning", "color": "purple" }
+    },
+    {
+      "id": "evt-303",
+      "start": "12:30 PM",
+      "end": "1:15 PM",
+      "title": "Lunch with the Ostara partnership team",
+      "location": "Fennel & Fig, Market Street",
+      "attendees": ["Ana Silva", "Lucia Romano", "Mateo Ruiz"],
+      "tag": { "label": "Social", "color": "green" }
+    },
+    {
+      "id": "evt-304",
+      "start": "2:00 PM",
+      "end": "2:45 PM",
+      "title": "Design critique: checkout flow",
+      "location": "Video call",
+      "attendees": ["Ana Silva", "Chen Wei", "Nadia Petrenko", "Omar Farouk"],
+      "tag": { "label": "Design", "color": "amber" }
+    },
+    {
+      "id": "evt-305",
+      "start": "4:00 PM",
+      "end": "4:30 PM",
+      "title": "Hiring sync for the platform team",
+      "location": "Room 2A",
+      "attendees": ["Ana Silva", "Grace Mwangi", "Priya Desai"],
+      "tag": { "label": "Hiring", "color": "red" }
+    }
+  ],
+  "addEventLabel": "New event"
+}

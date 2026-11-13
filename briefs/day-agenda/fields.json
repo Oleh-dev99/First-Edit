@@ -1,0 +1,14 @@
+{
+  "dateLabel": { "kind": "fixed" },
+  "events": { "kind": "list", "max": 20 },
+  "events[].id": { "kind": "id" },
+  "events[].start": { "kind": "fixed" },
+  "events[].end": { "kind": "fixed" },
+  "events[].title": { "kind": "label", "required": true },
+  "events[].location": { "kind": "label" },
+  "events[].attendees": { "kind": "list", "max": 12 },
+  "events[].attendees[]": { "kind": "label", "required": true },
+  "events[].tag.label": { "kind": "label", "required": true },
+  "events[].tag.color": { "kind": "fixed" },
+  "addEventLabel": { "kind": "label", "required": true }
+}
