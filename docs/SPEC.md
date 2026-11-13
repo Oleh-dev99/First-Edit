@@ -26,6 +26,8 @@ survives when the content changes.
 - Suite: the cases with their tiers, the checks with their tolerances,
   and the new-finding rule. The current suite is v1, and it is frozen
   (D-044; see Suite v1).
+- Label set: a blind, stratified sample of cases for human labelling,
+  used to calibrate the suite (see Labelling and calibration).
 
 ## Candidate contract
 - One self-contained .tsx file with a default export. It declares its own
@@ -69,8 +71,9 @@ survives when the content changes.
 2. render (Node harness): candidate x mutation -> Vite + Playwright
    (Chromium) -> screenshot + findings JSON.
 3. score (Python): findings -> survival rates and tables.
-4. calibrate (Python): compare checks against a hand-labelled set and
-   report precision and recall per check.
+4. calibrate (Python): compare the suite's verdicts with blind human
+   labels and report precision, miss rate and estimated recall, per tier
+   and per check (docs/LABELLING.md).
 5. publish: a static results site and a CLI usable on any component.
 
 ## Rendering rules
@@ -93,8 +96,9 @@ survives when the content changes.
   (source is _samples, _reference or a model id; model outputs are
   git-ignored, D-029)
 - harness/ : Node. Vite app, Playwright runner, mutations, checks
-- runner/ : Python. Generation (see Generation); scoring and calibration
-  later
+- runner/ : Python. Generation (see Generation), scoring, labelling and
+  calibration
+- labels/ : label sets and their labels, committed (docs/LABELLING.md)
 - results/ : run output, git-ignored
 - docs/ : spec, methodology, decisions
 
@@ -555,6 +559,9 @@ python -m first_edit summarize --out <dir> [--model <id> ...] [--runs-dir <dir>]
   [--plan <file>]
 python -m first_edit run-next [--dry-run] [--plan <file>]
 python -m first_edit cli-probe --model <claude-cli model id>
+python -m first_edit label-set --runs <dir> --name <name> --seed N
+python -m first_edit label --set <file> [--port N]
+python -m first_edit calibrate --set <file> --runs <dir> --out <dir> [--partial]
 ```
 
 --all means every corpus brief (sample: false). The default variant is
@@ -883,6 +890,10 @@ values:
 - report.md: the same as tables.
 - gallery.html: a static page, opened from disk.
 
+A summary driven by a run plan (run-next, or summarize --plan) is titled
+"Run report" and "Run gallery"; one without a plan "Spike report" and
+"Spike gallery". results/run2 is a run report.
+
 Per model and variant:
 - the headline: clean-baseline candidates that broke at least once in
   a core case, as a count, a share and a 95% Wilson interval (D-033,
@@ -956,6 +967,29 @@ utilities") removed and that affect layout, sizing or text overflow
 overflow-ellipsis, decoration-slice and decoration-clone. Purely visual
 removals and renames (the *-opacity-* utilities, shadow, drop-shadow,
 blur, backdrop-blur, rounded, outline-none, ring) are left alone.
+
+## Labelling and calibration
+The suite's verdicts are checked against blind human labels (D-050);
+docs/LABELLING.md is the full procedure. In short:
+- `label-set` draws a label set from a runs directory into
+  labels/<name>.json: every failed core case of the clean-baseline
+  candidates, up to 40 failed extreme cases, 120 survived cases (at least
+  half from text-longword@320, text-long@320, number-large@320,
+  list-many, viewport-320 and text-200pct) and 20 of these repeated,
+  sampled per stratum and shuffled with the seed. Each item records the
+  candidate, the case, the suite's verdict, the stratum and its size, the
+  harness commit and the two clean screenshots.
+- `label` serves the set on 127.0.0.1: one item per screen, the reference
+  render and the case render side by side, with the brief and the case
+  in plain words and nothing of the suite's result. The labels are
+  broken, fine, other (D-051) and unsure, with an optional note, saved to
+  labels/<name>.labels.jsonl after every answer.
+- `calibrate` writes report.md, summary.json and gallery.html: precision
+  (overall, per tier and per check) and miss rate with Wilson intervals,
+  recall estimated by weighting each stratum by its size, the "other"
+  and "unsure" counts, self-consistency on the repeats, and a gallery of
+  every disagreement. It refuses to run until every item has a label,
+  unless --partial is given.
 
 ## Known gaps
 Accepted in step 3:
@@ -1067,11 +1101,9 @@ and replaced elements.
 9. Post-spike changes and re-stress (done)
 10. Tiers and check refinements; re-stress (done)
 11. Suite v1 frozen; ten more briefs (20 in total) (done)
-12. Second run on 20 briefs with more models; decide on the comparison
-13. Published multi-model run, with more briefs if step 12 calls for
-    them
-14. Labelling tool and calibration
-15. Scoring and report tables
-16. Results site
-17. CLI packaging
-18. Write-up and README
+12. Second run on free models (in progress; one model a day)
+13. Labelling tool and blind calibration, set 1
+14. Results site
+15. CLI packaging
+16. Decision on the comparison when the queue finishes; label set 2
+17. Write-up and README

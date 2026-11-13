@@ -382,3 +382,25 @@ c. model effect: at least two models whose plain core "broke at least
    once" 95% Wilson intervals do not overlap.
 They were fixed before any of the second run's numbers existed, so that
 the numbers cannot shape the lines that judge them.
+
+## D-050 Calibration uses blind human labels (2026-11-13)
+The suite is calibrated against labels given blind: the labeller sees the
+two clean screenshots of a case (its reference render and the case
+render), the brief and the case in plain words, and no model, variant,
+finding, outline or verdict. The labelling tool sends the browser only
+those, and a test checks it. Items are drawn per stratum of the suite's
+verdict (failed core, failed extreme, survived in the six cases where
+misses are most likely, other survived) with a seed, so that precision
+and the miss rate come with Wilson intervals and recall over all cases
+can be estimated by weighting each stratum by its size. The step 8 to 12
+reviews (docs/REVIEW.md) were non-blind: the reviewer knew the verdict
+being checked, which can pull a judgement towards it.
+
+## D-051 "other" is a label of its own (2026-11-13)
+Besides broken, fine and unsure, a labeller can answer "other": something
+looks wrong (a squeezed column, missing content, a collapsed element), but
+not a kind of breakage the suite checks for. Such problems are counted,
+with how many of them the suite failed, instead of being forced into
+broken, which would count them as misses of checks that never looked for
+them, or into fine, which would hide them. In the rates, "other" counts as
+not broken.
