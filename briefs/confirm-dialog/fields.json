@@ -1,0 +1,12 @@
+{
+  "title": { "kind": "label", "required": true },
+  "body": { "kind": "prose" },
+  "projectName": { "kind": "label", "required": true },
+  "consequencesTitle": { "kind": "label" },
+  "consequences": { "kind": "list", "max": 10 },
+  "consequences[]": { "kind": "prose", "required": true },
+  "confirmInput.label": { "kind": "label", "required": true },
+  "confirmInput.placeholder": { "kind": "label" },
+  "cancelLabel": { "kind": "label", "required": true },
+  "confirmLabel": { "kind": "label", "required": true }
+}

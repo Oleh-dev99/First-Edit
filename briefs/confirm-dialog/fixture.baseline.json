@@ -1,0 +1,18 @@
+{
+  "title": "Delete project",
+  "body": "This permanently deletes the project, its deployments and its data. Deleted projects cannot be restored.",
+  "projectName": "orchard-checkout-api",
+  "consequencesTitle": "Deleting this project will",
+  "consequences": [
+    "Take down 3 environments and erase their deployment history",
+    "Delete 14 environment variables and release 2 custom domains",
+    "Revoke every API key issued for this project",
+    "Remove access for the 6 people on the project team"
+  ],
+  "confirmInput": {
+    "label": "Type the project name to confirm",
+    "placeholder": "orchard-checkout-api"
+  },
+  "cancelLabel": "Cancel",
+  "confirmLabel": "Delete this project"
+}
