@@ -468,5 +468,110 @@
    ]
   }
  },
- "adjudication": null
+ "adjudication": {
+  "file": "labels/set-01.adjudication.jsonl",
+  "disagreements": 14,
+  "answered": 14,
+  "answers": {
+   "suite-right": 1,
+   "label-right": 5,
+   "defined-differently": 8
+  },
+  "unanswered": [],
+  "definedDifferently": [
+   "i064",
+   "i100",
+   "i173",
+   "i174",
+   "i028",
+   "i077",
+   "i155",
+   "i214"
+  ],
+  "notDisagreements": [],
+  "all": {
+   "precision": {
+    "all": {
+     "count": 68,
+     "of": 75,
+     "share": 0.9067,
+     "ci95": [
+      0.8197,
+      0.9541
+     ]
+    },
+    "core": {
+     "count": 29,
+     "of": 35,
+     "share": 0.8286,
+     "ci95": [
+      0.6732,
+      0.919
+     ]
+    },
+    "extreme": {
+     "count": 39,
+     "of": 40,
+     "share": 0.975,
+     "ci95": [
+      0.8712,
+      0.9956
+     ]
+    }
+   },
+   "missRate": {
+    "all": {
+     "count": 6,
+     "of": 119,
+     "share": 0.0504,
+     "ci95": [
+      0.0233,
+      0.1056
+     ]
+    }
+   }
+  },
+  "unguided": {
+   "precision": {
+    "all": {
+     "count": 59,
+     "of": 66,
+     "share": 0.8939,
+     "ci95": [
+      0.7969,
+      0.9477
+     ]
+    },
+    "core": {
+     "count": 24,
+     "of": 30,
+     "share": 0.8,
+     "ci95": [
+      0.6269,
+      0.9049
+     ]
+    },
+    "extreme": {
+     "count": 35,
+     "of": 36,
+     "share": 0.9722,
+     "ci95": [
+      0.8583,
+      0.9951
+     ]
+    }
+   },
+   "missRate": {
+    "all": {
+     "count": 6,
+     "of": 119,
+     "share": 0.0504,
+     "ci95": [
+      0.0233,
+      0.1056
+     ]
+    }
+   }
+  }
+ }
 }
