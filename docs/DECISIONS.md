@@ -12,7 +12,11 @@ metrics and screenshots between runs.
 Cases are rendered from the Vite dev server, not a production build. It
 is simpler and fast enough while the harness takes shape. Revisit at step
 8 (end-to-end spike), when run time and dev-only React behaviour can be
-measured on real candidates.
+measured on real candidates. Measured in step 9: a full stress run
+(baseline and up to 17 cases, server and browser start included) took
+9.7 s per candidate on average over 36 real candidates (6.8 to 13.1 s),
+so run time is no reason to switch. Dev-only React behaviour was not
+measured.
 
 ## D-003 The render stage (2026-11-12)
 #fe-root is the stage: 16px padding, background #f1f5f9, min-height
@@ -195,3 +199,70 @@ output. It is not the published comparison: free variants can be
 previews and are rate limited and served apart from the paid endpoints,
 two models are no cross-vendor sample, and one sample per brief and
 variant is no estimate of a model's rate.
+
+## D-031 Spike outcome: pipeline and trust met, signal not met (2026-11-13)
+The step 8 spike (two free models, plain and hinted, one sample of each
+brief) met the pipeline criterion (90% valid for both models) and,
+narrowly, the trust criterion (22 of 24 reviewed failed cases real, 2 of
+40 reviewed survived cases broken). It did not meet the signal
+criterion: mean survival ranged from 91.8% to 97.5%, and six of the ten
+mutations (text-long, text-empty, list-0, list-1, list-many, dir-rtl)
+never failed a clean candidate. Decision: continue, with the changes of
+step 9, and settle the comparison in step 10.
+
+## D-032 Content mutations also run at 320px (2026-11-13)
+Every content mutation runs a second time at 320x800 as <mutation>@320,
+and those cases are judged against the viewport-320 render instead of
+the baseline, so they count only breakage that the narrow screen alone
+did not already cause. Real content changes reach phones too, and the
+spike showed that 1280 hides most content-driven breakage. This was
+added after seeing the spike's results and is recorded as a post-hoc
+design change: numbers from before and after it are not comparable.
+
+## D-033 The headline is "broke at least once" (2026-11-13)
+The headline is the share of clean-baseline candidates that broke at
+least once (one or more failed cases), with a 95% Wilson interval. One
+broken case is a broken component for the person who meets it, and a
+share of candidates reads directly as a risk. The failure rate per case,
+also with a Wilson interval, and the mean survival rate are secondary.
+
+## D-034 A border makes a box only on all four sides (2026-11-13)
+For content-spill, an element is visibly boxed by its border only when
+all four sides have width, style and colour. In the spike a divider (a
+top border alone) counted as a box, and text that ran past the end of a
+divider line, still inside its card, was the cause of both false
+positives. Background, background image, box shadow and outline count as
+before.
+
+## D-035 off-screen: content cut off by the viewport edge (2026-11-13)
+A new error check flags content that the viewport cuts off and that
+cannot be scrolled into view: boxes inside a fixed subtree past either
+edge, and boxes past the edge the page cannot scroll to (left in a
+left-to-right page). It covers out-of-flow content, which D-006 exempts
+from content-spill and text-overlap, because the spike's two missed
+failures were a fixed header running off the screen. It replaces the
+deferred off-canvas check. Boxes parked more than a viewport width away
+are ignored.
+
+## D-036 content-hidden is an info-level measure (2026-11-13)
+content-hidden counts fixture values that the same data shows at 1280
+and a render at 320, at 200% text or in RTL does not. It is reported per
+case like truncations and never fails a case: hiding secondary content
+on a phone can be a deliberate design, and no check can tell a lost
+value from a summarised one. It makes hiding visible, and it holds
+references to D-019 (content-hidden 0).
+
+## D-037 text-long grows by whole words (2026-11-13)
+Values with spaces grow by appending whole words until they reach at
+least the target length, instead of being cut at the target. In the
+spike, values such as "Contact sales Contact sa" looked like clipping
+to a reviewer although they were fully shown. Single words still grow
+by letters.
+
+## D-038 States before stress (2026-11-13)
+Every candidate is in one of four states before it is scored: invalid
+(it failed the gate), baseline crash (the baseline threw or timed out),
+born broken (the baseline has error findings) or clean. Each is reported
+separately everywhere, and only clean candidates are scored. In the
+spike a crashing baseline was counted as clean by the stress command and
+as born broken by summarize.

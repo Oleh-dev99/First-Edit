@@ -12,13 +12,15 @@ survives when the content changes.
 - Candidate: one React component implementing a brief. Hand-written or
   model-generated.
 - Reference candidate: a hand-written candidate for a corpus brief that
-  survives every applicable mutation. See Reference candidates.
+  survives every applicable case and hides no content. See Reference
+  candidates.
 - Mutation: a deterministic change to the fixture (content) or to the
   render environment (viewport width, text size, direction).
 - Check: a deterministic in-page function that returns findings of the
   form { check, severity, selector, rect, text, detail }. See Checks (v0).
-- Case: one candidate rendered under one mutation. A screenshot plus
-  findings.
+- Case: one candidate rendered under one mutation at one viewport (a
+  content mutation runs at 1280 and at 320; see Cases). A screenshot
+  plus findings.
 - Baseline: the candidate rendered with the unmodified fixture at
   1280x800.
 
@@ -33,20 +35,28 @@ survives when the content changes.
 - No randomness, no timers, no data fetching.
 
 ## Scoring
-- A finding counts against a mutation only if it is new relative to the
-  baseline. Findings already present in the baseline are reported
-  separately as "born broken".
-- Survival rate = mutations survived / mutations applicable. See Case
-  results.
-- Reported per candidate, per mutation type and per model.
-- The headline survival rate is computed only over candidates with a
-  clean baseline (no born-broken errors). The share of born-broken
-  candidates is reported as its own number. Selector drift (see Known
-  gaps) can then only affect candidates already left out of the
-  headline.
-- v0 judges geometric breakage only: overflow, clipping, spill, overlap
-  and crashes. Empty states (blank placeholders, collapsed boxes) are out
-  of scope.
+- A finding counts against a case only if it is new relative to the
+  case's reference render: the baseline, or viewport-320 for a content
+  case at 320 px (see Cases). Findings already present in the baseline
+  are reported separately as "born broken".
+- Before scoring, every candidate is in one of four states (D-038):
+  invalid (it failed the gate), baseline crash (the baseline threw or
+  timed out), born broken (the baseline has error findings) or clean.
+  Each is reported as its own number; a sample whose API call failed has
+  no candidate and is counted as an API error.
+- Only clean candidates are scored. The headline is the share of clean
+  candidates that broke at least once, that is with one or more failed
+  cases, with a 95% Wilson interval (D-033). The failure rate per case
+  (failed / applicable cases, also with a Wilson interval) and the mean
+  survival rate (survived / applicable cases, per candidate) are
+  secondary. Selector drift (see Known gaps) can then only affect
+  candidates already left out of the headline.
+- Reported per model and variant, pooled across models per variant, per
+  case and per check.
+- v0 judges geometric breakage only: overflow, clipping, spill, overlap,
+  content cut off by the viewport and crashes. Empty states (blank
+  placeholders, collapsed boxes) are out of scope. Hidden content is
+  measured (content-hidden) but never fails a case.
 
 ## Pipeline
 1. generate (Python runner): brief -> model API -> candidate file.
@@ -142,7 +152,8 @@ engineer would (it must look good at baseline, not merely survive), and
 never special-cases mutation values. briefs:check verifies that its
 default export accepts Props (type-level), that it imports nothing but
 react (found with a parser, so comments and strings never count), that
-its baseline is clean and that every applicable mutation survives. A
+its baseline is clean, that every applicable case survives (the @320
+cases included) and that no case hides content (content-hidden 0). A
 reference therefore shows that a full score is attainable for its brief
 (D-017).
 
@@ -211,10 +222,11 @@ Content mutations:
 - text-long: every label and prose value grows by the lower bound of
   IBM's expansion table, based on its current length: up to 10 chars
   +100%, 11-20 +80%, 21-30 +60%, 31-50 +40%, 51-70 +31%, over 70 +30%
-  (rounded up, lengths in characters). Values with spaces grow by
-  appending their own words in order, cut at the target length. Single
-  words grow by appending their own letters, with no space. Empty values
-  stay empty.
+  (rounded up, lengths in characters). Values with spaces grow by whole
+  words: their own words are appended in order until the value reaches
+  at least the target length, so a grown value never ends in a cut word
+  (D-037). Single words grow by appending their own letters, with no
+  space, cut at the target. Empty values stay empty.
 - text-unbroken: in every label and prose value, the longest word (the
   first one on a tie) is replaced by one fixed 60-letter token (letters
   only).
@@ -238,6 +250,21 @@ Environment mutations (always applicable):
 The baseline and all other mutations render at 1280x800. Run order:
 text-long, text-unbroken, text-empty, list-0, list-1, list-many,
 number-large, viewport-320, text-200pct, dir-rtl.
+
+### Cases
+A case is one render that is scored. The stress suite has 17
+(harness/src/mutations/cases.ts), in run order:
+- the 7 content mutations at 1280x800 (kind "content")
+- the 3 environment mutations (kind "environment")
+- the 7 content mutations again at 320x800, named <mutation>@320 (kind
+  "content@320"), applicable whenever the mutation is (D-032)
+
+Each case has a reference render for the new-finding rule: the baseline
+for every case except the content@320 cases, which are judged against
+the viewport-320 render. A phone-width content case then counts only
+breakage that the narrow screen alone did not already cause. A
+content@320 case is opened with the same query as its mutation
+(`mutation=text-long`) at a 320px viewport.
 
 The app applies `mutation=<id>`: a content mutation to the fixture before
 rendering, text-200pct and dir-rtl to <html>. The viewport is set by the
@@ -277,11 +304,12 @@ that belong to the same element are merged.
 - Geometry tolerance: 1px horizontally. Vertically for text: 0.3 x the
   text's font size, because glyph boxes can exceed tight line heights.
 
-### The four checks
+### The checks
 1. page-overflow-x (error)
    documentElement.scrollWidth exceeds clientWidth by more than 1px.
    One finding for the page. detail lists up to three deepest elements
-   whose right edge passes the viewport.
+   whose right edge passes the viewport, elements in fixed or absolute
+   subtrees included.
 2. text-clipped
    A text line box extends past the padding box of its nearest ancestor
    with overflow hidden or clip on that axis.
@@ -294,7 +322,9 @@ that belong to the same element are merged.
    An in-flow content box's visible rect extends past the border box of
    its nearest visibly boxed ancestor. Visibly boxed means any of: a
    non-transparent background color, a background image, a border with
-   width and color, a box shadow, or an outline.
+   width and color on all four sides, a box shadow, or an outline. A
+   border on some sides only, such as a divider line, does not make a box
+   (D-034).
    A visibly boxed element is itself a content box for this check: its
    border box is compared with the border box of its own nearest visibly
    boxed ancestor, under the same in-flow and visible-rect rules, with a
@@ -307,8 +337,23 @@ that belong to the same element are merged.
    and taller than 0.3 x the smaller font size. Line boxes of the same
    element never count against each other. Two non-text boxes never
    count (overlapping avatars are a design choice).
+5. off-screen (error, D-035)
+   A content box is cut off by the viewport edge and cannot be scrolled
+   into view:
+   (a) it is inside a position: fixed subtree and its visible rect passes
+       the viewport's left or right edge by more than 1px, or
+   (b) its page x-coordinate is below -1 (left of the page, which cannot
+       be scrolled to). In a right-to-left page the unreachable side is
+       the right: a box past the viewport's right edge by more than 1px.
+   Boxes that lie entirely more than one viewport width beyond an edge
+   are a deliberate parking pattern (a skip link at left -9999px) and are
+   ignored. Unlike content-spill and text-overlap, off-screen covers
+   out-of-flow content; D-006 still exempts it from those two. One
+   finding per element; rect is the part on screen, or a 4px strip at the
+   edge when the box lies entirely past it.
 
-Deferred until a real failure needs them: off-canvas, element-collapsed
+Deferred until a real failure needs it: element-collapsed. off-screen
+replaces the deferred off-canvas check.
 
 ### Implementation notes (v0)
 - Clipping follows the containing-block chain: an absolutely positioned
@@ -333,16 +378,20 @@ Deferred until a real failure needs them: off-canvas, element-collapsed
   behaviour of every check with minimal positive and negative cases.
 
 ## Case results
-`npm run stress -- --brief <id> --candidate <path>` renders the baseline
-and then every applicable mutation, and runs the checks on each.
+`npm run stress -- --brief <id> --candidate <path> [--runs-dir <dir>]`
+renders the baseline and then every applicable case (see Cases), and runs
+the checks on each.
 - Baseline: fixture "baseline", no mutation, 1280x800. Its error findings
   are "born broken"; they are reported once and never count against a
-  mutation.
-- New-finding rule: a finding is new if it is an error and no baseline
-  finding (of any severity) has the same check and selector.
+  case.
+- New-finding rule: a finding is new if it is an error and no finding (of
+  any severity) of the case's reference render has the same check and
+  selector. The reference is the baseline, or the viewport-320 render for
+  a content@320 case (D-032).
 - Survived: the case rendered (status ok) and has no new findings.
 - Not applicable: a content mutation that changes nothing for the brief
-  is not rendered and is left out of the survival rate.
+  is not rendered and is left out of the survival rate; so is its @320
+  case.
 - render-error: the candidate threw during render or the page crashed.
   window.__FE_ERROR__ holds the message, which the page also shows.
   timeout: the page did not become ready within 30 s. Both are failed
@@ -353,28 +402,50 @@ and then every applicable mutation, and runs the checks on each.
 - Truncations: the text-clipped info findings of a case (text cut with an
   ellipsis or a line clamp) are counted as `truncations`, a secondary
   measure (D-021). They never fail a case.
+- Content hidden: see below. Info only; it never fails a case.
 - Statuses: ok, render-error, timeout, not-applicable.
 
-Output in results/runs/<brief>/<candidate with / replaced by __>/ (the
-directory is replaced on every run):
+### Content hidden (D-036)
+content-hidden counts fixture text that a narrow, enlarged or mirrored
+render does not show although the same data shows it at 1280 with
+default settings. It is measured for viewport-320, text-200pct and
+dir-rtl against the baseline, and for every <mutation>@320 case against
+<mutation> at 1280. The values compared are the label and prose values
+of the rendered fixture (after the mutation), whitespace-normalized and
+lower-cased, each counted once. A value is visible when it is part of
+the visible text of the page: text whose line box has an area and is
+not fully clipped by an ancestor with overflow hidden or clip, plus the
+value, placeholder or selected option of a visible form control. Text
+reachable by scrolling inside a scroll container counts as visible, and
+so does text cut with an ellipsis; display none, visibility hidden and
+screen-reader-only text do not. The count is the number of values
+visible in the reference render and not visible in the case. Each case
+records the hidden values. The page exposes
+`window.__FE_VISIBLE_VALUES__()` for this; the lab cases in
+harness/src/lab/hidden-cases.ts pin it.
+
+Output in <runs-dir>/<brief>/<candidate with / replaced by __>/ (the
+runs directory defaults to results/runs; the candidate's directory is
+replaced on every run):
 - baseline.json: case, brief, candidate, fixture, query, viewport,
   status, error, bornBroken, truncations, findings
-- <mutation>.json for every rendered case: case, brief, candidate,
+- <case>.json for every rendered case: case, kind, brief, candidate,
   fixture, mutation { id, kind }, changed (content mutations; null
-  otherwise), query, viewport, status, error, survived, newErrors,
-  truncations, newFindings, findings
+  otherwise), query, viewport, reference, status, error, survived,
+  newErrors, truncations, contentHidden, hiddenReference, hiddenValues,
+  newFindings, findings
 - <case>.png and <case>.annotated.png when a screenshot could be taken
   (not after a timeout)
 - summary.json, below
 
-### summary.json (schemaVersion 1)
+### summary.json (schemaVersion 2)
 The contract with the Python side. File names are relative to the run
 directory. There is no timestamp, so two runs of the same code diff
 cleanly. Bump schemaVersion on any incompatible change.
 
 ```
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "brief": "hello-card",
   "candidate": "_samples/hello-card/brittle",
   "fixture": "baseline",
@@ -386,24 +457,29 @@ cleanly. Bump schemaVersion on any incompatible change.
     "viewport": { "width": 1280, "height": 800 },
     "files": { "result": "baseline.json", "screenshot": <name> | null, "annotated": <name> | null }
   },
-  "mutations": [                       // every mutation, in run order
+  "cases": [                           // every case, in run order
     {
-      "id": "<mutation id>",
-      "kind": "content" | "environment",
+      "id": "<case id>",               // "text-long", "viewport-320", "text-long@320"
+      "mutation": "<mutation id>",
+      "kind": "content" | "environment" | "content@320",
+      "viewport": { "width": 1280 | 320, "height": 800 },
+      "reference": "baseline" | "viewport-320",
       "applicable": true | false,
       "status": "ok" | "render-error" | "timeout" | "not-applicable",
       "survived": true | false | null, // null when not applicable
-      "newErrors": { "page-overflow-x": n, "text-clipped": n,
-                     "content-spill": n, "text-overlap": n } | null,
+      "newErrors": { "page-overflow-x": n, "text-clipped": n, "content-spill": n,
+                     "text-overlap": n, "off-screen": n } | null,
                                        // null when not applicable or not rendered
       "truncations": n | null,         // null when not applicable or not rendered
+      "contentHidden": n | null,       // null when not measured or a render failed
       "files": { "result": "<id>.json", "screenshot": <name> | null,
                  "annotated": <name> | null } | null
     }
   ],
   "totals": {
-    "mutations": 10, "applicable": n, "survived": n, "failed": n,
-    "survivalRate": <survived / applicable, 4 decimals> | null
+    "cases": 17, "applicable": n, "survived": n, "failed": n,
+    "survivalRate": <survived / applicable, 4 decimals> | null,
+    "contentHidden": <sum over measured cases>
   }
 }
 ```
@@ -575,8 +651,12 @@ candidates/<model-id>/<brief-id>/<variant>-s<n>/:
   cost the response reports, else null), latencyMs, attempts,
   finishReason, extraction, warnings, valid and reasons.
 
-A candidate is valid only if the gate passes and the reply was not cut
-off by the token limit (finish reason "length"). The gate is
+A candidate is valid only if the reply has content, the gate passes and
+the reply was not cut off by the token limit (finish reason "length",
+reason "truncated"). A reply with no content gets the reason "empty",
+plus "reasoning-exhausted" when it was cut off by the token limit and
+the provider reports reasoning tokens (the model spent the output budget
+thinking); the gate is not run on it. The gate is
 `npm run candidate:check -- --brief <id> --candidate <path> --json`,
 which prints { valid, reasons: [{ rule, message }] } and exits 0 either
 way. Its rules:
@@ -600,7 +680,9 @@ _reference is git-ignored: model outputs stay out of git until a run is
 published (D-029). Tailwind skips git-ignored files unless a source
 points into the ignored folder, so harness/src/styles.css names them all
 with `@source "../../candidates/*"`; the test tailwind-sources.test.ts
-guards it.
+guards it. The harness typecheck (`npm run typecheck`) covers only
+candidates/_samples and candidates/_reference: model outputs are judged
+by the gate, which does not apply the harness's strict settings.
 
 ### Doctor
 `python -m first_edit doctor` checks every configured model without
@@ -612,51 +694,66 @@ ones, flagging any difference. Listed prices are USD per token and are
 shown per million. A model is unusable if its key is not set, it is not
 listed, the listing cannot be fetched, or a listed price is higher than
 the configured one (the budget would undercount). Exit 0 when every
-model is usable, 1 when one is not, 2 on an invalid models file.
+model is usable, 1 when one is not, 2 on an invalid models file. The
+doctor cannot detect region blocking: a model can be listed and usable
+here and still answer every call with HTTP 403 ("not available in your
+region"), as inkling-2-small-free did in step 8. Only a call shows it.
 
 ### Stress
-`python -m first_edit stress` runs `npm run stress` on every valid
-candidate and reads its summary.json. It prints one row per candidate
-(brief, variant, sample, valid, baseline errors, survived/applicable,
-truncations over all cases) and totals; invalid candidates appear as
-rows and are not stressed.
+`python -m first_edit stress [--runs-dir <dir>]` runs `npm run stress`
+on every valid candidate, writing to the runs directory (default
+results/runs), and reads its summary.json. It prints one row per
+candidate (brief, variant, sample, valid, baseline state, survived /
+applicable, truncations and content hidden over all cases, and the
+seconds the stress run took) and totals: clean baseline, born broken
+and baseline crash counted as summarize counts them (D-038), survival of
+clean-baseline candidates, and the stress time per candidate. Invalid
+candidates appear as rows and are not stressed.
 
 ### Summarize and the gallery
-`python -m first_edit summarize --out <dir> [--model <id> ...]` reads
-every generation.json and stress summary of the given models (default:
-every non-mock model in runner/models.toml) for the corpus briefs and
-writes three files to <dir> (results/spike for the step 8 spike):
-- summary.json (schemaVersion 1, no timestamp): per model the provider
+`python -m first_edit summarize --out <dir> [--model <id> ...]
+[--runs-dir <dir>]` reads every generation.json and stress summary of
+the given models (default: every non-mock model in runner/models.toml)
+for the corpus briefs and writes three files to <dir> (results/spike for
+the step 8 spike, results/spike-v2 for its re-stress in step 9):
+- summary.json (schemaVersion 2, no timestamp): per model the provider
   model id, the reported model ids and the first and last call; per model
-  and variant the numbers below; survival by brief; totals.
+  and variant, and pooled across models per variant when there are
+  several, the numbers below; survival by brief; totals.
 - report.md: the same as tables.
 - gallery.html: a static page, opened from disk.
 
 Per model and variant:
+- the headline: clean-baseline candidates that broke at least once
+  (one or more failed cases), as a count, a share and a 95% Wilson
+  interval (D-033)
+- the failure rate per case (failed / applicable cases, the @320 cases
+  included) with a 95% Wilson interval
 - candidates (generated samples), valid, invalid and invalid by rule (a
   candidate counts once per rule), API errors, briefs with no candidate,
   valid candidates with no stress results
-- clean baseline and born broken (baseline errors, or a baseline that
-  did not render)
-- mean, min and max survival rate over clean-baseline candidates (D-015)
-- failed cases per mutation (failed / applicable) and per check (cases
-  with at least one new error from that check), render errors and
-  timeouts
-- truncations per rendered case (baseline and mutation cases with status
-  ok)
+- clean baseline, born broken and baseline crash (D-038)
+- mean, min and max survival rate over clean-baseline candidates
+  (secondary)
+- failed cases per case (failed / applicable) and per check (cases with
+  at least one new error from that check), render errors and timeouts
+- truncations per rendered case (baseline and cases with status ok), and
+  content hidden per measured case with the number of cases that hide
+  content
 - tokens (input, cached input, output, of which reasoning) and cost: the
   reported cost where there is one, else the estimate
 
-Failed cases, survival and truncations cover clean-baseline candidates
-only; born-broken candidates are counted, not scored.
+Every scored number covers clean-baseline candidates only; born-broken
+and crashed candidates are counted, not scored.
 
 The gallery has one card per failed case of a clean-baseline candidate
-and per born-broken baseline, then one card per survived case. A card
-shows model, brief, variant and sample, the case, status, viewport, the
-checks with new errors, truncations, the clean and annotated screenshots
-side by side (linked relative to the output directory), the new (or
-born-broken) findings and the query that reproduces the case. Cards can
-be filtered by model, variant, brief, mutation and check.
+and per born-broken or crashed baseline, then one card per survived
+case. A card shows model, brief, variant and sample, the case, status,
+viewport, the checks with new errors, truncations, content hidden and
+the hidden values, the clean and annotated screenshots side by side
+(linked relative to the output directory), the new (or born-broken)
+findings and the query that reproduces the case. Cards can be filtered
+by model, variant, brief, case, check and whether content is hidden.
 
 ### Tailwind v3 compatibility
 The prompt names Tailwind v4, but models often write v3 class names. The
@@ -674,36 +771,79 @@ Accepted in step 3:
   ancestor.
 - Out-of-flow content is exempt from content-spill and text-overlap
   (D-006): a positioned label that collides with text after a mutation is
-  not caught.
+  not caught. Out-of-flow content cut off by the viewport is caught by
+  off-screen (D-035).
 - Boxes are rectangles: text that overflows a rounded shape (for example
   initials past the curve of a round avatar) is not caught.
 
 Found in step 4:
 - Selectors are structural, so a mutation that adds or removes elements
   (list-0 removing a list, list-many) can shift nth-child indices. A
-  problem that already exists at baseline can then look new. Accepted:
-  the headline survival rate uses clean-baseline candidates only (D-015),
-  where there is no old problem to shift.
+  problem that already exists in the reference render can then look new.
+  Against the baseline this only affects born-broken candidates, which
+  are left out of the headline (D-015). Against the viewport-320
+  reference of a content@320 case it can affect clean candidates: in
+  step 9 a kanban board whose columns already overhung their panel by
+  8px at 320 failed list-many@320 because the repeated columns had new
+  selectors.
 - page-overflow-x culprits only look past the right edge. With dir-rtl,
   overflow goes to the left, so culprits would be empty and the rect
   strip is drawn on the wrong side. Not yet observed.
 
 Found in step 6:
-- Content that is hidden rather than shown is not measured. Display
-  none, visually hidden text, icon-only replacements and text cut off
-  inside form controls (inputs, selects) escape every check; the
-  no-hiding rule for references is enforced by review, not by a check.
+- Hiding is measured but never fails a case. content-hidden (D-036)
+  counts fixture text that a render at 320, at 200% text or in RTL does
+  not show although the same data at 1280 does; hiding at 1280 itself has
+  no reference and is not measured. Text cut off inside form controls
+  (inputs, selects) still escapes every check, and the no-hiding rule for
+  references is enforced by content-hidden 0 plus review.
 - list-many copies fixed flags along with the items, so two links can be
-  active or two plans highlighted.
+  active or two plans highlighted. It also leaves counters in the fixture
+  ("3 unread messages", "Showing 6 of 48") unchanged.
 - page-overflow-x can fire with an empty culprits list when the overflow
   comes from a screen-reader-only element, which the scan skips. Seen
   when visually hidden text inside a horizontal scroller had no
   positioned ancestor and widened the page.
 
+Found in step 8 and step 9:
+- content-spill compares a box's visible rect, which a scroll container
+  clips, with its boxed ancestor's unclipped border box. When a card and
+  its overflowing pills both run past a horizontal scroller's window,
+  the spill beyond the window is not measured (a kanban board at
+  text-unbroken@320 in step 9).
+- text-clipped never reports clipping by a scroll container, including
+  content pushed past the container's start edge (left in a left-to-right
+  page), which cannot be scrolled to. Note that overflow-y: auto also
+  makes overflow-x auto, so a chat list with overflow-y-auto clips
+  sideways overflow without a finding.
+- The new-finding rule matches check and selector whatever the severity,
+  so a finding that is info in the reference and error in the case is
+  not new.
+- content-spill has a 1px tolerance; subpixel overflow of 1 to 2 px from
+  centring or rounding fails a case although it cannot be seen (one
+  false positive in the step 9 review).
+- One cause often produces many findings (one per element). Scores use
+  failed cases, not finding counts.
+- off-screen treats an off-canvas drawer parked at exactly one viewport
+  width (translateX(-100%)) as cut off. Not yet observed.
+- content-hidden matches values as substrings of the visible text: a
+  value that also appears inside another visible value counts as
+  visible, and a value the component transforms (sliced, reformatted) is
+  invisible in both renders and so never counted.
+- The gate passes a file that throws when it runs (a stray identifier
+  left by a reply without code-fence backticks); it is reported as a
+  baseline crash.
+- The doctor cannot detect region blocking (see Doctor).
+- Vite's dependency scan logs parse errors for unparseable model outputs
+  under candidates/ whenever the dev server starts; rendering is
+  unaffected.
+
 Closed in step 5: a visibly boxed element spilling out of its boxed
 parent (for example a tag pill out of a card) is now caught by
 content-spill (D-014). Empty states are out of scope rather than a gap
-(D-016).
+(D-016). Closed in step 9: divider lines no longer count as boxes
+(D-034), and content cut off by the viewport, fixed headers included, is
+caught by off-screen (D-035).
 
 ## Roadmap
 1. Attribution setup (done)
@@ -713,11 +853,14 @@ content-spill (D-014). Empty states are out of scope rather than a gap
 5. Spill gap, brief format, first three briefs (done)
 6. Seven more briefs (done)
 7. Generation runner, one model (done)
-8. End-to-end spike and go/no-go review
-9. Full brief corpus (about 40)
-10. Multi-model runs
-11. Labelling tool and calibration
-12. Scoring and report tables
-13. Results site
-14. CLI packaging
-15. Write-up and README
+8. Spike on free models (done)
+9. Post-spike changes and re-stress
+10. Second run: more samples and stronger models; decide on the
+    comparison
+11. Full brief corpus (about 40)
+12. Published multi-model run
+13. Labelling tool and calibration
+14. Scoring and report tables
+15. Results site
+16. CLI packaging
+17. Write-up and README
