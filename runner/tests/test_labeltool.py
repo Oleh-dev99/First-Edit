@@ -119,11 +119,18 @@ def test_the_first_screen_states_the_ellipsis_rule(label_set) -> None:
     server = open_tool(path, data, port=0, root=path.parent.parent)
     with running(server) as origin:
         _, body = get(f"{origin}/")
-    labels = re.search(r'<dl class="labels">(.*?)</dl>', body.decode("utf-8"), re.S).group(1)
-    fine, other = (re.search(rf"{key}</dt>\s*<dd>(.*?)</dd>", labels, re.S).group(1)
-                   for key in ("fine", "other"))
-    assert "text shortened with an ellipsis" in " ".join(fine.split())
-    assert "an ellipsis that hides something essential: then write a note" in " ".join(other.split())
+    page = body.decode("utf-8")
+    labels = re.search(r'<dl class="labels">(.*?)</dl>', page, re.S).group(1)
+    broken, fine, other = (" ".join(re.search(rf"{key}</dt>\s*<dd>(.*?)</dd>", labels, re.S).group(1).split())
+                           for key in ("broken", "fine", "other"))
+    assert "text shortened with an ellipsis" in fine
+    assert "an ellipsis that hides something essential: then write a note" in other
+    # D-052, clarified: text cut off without an ellipsis is broken
+    assert "text cut off without an ellipsis included" in broken
+    # the two notes: grown text can end mid-word; "other" is not for content the change removed
+    notes = " ".join(re.search(r'<ul class="notes">(.*?)</ul>', page, re.S).group(1).split())
+    assert "can end mid-word on purpose" in notes
+    assert "&ldquo;other&rdquo; is not for content that the change itself removed" in notes
 
 
 def test_pictures_are_served_only_by_item_id(label_set) -> None:

@@ -27,6 +27,8 @@ dl.labels { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px
 dl.labels dt { font-weight: 600; }
 dl.labels dd { margin: 0; }
 .muted { color: var(--muted); }
+ul.notes { margin: 8px 0; padding-left: 22px; }
+ul.notes li { margin: 0 0 4px; }
 .example .caption { margin: 0 0 8px; color: var(--muted); }
 .bar { position: sticky; top: 0; z-index: 2; background: var(--panel); border-bottom: 1px solid var(--soft);
        padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
@@ -64,8 +66,8 @@ figcaption { color: var(--muted); font-size: 13px; margin: 0 0 4px; }
   <p class="question">Does the right-hand picture show layout breakage that the left-hand one does not?</p>
   <dl class="labels">
     <dt><kbd>1</kbd> broken</dt>
-    <dd>content is cut off, spills out of its box, overlaps other content, is pushed off the screen, or the page
-        scrolls sideways</dd>
+    <dd>content is cut off (text cut off without an ellipsis included), spills out of its box, overlaps other
+        content, is pushed off the screen, or the page scrolls sideways</dd>
     <dt><kbd>2</kbd> fine</dt>
     <dd>none of that; awkward wrapping, words broken across lines and text shortened with an ellipsis (&hellip;)
         are fine</dd>
@@ -78,6 +80,13 @@ figcaption { color: var(--muted); font-size: 13px; margin: 0 0 4px; }
   <p>Only what is new on the right counts: a flaw that the left-hand picture already shows does not. When a
      picture is wider than its screen, a dashed red line marks the screen's edge; whatever lies past it can only be
      seen by scrolling the page sideways. Judge each pair on its own.</p>
+  <ul class="notes">
+    <li>Text made longer by the change &ldquo;longer text, as after translation&rdquo; can end mid-word on purpose:
+        a single word grows by repeating its own letters, so an email address can end in &ldquo;&hellip;@ex&rdquo;.
+        That is the content, not a cut.</li>
+    <li>&ldquo;other&rdquo; is not for content that the change itself removed, such as text left empty, an emptied
+        list or a list cut to one item. Judge how the layout copes with it.</li>
+  </ul>
   <p class="muted">Keys: <kbd>1</kbd>&ndash;<kbd>4</kbd> answer and move on &middot; <kbd>N</kbd> write a note
      (optional; <kbd>Enter</kbd> keeps it) &middot; <kbd>Z</kbd> undo the last answer &middot;
      <kbd>&larr;</kbd> <kbd>&rarr;</kbd> previous and next &middot; click a picture to zoom, <kbd>Esc</kbd> to close.
