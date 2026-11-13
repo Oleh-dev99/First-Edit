@@ -75,11 +75,23 @@ model = "baidu/ernie-5.5-flash-preview:free"
 params = { max_tokens = 32000 }
 price = { input = 0.0, output = 0.0 }
 
+# Dropped from the spike: its first two samples failed with HTTP 403, "This
+# model is not available in your region" (geo restricted).
 [[model]]
 id = "inkling-2-small-free"
 provider = "openai-compatible"
 base_url = "https://openrouter.ai/api/v1"
 api_key_env = "OPENROUTER_API_KEY"
 model = "thinkingmachines/inkling-2-small:free"
+params = { max_tokens = 32000 }
+price = { input = 0.0, output = 0.0 }
+
+# The next model of the step's list, in place of inkling-2-small-free.
+[[model]]
+id = "nemotron-3.5-free"
+provider = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "nvidia/nemotron-3.5-super-vl:free"
 params = { max_tokens = 32000 }
 price = { input = 0.0, output = 0.0 }
