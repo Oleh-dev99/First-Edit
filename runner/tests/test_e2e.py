@@ -15,7 +15,7 @@ pytestmark = pytest.mark.e2e
 
 def test_mock_reference_end_to_end(capsys: pytest.CaptureFixture[str], tmp_path) -> None:
     briefs = list_briefs(corpus_only=True)
-    assert len(briefs) == 10
+    assert len(briefs) == 20
 
     assert main(["generate", "--model", "mock-reference", "--all"]) == 0
     for brief in briefs:
@@ -37,18 +37,18 @@ def test_mock_reference_end_to_end(capsys: pytest.CaptureFixture[str], tmp_path)
         assert [(entry["id"], entry["tier"]) for entry in summary["cases"]] == list(CASE_TIERS.items()), brief
 
     output = capsys.readouterr().out
-    assert "candidates: 10  valid: 10  stressed: 10  clean baseline: 10  born broken: 0  baseline crash: 0" in output
-    assert "at 100%: 10" in output and "content hidden: 0" in output
+    assert "candidates: 20  valid: 20  stressed: 20  clean baseline: 20  born broken: 0  baseline crash: 0" in output
+    assert "at 100%: 20" in output and "content hidden: 0" in output
 
     assert main(["summarize", "--out", str(tmp_path / "spike"), "--model", "mock-reference", "--runs-dir", str(runs)]) == 0
     report = (tmp_path / "spike" / "report.md").read_text(encoding="utf-8")
-    # The references never break, so the headline is 0 of 10 (D-033), over core and all cases.
-    headline = next(line for line in report.splitlines() if line.startswith("| mock-reference | plain | 10 | 0 |"))
-    assert "| 0 | 0.0% | 0.0% to 27.8% |" in headline and headline.count("0.0% to 27.8%") == 2
-    assert "| mock-reference | plain | 10 | 10 | 0 | 0 | 10 | 0 | 0 |" in report
+    # The references never break, so the headline is 0 of 20 (D-033), over core and all cases.
+    headline = next(line for line in report.splitlines() if line.startswith("| mock-reference | plain | 20 | 0 |"))
+    assert "| 0 | 0.0% | 0.0% to 16.1% |" in headline and headline.count("0.0% to 16.1%") == 2
+    assert "| mock-reference | plain | 20 | 20 | 0 | 0 | 20 | 0 | 0 |" in report
     assert "| mock-reference | plain | core | 0/" in report and "| 100.0% | 100.0% | 100.0% |" in report
     # Every stress summary records suite v1 (D-044); the sensitivity table pools the one model (D-045).
     assert "Suite v1 (D-044)" in report and "predate the suite field" not in report
-    assert "| none | 0/10 | 0.0% | 0.0% to 27.8% | - |" in report
+    assert "| none | 0/20 | 0.0% | 0.0% to 16.1% | - |" in report
     gallery = (tmp_path / "spike" / "gallery.html").read_text(encoding="utf-8")
     assert 'data-section="failing"' in gallery and 'class="card survived"' in gallery
