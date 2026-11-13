@@ -197,20 +197,13 @@ function clipChainOf(from: Element, root: Element, mode: FlowMode): Element[] {
   return chain;
 }
 
-/**
- * Intersects `box` with the padding box of every chain element whose
- * overflow is not visible. With `scrollClips` false, scroll containers
- * (overflow auto or scroll) do not clip: content inside them can be
- * scrolled to.
- */
-export function clipBox(box: Box, clipChain: Element[], scrollClips = true): Box | null {
-  const clips = (overflow: string): boolean =>
-    overflow !== 'visible' && (scrollClips || (overflow !== 'auto' && overflow !== 'scroll'));
+/** Intersects `box` with the padding box of every chain element whose overflow is not visible. */
+export function clipBox(box: Box, clipChain: Element[]): Box | null {
   let result = { ...box };
   for (const el of clipChain) {
     const style = getComputedStyle(el);
-    const clipX = clips(style.overflowX);
-    const clipY = clips(style.overflowY);
+    const clipX = style.overflowX !== 'visible';
+    const clipY = style.overflowY !== 'visible';
     if (!clipX && !clipY) continue;
     const pad = paddingBox(el, style);
     result = {

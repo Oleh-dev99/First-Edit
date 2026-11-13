@@ -15,6 +15,16 @@ export interface HiddenLabCase {
 
 const TABS = ['Overview', 'Invoices', 'Expenses', 'Reports', 'Customers', 'Integrations', 'Settings'];
 
+const MESSAGES = [
+  'Hi! I was charged twice for my March subscription this week.',
+  'Sorry about that. Could you share the invoice number with me?',
+  'Sure, it is INV-20417 and the second charge was on the 14th.',
+];
+
+const CARD = 'height:120px; padding:12px; overflow:hidden; background:#fff; border:1px solid #e2e8f0';
+
+const message = (text: string): string => `<p style="margin:0 0 8px; line-height:24px">${text}</p>`;
+
 export const HIDDEN_LAB_CASES: HiddenLabCase[] = [
   {
     id: 'hidden-display-none-narrow',
@@ -61,6 +71,23 @@ export const HIDDEN_LAB_CASES: HiddenLabCase[] = [
       `A hand-thrown stoneware pour-over set with a matching carafe and two cups` +
       `</p>`,
     values: ['A hand-thrown stoneware pour-over set with a matching carafe and two cups'],
+    expectedHidden: 0,
+  },
+  {
+    id: 'hidden-clipped-card',
+    description: '+ a fixed-height card with overflow hidden cuts off its last message at 320px',
+    html: `<div style="${CARD}">${MESSAGES.map(message).join('')}</div>`,
+    values: MESSAGES,
+    expectedHidden: 1,
+  },
+  {
+    id: 'hidden-scroller-in-clipped-card',
+    description: '- the same card with a message list that scrolls (overflow-y auto) inside it',
+    html:
+      `<div style="${CARD}; display:flex; flex-direction:column">` +
+      `<div style="flex:1; min-height:0; overflow-y:auto">${MESSAGES.map(message).join('')}</div>` +
+      `</div>`,
+    values: MESSAGES,
     expectedHidden: 0,
   },
 ];

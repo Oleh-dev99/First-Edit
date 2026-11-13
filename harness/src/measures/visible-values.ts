@@ -3,7 +3,7 @@
 // prose value of the rendered fixture, whether it is visible; the runner
 // compares two renders. Plain DOM code plus pure helpers, no app imports.
 
-import { clipBox, scan } from '../checks/dom.ts';
+import { type Box, hasArea, paddingBox, scan } from '../checks/dom.ts';
 import { forEachValue, type FieldsMap } from '../mutations/fields.ts';
 
 export interface VisibleValue {
@@ -38,19 +38,47 @@ function controlText(element: Element): string {
   return '';
 }
 
+const scrolls = (overflow: string): boolean => overflow === 'auto' || overflow === 'scroll';
+const clips = (overflow: string): boolean => overflow === 'hidden' || overflow === 'clip';
+
+/**
+ * True if `box` can be seen, perhaps after scrolling: walking up its clip
+ * chain, an ancestor with overflow hidden or clip cuts the box on that axis,
+ * and a scroll container makes the box reachable on that axis as long as the
+ * container's own window is seen, so from there on its padding box is what
+ * must stay visible. A message list that scrolls inside a fixed-height card
+ * with overflow hidden therefore shows every message.
+ */
+export function reachable(box: Box, clipChain: Element[]): boolean {
+  let current: Box = { ...box };
+  for (const el of clipChain) {
+    const style = getComputedStyle(el);
+    const [overflowX, overflowY] = [style.overflowX, style.overflowY];
+    if (overflowX === 'visible' && overflowY === 'visible') continue;
+    const pad = paddingBox(el, style);
+    if (scrolls(overflowX)) current = { ...current, left: pad.left, right: pad.right };
+    else if (clips(overflowX)) current = { ...current, left: Math.max(current.left, pad.left), right: Math.min(current.right, pad.right) };
+    if (scrolls(overflowY)) current = { ...current, top: pad.top, bottom: pad.bottom };
+    else if (clips(overflowY)) current = { ...current, top: Math.max(current.top, pad.top), bottom: Math.min(current.bottom, pad.bottom) };
+    if (!hasArea(current)) return false;
+  }
+  return true;
+}
+
 /**
  * The text inside `root` that is on screen, normalized. Text counts when one
- * of its line boxes has an area and is not fully clipped by an ancestor with
- * overflow hidden or clip; scroll containers do not hide text (it can be
- * scrolled to), and neither does an ellipsis (part of the text is shown).
- * display none, visibility hidden and screen-reader-only text never count.
- * Form controls contribute their value, placeholder or selected option.
+ * of its line boxes has an area and is reachable: not fully clipped by an
+ * ancestor with overflow hidden or clip, where text inside a scroll
+ * container counts as long as the container itself is seen. An ellipsis
+ * does not hide text (part of it is shown). display none, visibility hidden
+ * and screen-reader-only text never count. Form controls contribute their
+ * value, placeholder or selected option.
  */
 export function visibleText(root: Element): string {
   const pieces: string[] = [];
   let lastNode: Text | null = null;
   for (const box of scan(root).boxes) {
-    if (clipBox(box.raw, box.clipChain, false) === null) continue;
+    if (!reachable(box.raw, box.clipChain)) continue;
     if (box.kind === 'text' && box.textNode) {
       if (box.textNode !== lastNode) pieces.push(box.textNode.data);
       lastNode = box.textNode;
