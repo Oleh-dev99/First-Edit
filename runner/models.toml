@@ -60,3 +60,26 @@ api_key_env = "OPENROUTER_API_KEY"
 model = "google/gemini-4-carbon"
 params = { max_tokens = 32000 }
 price = { input = 2.00, output = 10.00 }
+
+# Step 8 spike on free model variants (2026-11-13). The first two usable
+# models of the step's list. Ids ending in ":free" are limited per account
+# (20 requests a minute, 50 a day); the runner counts them in a daily
+# ledger (see docs/SPEC.md, Free model variants).
+
+[[model]]
+id = "ernie-5.5-flash-free"
+provider = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "baidu/ernie-5.5-flash-preview:free"
+params = { max_tokens = 32000 }
+price = { input = 0.0, output = 0.0 }
+
+[[model]]
+id = "inkling-2-small-free"
+provider = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "thinkingmachines/inkling-2-small:free"
+params = { max_tokens = 32000 }
+price = { input = 0.0, output = 0.0 }
