@@ -1,0 +1,49 @@
+{
+  "title": "Order summary",
+  "currency": "USD",
+  "items": [
+    {
+      "id": "sku-4410",
+      "image": { "src": "/fe-assets/placeholder-1x1.svg", "alt": "Merino crew sweater in heather grey" },
+      "name": "Merino crew sweater",
+      "variant": "Size M · Heather grey",
+      "quantity": 1,
+      "price": 89
+    },
+    {
+      "id": "sku-2187",
+      "image": { "src": "/fe-assets/placeholder-1x1.svg", "alt": "Waxed canvas field jacket in olive" },
+      "name": "Waxed canvas field jacket",
+      "variant": "Size L · Olive",
+      "quantity": 1,
+      "price": 245
+    },
+    {
+      "id": "sku-3302",
+      "image": { "src": "/fe-assets/placeholder-1x1.svg", "alt": "Wool hiking socks" },
+      "name": "Wool hiking socks",
+      "variant": "Size M · Charcoal",
+      "quantity": 2,
+      "price": 36
+    },
+    {
+      "id": "sku-5120",
+      "image": { "src": "/fe-assets/placeholder-1x1.svg", "alt": "Leather card wallet in chestnut" },
+      "name": "Leather card wallet",
+      "variant": "Chestnut",
+      "quantity": 1,
+      "price": 42
+    }
+  ],
+  "promo": {
+    "label": "Promo code",
+    "placeholder": "Enter a code",
+    "applyLabel": "Apply"
+  },
+  "subtotal": 412,
+  "shipping": 12,
+  "tax": 33.92,
+  "total": 457.92,
+  "note": "Orders placed before 2 PM ship the same day. Returns are free within 30 days.",
+  "payLabel": "Place order"
+}

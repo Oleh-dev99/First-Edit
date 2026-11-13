@@ -1,0 +1,21 @@
+{
+  "title": { "kind": "label", "required": true },
+  "currency": { "kind": "fixed" },
+  "items": { "kind": "list", "min": 1, "max": 12 },
+  "items[].id": { "kind": "id" },
+  "items[].image.src": { "kind": "fixed" },
+  "items[].image.alt": { "kind": "fixed" },
+  "items[].name": { "kind": "label", "required": true },
+  "items[].variant": { "kind": "label" },
+  "items[].quantity": { "kind": "number" },
+  "items[].price": { "kind": "number" },
+  "promo.label": { "kind": "label", "required": true },
+  "promo.placeholder": { "kind": "label" },
+  "promo.applyLabel": { "kind": "label", "required": true },
+  "subtotal": { "kind": "number" },
+  "shipping": { "kind": "number" },
+  "tax": { "kind": "number" },
+  "total": { "kind": "number" },
+  "note": { "kind": "prose" },
+  "payLabel": { "kind": "label", "required": true }
+}
