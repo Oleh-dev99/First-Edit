@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>First Edit labelling</title>
+<style>
+:root { --bg: #f8fafc; --panel: #ffffff; --ink: #0f172a; --muted: #475569; --line: #cbd5e1; --soft: #e2e8f0;
+        --accent: #1d4ed8; --accent-bg: #dbeafe; --edge: #dc2626; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; font: 15px/1.45 system-ui, sans-serif; color: var(--ink); background: var(--bg); }
+h1 { font-size: 22px; margin: 0 0 12px; }
+h2 { font-size: 18px; margin: 28px 0 8px; }
+h3 { font-size: 15px; margin: 20px 0 2px; }
+kbd { display: inline-block; min-width: 1.6em; padding: 0 5px; border: 1px solid var(--line); border-bottom-width: 2px;
+      border-radius: 4px; background: var(--panel); font: 600 13px/1.5 ui-monospace, monospace; text-align: center; }
+button { font: inherit; padding: 5px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel);
+         color: var(--ink); cursor: pointer; }
+button:hover { border-color: var(--muted); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; padding: 8px 20px; }
+button.chosen { background: var(--accent-bg); border-color: var(--accent); font-weight: 600; }
+.page { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+.question { font-size: 18px; font-weight: 600; padding: 12px 16px; background: var(--panel);
+            border-left: 4px solid var(--accent); border-radius: 4px; }
+dl.labels { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 12px 0; }
+dl.labels dt { font-weight: 600; }
+dl.labels dd { margin: 0; }
+.muted { color: var(--muted); }
+.example .caption { margin: 0 0 8px; color: var(--muted); }
+.bar { position: sticky; top: 0; z-index: 2; background: var(--panel); border-bottom: 1px solid var(--soft);
+       padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+.bar .where { font-weight: 600; flex: 1 1 280px; }
+.bar .where .brief { color: var(--muted); font-weight: 400; }
+.group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.note-row { display: flex; gap: 8px; align-items: center; padding: 8px 16px 0; }
+.note-row textarea { flex: 1; font: inherit; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px;
+                     resize: vertical; min-height: 34px; }
+#status { min-width: 9em; color: var(--muted); font-size: 13px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 12px 16px 48px; align-items: start; }
+.example .pair { padding: 0; }
+figure { margin: 0; min-width: 0; }
+figcaption { color: var(--muted); font-size: 13px; margin: 0 0 4px; }
+.frame { position: relative; background: #fff; outline: 1px solid var(--line); cursor: zoom-in; }
+.frame img { display: block; width: 100%; height: 100%; }
+.beyond { position: absolute; top: 0; bottom: 0; border-left: 2px dashed var(--edge); pointer-events: none;
+          background: repeating-linear-gradient(135deg, rgba(220, 38, 38, 0.10) 0 6px, transparent 6px 12px); }
+.beyond.rtl { border-left: 0; border-right: 2px dashed var(--edge); }
+.missing { display: grid; place-items: center; height: 160px; border: 1px dashed var(--line); color: var(--muted); }
+.loading { padding: 24px 16px; color: var(--muted); }
+#zoom { position: fixed; inset: 0; z-index: 10; overflow: auto; padding: 24px; background: rgba(15, 23, 42, 0.85);
+        cursor: zoom-out; }
+#zoom .frame { cursor: zoom-out; margin: 0 auto; }
+#zoom figcaption { color: #e2e8f0; }
+</style>
+</head>
+<body>
+
+<section id="intro" class="page">
+  <h1>Layout breakage: blind labelling</h1>
+  <p>Each screen shows two pictures of the same component: on the left before a change, on the right after a
+     change to its content or its screen. The line above the pictures names the component and the change.
+     Answer one question for each pair:</p>
+  <p class="question">Does the right-hand picture show layout breakage that the left-hand one does not?</p>
+  <dl class="labels">
+    <dt><kbd>1</kbd> broken</dt>
+    <dd>content is cut off, spills out of its box, overlaps other content, is pushed off the screen, or the page
+        scrolls sideways</dd>
+    <dt><kbd>2</kbd> fine</dt>
+    <dd>none of that; awkward wrapping and words broken across lines are fine</dd>
+    <dt><kbd>3</kbd> other</dt>
+    <dd>something else looks wrong (a squeezed column, missing content, a collapsed element), but not the kinds
+        above</dd>
+    <dt><kbd>4</kbd> unsure</dt>
+    <dd>cannot tell</dd>
+  </dl>
+  <p>Only what is new on the right counts: a flaw that the left-hand picture already shows does not. When a
+     picture is wider than its screen, a dashed red line marks the screen's edge; whatever lies past it can only be
+     seen by scrolling the page sideways. Judge each pair on its own.</p>
+  <p class="muted">Keys: <kbd>1</kbd>&ndash;<kbd>4</kbd> answer and move on &middot; <kbd>N</kbd> write a note
+     (optional; <kbd>Enter</kbd> keeps it) &middot; <kbd>Z</kbd> undo the last answer &middot;
+     <kbd>&larr;</kbd> <kbd>&rarr;</kbd> previous and next &middot; click a picture to zoom, <kbd>Esc</kbd> to close.
+     Every answer is saved at once: close this tab whenever you like, and start the tool again to carry on.</p>
+  <h2>Examples of breakage</h2>
+  <p class="muted">Small test pages, one for each kind of breakage: fine on the left, broken on the right.</p>
+  <div id="examples"></div>
+  <p style="margin-top: 32px"><button id="start" class="primary">Start</button> <span class="muted">or press
+     <kbd>Enter</kbd></span></p>
+</section>
+
+<section id="labeller" hidden>
+  <div class="bar">
+    <span id="progress"></span>
+    <span class="where"><span id="change"></span> <span class="brief">&middot; <span id="brief"></span></span></span>
+    <span class="group" id="answer-buttons"></span>
+    <span class="group">
+      <button id="prev" title="previous item (left arrow)">&larr;</button>
+      <button id="next" title="next item (right arrow)">&rarr;</button>
+      <button id="undo" title="undo the last answer (Z)">Undo</button>
+      <button id="help" title="the instructions and examples">Instructions</button>
+    </span>
+  </div>
+  <div class="note-row">
+    <textarea id="note" rows="1" placeholder="Note (optional): press N to write, Enter to keep"></textarea>
+    <span id="status" aria-live="polite"></span>
+  </div>
+  <main class="pair" id="pair"></main>
+</section>
+
+<section id="done" class="page" hidden>
+  <h1>Every item is labelled</h1>
+  <p id="done-count"></p>
+  <p>Stop the tool with Ctrl+C in its terminal. Calibration is described in docs/LABELLING.md.</p>
+  <p><button id="review">Look through the answers again</button></p>
+</section>
+
+<div id="zoom" hidden></div>
+
+<script>
+'use strict';
+
+const KEYS = { 1: 'broken', 2: 'fine', 3: 'other', 4: 'unsure' };
+const $ = (id) => document.getElementById(id);
+let state = null;      // the server's /api/state
+let index = 0;         // the item on screen
+let shownAt = 0;       // when its pictures appeared, for the time taken
+let current = null;    // { item, left, right } images of the item on screen
+let token = 0;         // discards picture loads of an item no longer on screen
+let busy = false;      // one request at a time
+
+async function api(path, body) {
+  const options = body === undefined ? {} :
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+  const response = await fetch(path, options);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `${response.status} ${response.statusText}`);
+  return data;
+}
+
+function loadImage(url) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = url;
+  });
+}
+
+/** One picture at `scale`, with the screen's edge marked when the picture is wider than its screen. */
+function figure(picture, image, scale, caption, onClick) {
+  const element = document.createElement('figure');
+  const label = document.createElement('figcaption');
+  label.textContent = caption;
+  element.append(label);
+  if (!image) {
+    const missing = document.createElement('div');
+    missing.className = 'missing';
+    missing.textContent = 'picture missing';
+    element.append(missing);
+    return element;
+  }
+  const width = image.naturalWidth;
+  const frame = document.createElement('div');
+  frame.className = 'frame';
+  frame.style.width = `${width * scale}px`;
+  frame.style.height = `${image.naturalHeight * scale}px`;
+  const shown = document.createElement('img');
+  shown.src = image.src;
+  shown.alt = caption;
+  frame.append(shown);
+  if (width > picture.screen + 1) {
+    const beyond = document.createElement('div');
+    beyond.className = 'beyond';
+    if (picture.rtl) {
+      beyond.classList.add('rtl');
+      beyond.style.left = '0';
+      beyond.style.width = `${(width - picture.screen) * scale}px`;
+    } else {
+      beyond.style.left = `${picture.screen * scale}px`;
+      beyond.style.right = '0';
+    }
+    frame.append(beyond);
+  }
+  if (onClick) frame.addEventListener('click', onClick);
+  element.append(frame);
+  return element;
+}
+
+/**
+ * Both pictures at one scale, so that their widths compare: as large as the columns allow, and no taller than
+ * the window, except that a tall page is never shrunk below its real size for its height (it scrolls instead).
+ */
+function renderPair(container, left, right, leftImage, rightImage, maxScale) {
+  const column = (container.clientWidth - 16 - 32) / 2;
+  const images = [leftImage, rightImage].filter(Boolean);
+  const widest = Math.max(1, ...images.map((image) => image.naturalWidth));
+  const tallest = Math.max(1, ...images.map((image) => image.naturalHeight));
+  const room = window.innerHeight - container.getBoundingClientRect().top - window.scrollY - 40;
+  const scale = Math.min(maxScale, column / widest, Math.max(1, room / tallest));
+  container.replaceChildren(
+    figure(left, leftImage, scale, 'before', leftImage && (() => zoom(left, leftImage, scale, 'before'))),
+    figure(right, rightImage, scale, 'after', rightImage && (() => zoom(right, rightImage, scale, 'after'))),
+  );
+}
+
+function zoom(picture, image, scale, caption) {
+  const overlay = $('zoom');
+  overlay.replaceChildren(figure(picture, image, Math.max(1, scale * 2), caption, null));
+  overlay.hidden = false;
+}
+
+function closeZoom() {
+  $('zoom').hidden = true;
+  $('zoom').replaceChildren();
+}
+
+function labelledCount() {
+  return Object.keys(state.answers).length;
+}
+
+function firstUnlabelled() {
+  return state.items.findIndex((item) => !(item.id in state.answers));
+}
+
+function setStatus(text) {
+  $('status').textContent = text;
+}
+
+function showSection(id) {
+  for (const section of ['intro', 'labeller', 'done']) $(section).hidden = section !== id;
+  window.scrollTo(0, 0);
+}
+
+function renderIntro() {
+  const container = $('examples');
+  container.replaceChildren();
+  for (const example of state.examples) {
+    const block = document.createElement('div');
+    block.className = 'example';
+    const title = document.createElement('h3');
+    title.textContent = example.kind;
+    const caption = document.createElement('p');
+    caption.className = 'caption';
+    caption.textContent = example.caption;
+    const pair = document.createElement('div');
+    pair.className = 'pair';
+    block.append(title, caption, pair);
+    container.append(block);
+    Promise.all([loadImage(example.left.url), loadImage(example.right.url)]).then(([left, right]) => {
+      example.images = [left, right];
+      renderPair(pair, example.left, example.right, left, right, 1.5);
+    });
+  }
+  const done = labelledCount();
+  $('start').textContent = done ? `Continue (${done} of ${state.items.length} labelled)` : 'Start';
+}
+
+function relayoutIntro() {
+  const pairs = $('examples').querySelectorAll('.pair');
+  state.examples.forEach((example, n) => {
+    if (example.images) renderPair(pairs[n], example.left, example.right, ...example.images, 1.5);
+  });
+}
+
+function updateBar() {
+  const item = state.items[index];
+  const answer = state.answers[item.id];
+  $('progress').textContent = `${labelledCount()} of ${state.items.length} labelled · item ${index + 1}`;
+  $('change').textContent = item.description;
+  $('brief').textContent = item.brief;
+  for (const button of $('answer-buttons').children) {
+    button.classList.toggle('chosen', answer !== undefined && button.dataset.label === answer.label);
+  }
+  $('prev').disabled = index === 0;
+  $('next').disabled = index === state.items.length - 1;
+}
+
+function show(position) {
+  index = Math.max(0, Math.min(state.items.length - 1, position));
+  const item = state.items[index];
+  showSection('labeller');
+  closeZoom();
+  updateBar();
+  $('note').value = state.answers[item.id] ? state.answers[item.id].note : '';
+  setStatus('');
+  const mine = ++token;
+  current = null;
+  const pair = $('pair');
+  pair.replaceChildren(Object.assign(document.createElement('p'), { className: 'loading', textContent: 'Loading the pictures…' }));
+  Promise.all([loadImage(item.left.url), loadImage(item.right.url)]).then(([left, right]) => {
+    if (mine !== token) return;
+    current = { item, left, right };
+    renderPair(pair, item.left, item.right, left, right, 2);
+    shownAt = performance.now();
+    window.scrollTo(0, 0);
+    const next = state.items[index + 1];
+    if (next) { loadImage(next.left.url); loadImage(next.right.url); }
+  });
+}
+
+async function answer(label) {
+  if (busy || !current) return;
+  busy = true;
+  try {
+    const item = state.items[index];
+    const ms = Math.round(performance.now() - shownAt);
+    const result = await api('/api/answer', { item: item.id, label, note: $('note').value, ms });
+    state.answers = result.answers;
+    if (index + 1 < state.items.length) {
+      show(index + 1);
+    } else {
+      const open = firstUnlabelled();
+      if (open === -1) showDone(); else show(open);
+    }
+    setStatus(`saved: ${label}`);
+  } catch (error) {
+    setStatus(`not saved: ${error.message}`);
+  } finally {
+    busy = false;
+  }
+}
+
+async function undo() {
+  if (busy) return;
+  busy = true;
+  try {
+    const result = await api('/api/undo', {});
+    state.answers = result.answers;
+    if (result.undone) {
+      show(state.items.findIndex((item) => item.id === result.undone));
+      setStatus('undone: answer again');
+    } else {
+      updateBar();
+      setStatus('nothing to undo');
+    }
+  } catch (error) {
+    setStatus(`not undone: ${error.message}`);
+  } finally {
+    busy = false;
+  }
+}
+
+async function keepNote() {
+  const item = state.items[index];
+  if (!(item.id in state.answers)) {
+    setStatus('note kept: it is saved with your answer');
+    return;
+  }
+  try {
+    const result = await api('/api/note', { item: item.id, note: $('note').value });
+    state.answers = result.answers;
+    setStatus('note saved');
+  } catch (error) {
+    setStatus(`note not saved: ${error.message}`);
+  }
+}
+
+function showDone() {
+  showSection('done');
+  $('done-count').textContent = `All ${state.items.length} items of ${state.set} have an answer.`;
+}
+
+function start() {
+  const open = firstUnlabelled();
+  if (open === -1) showDone(); else show(open);
+}
+
+document.addEventListener('keydown', (event) => {
+  if (!state || event.ctrlKey || event.metaKey || event.altKey) return;
+  if (!$('zoom').hidden) {
+    if (event.key === 'Escape') closeZoom();
+    return;
+  }
+  if (event.target === $('note')) {
+    if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); $('note').blur(); keepNote(); }
+    if (event.key === 'Escape') $('note').blur();
+    return;
+  }
+  if (!$('intro').hidden) {
+    if (event.key === 'Enter') { event.preventDefault(); start(); }
+    return;
+  }
+  if ($('labeller').hidden) return;
+  if (KEYS[event.key]) {
+    if (!event.repeat) answer(KEYS[event.key]);
+  } else if (event.key === 'n' || event.key === 'N') {
+    event.preventDefault();
+    $('note').focus();
+  } else if (event.key === 'z' || event.key === 'Z') {
+    if (!event.repeat) undo();
+  } else if (event.key === 'ArrowLeft') {
+    event.preventDefault();
+    show(index - 1);
+  } else if (event.key === 'ArrowRight') {
+    event.preventDefault();
+    show(index + 1);
+  }
+});
+
+$('zoom').addEventListener('click', closeZoom);
+$('start').addEventListener('click', start);
+$('prev').addEventListener('click', () => show(index - 1));
+$('next').addEventListener('click', () => show(index + 1));
+$('undo').addEventListener('click', undo);
+$('help').addEventListener('click', () => { renderIntro(); showSection('intro'); });
+$('review').addEventListener('click', () => show(0));
+
+let resizeTimer = 0;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (!$('labeller').hidden && current) renderPair($('pair'), current.item.left, current.item.right, current.left, current.right, 2);
+    if (!$('intro').hidden) relayoutIntro();
+  }, 100);
+});
+
+api('/api/state').then((data) => {
+  state = data;
+  document.title = `${state.set} · First Edit labelling`;
+  for (const [key, label] of Object.entries(KEYS)) {
+    const button = document.createElement('button');
+    button.dataset.label = label;
+    button.textContent = `${key} ${label}`;
+    button.addEventListener('click', () => answer(label));
+    $('answer-buttons').append(button);
+  }
+  renderIntro();
+}).catch((error) => {
+  document.body.textContent = `The labelling tool could not load its set: ${error.message}`;
+});
+</script>
+</body>
+</html>

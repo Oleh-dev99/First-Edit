@@ -20,10 +20,11 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["first_edit", "first_edit.prompts"]
+packages = ["first_edit", "first_edit.prompts", "first_edit.label_ui"]
 
 [tool.setuptools.package-data]
 "first_edit.prompts" = ["*.md"]
+"first_edit.label_ui" = ["*.html", "*.json", "examples/*.png"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

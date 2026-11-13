@@ -1,4 +1,4 @@
-"""Command line: python -m first_edit <doctor|generate|stress|summarize|run-next|cli-probe|label-set> ..."""
+"""Command line: python -m first_edit <doctor|generate|stress|summarize|run-next|cli-probe|label-set|label> ..."""
 
 from __future__ import annotations
 
@@ -17,7 +17,8 @@ from .briefs import BriefError, list_briefs, load_brief
 from .budget import Budget
 from .doctor import run_doctor
 from .generate import generate, summarize
-from .labelset import build_label_set, format_composition, write_label_set
+from .labelset import build_label_set, format_composition, load_label_set, write_label_set
+from .labeltool import DEFAULT_PORT, open_tool, serve
 from .ledger import FreeRequestLedger, is_free
 from .models import ModelEntry, ModelsError, get_model, load_models
 from .node import check_candidate, run_stress
@@ -81,6 +82,10 @@ def _parser() -> argparse.ArgumentParser:
     label_set.add_argument("--runs", required=True, type=Path, help="the stress results to sample, e.g. results/runs-run2")
     label_set.add_argument("--name", required=True, help="the set's name; it is written to labels/<name>.json")
     label_set.add_argument("--seed", required=True, type=int, help="the sampling and shuffling seed")
+
+    label = commands.add_parser("label", help="start the blind labelling tool on 127.0.0.1 (docs/LABELLING.md)")
+    label.add_argument("--set", required=True, type=Path, dest="set_path", help="a label set, e.g. labels/set-01.json")
+    label.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"the local port (default {DEFAULT_PORT})")
     return parser
 
 
@@ -188,6 +193,9 @@ def main(argv: list[str] | None = None) -> int:
             return _cli_probe(args.model)
         if args.command == "label-set":
             return _label_set(args)
+        if args.command == "label":
+            serve(open_tool(args.set_path, load_label_set(args.set_path), port=args.port))
+            return 0
         entry = get_model(args.model)
         brief_ids = _brief_ids(args)
         if args.command == "generate":
