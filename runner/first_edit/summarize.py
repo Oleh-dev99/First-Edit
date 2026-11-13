@@ -2,15 +2,19 @@
 and the stress results, written as summary.json, report.md and a static
 gallery.html of cases.
 
-Survival numbers follow D-015: they cover clean-baseline candidates only.
-The gallery shows every case of a clean-baseline candidate (failed or
-survived) and the baseline of every born-broken candidate.
+The headline (D-033) is the share of clean-baseline candidates that broke at
+least once, with a 95% Wilson interval; the failure rate per case and the
+mean survival rate are secondary. Every scored number covers clean-baseline
+candidates only (D-015). The gallery shows every case of a clean-baseline
+candidate (failed or survived) and the baseline of every born-broken or
+crashed candidate.
 """
 
 from __future__ import annotations
 
 import html
 import json
+import math
 import os
 import statistics
 from collections import Counter
@@ -19,15 +23,18 @@ from pathlib import Path
 from typing import Any
 
 from .paths import CANDIDATES_DIR, RUNS_DIR
-from .stress import find_candidates
+from .stress import baseline_state, find_candidates
 
-SUMMARY_SCHEMA_VERSION = 1
-CHECKS = ("page-overflow-x", "text-clipped", "content-spill", "text-overlap")
-MUTATIONS = (
-    "text-long", "text-unbroken", "text-empty", "list-0", "list-1", "list-many",
-    "number-large", "viewport-320", "text-200pct", "dir-rtl",
-)
+SUMMARY_SCHEMA_VERSION = 2
+CHECKS = ("page-overflow-x", "text-clipped", "content-spill", "text-overlap", "off-screen")
+CONTENT_MUTATIONS = ("text-long", "text-unbroken", "text-empty", "list-0", "list-1", "list-many", "number-large")
+#: Every case in run order: the mutations, then the content mutations at 320 px (D-032).
+CASES = (*CONTENT_MUTATIONS, "viewport-320", "text-200pct", "dir-rtl", *(f"{m}@320" for m in CONTENT_MUTATIONS))
 VARIANT_ORDER = ("plain", "hinted")
+#: The model name of a pooled group: every model of one variant.
+POOLED = "all models"
+#: z for a two-sided 95% interval.
+Z_95 = 1.959964
 
 
 def _read_json(path: Path) -> dict[str, Any] | None:
@@ -35,6 +42,21 @@ def _read_json(path: Path) -> dict[str, Any] | None:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
+
+
+def wilson(successes: int, trials: int, z: float = Z_95) -> list[float] | None:
+    """The Wilson score interval for a proportion, [low, high], 4 decimals; None without trials."""
+    if trials <= 0:
+        return None
+    p = successes / trials
+    denominator = 1 + z * z / trials
+    centre = (p + z * z / (2 * trials)) / denominator
+    half = z * math.sqrt(p * (1 - p) / trials + z * z / (4 * trials * trials)) / denominator
+    return [round(max(0.0, centre - half), 4), round(min(1.0, centre + half), 4)]
+
+
+def _share(count: int, of: int) -> dict[str, Any]:
+    return {"count": count, "of": of, "share": round(count / of, 4) if of else None, "ci95": wilson(count, of)}
 
 
 @dataclass
@@ -46,10 +68,10 @@ class Case:
     variant: str
     sample: int
     candidate: str
-    #: "baseline" or a mutation id
+    #: "baseline" or a case id ("text-long", "text-long@320")
     case: str
     status: str
-    #: "failed", "survived" or "born-broken"
+    #: "failed", "survived", "born-broken" or "baseline-crash"
     outcome: str
     #: checks with new errors (failed) or baseline errors (born broken)
     checks: list[str]
@@ -60,6 +82,8 @@ class Case:
     query: str | None
     viewport: dict[str, Any] | None
     truncations: int
+    #: content-hidden values (normalized), when the case was measured
+    hidden_values: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -77,21 +101,22 @@ class Candidate:
 
     @property
     def state(self) -> str:
-        """api-error, invalid, not-stressed, born-broken or clean."""
+        """api-error (no candidate), invalid, not-stressed, or once stressed
+        baseline-crash, born-broken or clean (D-038)."""
         if self.generation.get("status") == "api-error":
             return "api-error"
         if not self.generation.get("valid"):
             return "invalid"
         if self.summary is None:
             return "not-stressed"
-        baseline = self.summary["baseline"]
-        if baseline.get("status") != "ok" or (baseline.get("errors") or 0) > 0:
-            return "born-broken"
-        return "clean"
+        return baseline_state(self.summary)
 
     @property
     def survival(self) -> float | None:
         return None if self.summary is None else self.summary["totals"].get("survivalRate")
+
+    def applicable_cases(self) -> list[dict[str, Any]]:
+        return [entry for entry in (self.summary or {}).get("cases", []) if entry.get("applicable")]
 
 
 def _case_from_files(candidate: Candidate, case_id: str, entry: dict[str, Any], outcome: str) -> Case:
@@ -118,6 +143,7 @@ def _case_from_files(candidate: Candidate, case_id: str, entry: dict[str, Any], 
         outcome=outcome, checks=checks, findings=findings, error=result.get("error"),
         screenshot=image(files.get("screenshot")), annotated=image(files.get("annotated")),
         query=result.get("query"), viewport=result.get("viewport"), truncations=entry.get("truncations") or 0,
+        hidden_values=list(result.get("hiddenValues") or []),
     )
 
 
@@ -134,13 +160,13 @@ def load_candidates(model_ids: list[str], brief_ids: list[str], *, candidates_di
             run_dir = runs_dir / brief_id / cid.replace("/", "__")
             summary = _read_json(run_dir / "summary.json") if generation.get("valid") else None
             candidate = Candidate(model_id, brief_id, variant, sample, cid, generation, summary, run_dir)
-            if candidate.state == "born-broken":
-                candidate.cases.append(_case_from_files(candidate, "baseline", candidate.summary["baseline"], "born-broken"))
-            elif candidate.state == "clean":
-                for entry in candidate.summary["mutations"]:
-                    if entry.get("applicable"):
-                        outcome = "survived" if entry.get("survived") else "failed"
-                        candidate.cases.append(_case_from_files(candidate, entry["id"], entry, outcome))
+            state = candidate.state
+            if state in ("born-broken", "baseline-crash"):
+                candidate.cases.append(_case_from_files(candidate, "baseline", candidate.summary["baseline"], state))
+            elif state == "clean":
+                for entry in candidate.applicable_cases():
+                    outcome = "survived" if entry.get("survived") else "failed"
+                    candidate.cases.append(_case_from_files(candidate, entry["id"], entry, outcome))
             found.append(candidate)
     return found
 
@@ -151,30 +177,32 @@ def _sum(values: list[int | float | None]) -> int | float | None:
 
 
 def group_stats(candidates: list[Candidate], brief_ids: list[str]) -> dict[str, Any]:
-    """The numbers for one model and variant."""
+    """The numbers for one model and variant (or one variant pooled across models)."""
     generated = [c for c in candidates if c.state != "api-error"]
     invalid = [c for c in generated if c.state == "invalid"]
     clean = [c for c in generated if c.state == "clean"]
-    born_broken = [c for c in generated if c.state == "born-broken"]
     rates = [c.survival for c in clean if c.survival is not None]
 
     by_rule: Counter[str] = Counter()
     for c in invalid:
         by_rule.update({reason.get("rule", "?") for reason in c.generation.get("reasons", [])})
 
-    mutation_entries = [entry for c in clean for entry in c.summary["mutations"] if entry.get("applicable")]
-    failed_entries = [entry for entry in mutation_entries if not entry.get("survived")]
-    by_mutation = {
-        mutation: {
-            "failed": sum(1 for e in failed_entries if e["id"] == mutation),
-            "applicable": sum(1 for e in mutation_entries if e["id"] == mutation),
+    case_entries = [entry for c in clean for entry in c.applicable_cases()]
+    failed_entries = [entry for entry in case_entries if not entry.get("survived")]
+    broke = [c for c in clean if any(not entry.get("survived") for entry in c.applicable_cases())]
+    by_case = {
+        case: {
+            "failed": sum(1 for e in failed_entries if e["id"] == case),
+            "applicable": sum(1 for e in case_entries if e["id"] == case),
         }
-        for mutation in MUTATIONS
+        for case in CASES
     }
     by_check = {check: sum(1 for e in failed_entries if (e.get("newErrors") or {}).get(check)) for check in CHECKS}
 
-    rendered_ok = [c.summary["baseline"] for c in clean] + [e for e in mutation_entries if e.get("status") == "ok"]
+    rendered_ok = [c.summary["baseline"] for c in clean] + [e for e in case_entries if e.get("status") == "ok"]
     truncations = sum(entry.get("truncations") or 0 for entry in rendered_ok)
+    measured = [e for e in case_entries if e.get("contentHidden") is not None]
+    hidden = sum(e["contentHidden"] for e in measured)
 
     usage = [c.generation.get("usage") or {} for c in generated]
     actual = [c.generation.get("actualCostUsd") for c in generated]
@@ -191,8 +219,15 @@ def group_stats(candidates: list[Candidate], brief_ids: list[str]) -> dict[str, 
         "missingBriefs": [brief for brief in brief_ids if brief not in present],
         "notStressed": sum(1 for c in generated if c.state == "not-stressed"),
         "cleanBaseline": len(clean),
-        "bornBroken": len(born_broken),
-        "baselineRenderFailures": sum(1 for c in born_broken if c.summary["baseline"].get("status") != "ok"),
+        "bornBroken": sum(1 for c in generated if c.state == "born-broken"),
+        "baselineCrash": sum(1 for c in generated if c.state == "baseline-crash"),
+        "brokeOnce": _share(len(broke), len(clean)),
+        "failureRate": {
+            "failed": len(failed_entries),
+            "applicable": len(case_entries),
+            "rate": round(len(failed_entries) / len(case_entries), 4) if case_entries else None,
+            "ci95": wilson(len(failed_entries), len(case_entries)),
+        },
         "survival": {
             "candidates": len(rates),
             "mean": round(statistics.fmean(rates), 4) if rates else None,
@@ -200,17 +235,23 @@ def group_stats(candidates: list[Candidate], brief_ids: list[str]) -> dict[str, 
             "max": max(rates) if rates else None,
         },
         "cases": {
-            "applicable": len(mutation_entries),
+            "applicable": len(case_entries),
             "failed": len(failed_entries),
-            "renderErrors": sum(1 for e in mutation_entries if e.get("status") == "render-error"),
-            "timeouts": sum(1 for e in mutation_entries if e.get("status") == "timeout"),
+            "renderErrors": sum(1 for e in case_entries if e.get("status") == "render-error"),
+            "timeouts": sum(1 for e in case_entries if e.get("status") == "timeout"),
         },
-        "failedByMutation": by_mutation,
+        "failedByCase": by_case,
         "failedByCheck": by_check,
         "truncations": {
             "total": truncations,
             "renderedCases": len(rendered_ok),
             "perCase": round(truncations / len(rendered_ok), 2) if rendered_ok else None,
+        },
+        "contentHidden": {
+            "total": hidden,
+            "measuredCases": len(measured),
+            "casesWithHidden": sum(1 for e in measured if e["contentHidden"] > 0),
+            "perCase": round(hidden / len(measured), 2) if measured else None,
         },
         "tokens": {
             "input": _sum([u.get("inputTokens") for u in usage]),
@@ -249,7 +290,12 @@ def build_summary(candidates: list[Candidate], model_ids: list[str], brief_ids: 
         for variant in VARIANT_ORDER:
             members = [c for c in candidates if c.model == model_id and c.variant == variant]
             if members:
-                groups.append({"model": model_id, "variant": variant, **group_stats(members, brief_ids)})
+                groups.append({"model": model_id, "variant": variant, "pooled": False, **group_stats(members, brief_ids)})
+    # One pooled group per variant when more than one model has candidates of it.
+    for variant in VARIANT_ORDER:
+        members = [c for c in candidates if c.variant == variant]
+        if len({c.model for c in members}) > 1:
+            groups.append({"model": POOLED, "variant": variant, "pooled": True, **group_stats(members, brief_ids)})
 
     model_info = []
     for model_id in model_ids:
@@ -274,13 +320,16 @@ def build_summary(candidates: list[Candidate], model_ids: list[str], brief_ids: 
         if any(c.variant == variant for c in candidates)
     }
 
+    own = [g for g in groups if not g["pooled"]]
     totals = {
-        "candidates": sum(g["candidates"] for g in groups),
-        "tokens": {key: _sum([g["tokens"][key] for g in groups]) for key in ("input", "cachedInput", "output", "reasoning")},
-        "costUsd": round(sum(g["cost"]["usd"] for g in groups), 6),
+        "candidates": sum(g["candidates"] for g in own),
+        "tokens": {key: _sum([g["tokens"][key] for g in own]) for key in ("input", "cachedInput", "output", "reasoning")},
+        "costUsd": round(sum(g["cost"]["usd"] for g in own), 6),
     }
     return {
         "schemaVersion": SUMMARY_SCHEMA_VERSION,
+        "cases": list(CASES),
+        "checks": list(CHECKS),
         "models": model_info,
         "briefs": brief_ids,
         "groups": groups,
@@ -293,6 +342,10 @@ def build_summary(candidates: list[Candidate], model_ids: list[str], brief_ids: 
 
 def _pct(value: float | None) -> str:
     return "-" if value is None else f"{value * 100:.1f}%"
+
+
+def _ci(interval: list[float] | None) -> str:
+    return "-" if interval is None else f"{interval[0] * 100:.1f}% to {interval[1] * 100:.1f}%"
 
 
 def _num(value: int | float | None) -> str:
@@ -314,10 +367,14 @@ def render_report(summary: dict[str, Any]) -> str:
     label = lambda g: f"{g['model']} {g['variant']}"  # noqa: E731
     out = ["# Spike report", ""]
     out += [
-        "Generated by `python -m first_edit summarize`. Survival, failed cases and",
-        "truncations cover clean-baseline candidates only (D-015); born-broken",
-        "candidates are counted, not scored. Costs are the cost the provider",
-        "reported, or configured prices times usage where it reported none.",
+        "Generated by `python -m first_edit summarize`. Every scored number covers",
+        "clean-baseline candidates only (D-015); born-broken and crashed",
+        "candidates are counted, not scored. The headline is the share of",
+        "clean-baseline candidates that broke at least once, with a 95% Wilson",
+        "interval (D-033). A candidate runs 17 cases at most: the ten mutations",
+        "and the seven content mutations again at 320 px (D-032). Content hidden",
+        "(D-036) and truncations (D-021) are info only. Costs are the cost the",
+        "provider reported, or configured prices times usage where it reported none.",
         "",
         "## Models",
         "",
@@ -327,18 +384,31 @@ def render_report(summary: dict[str, Any]) -> str:
         [[m["id"], m["model"] or "-", ", ".join(m["reportedModels"]) or "-", m["calls"]["first"] or "-",
           m["calls"]["last"] or "-"] for m in summary["models"]],
     )
-    out += ["", "## Per model and variant", ""]
     if not groups:
-        return "\n".join([*out, "No generated candidates for these models."]) + "\n"
+        return "\n".join([*out, "", "No generated candidates for these models."]) + "\n"
+
+    out += ["", "## Broke at least once (headline)", "",
+            "Clean-baseline candidates with at least one failed case, and the failure rate per case, "
+            "each with a 95% Wilson interval. Mean survival is secondary.", ""]
+    out += _table(
+        ["model", "variant", "clean baseline", "broke at least once", "share", "95% interval",
+         "failed cases", "failure rate", "95% interval", "mean survival"],
+        [[g["model"], g["variant"], str(g["cleanBaseline"]), str(g["brokeOnce"]["count"]), _pct(g["brokeOnce"]["share"]),
+          _ci(g["brokeOnce"]["ci95"]), f"{g['failureRate']['failed']}/{g['failureRate']['applicable']}",
+          _pct(g["failureRate"]["rate"]), _ci(g["failureRate"]["ci95"]), _pct(g["survival"]["mean"])] for g in groups],
+    )
+
+    out += ["", "## Candidates", ""]
     out += _table(
         ["model", "variant", "candidates", "valid", "invalid", "api errors", "clean baseline", "born broken",
-         "mean survival", "min", "max"],
+         "baseline crash", "mean survival", "min", "max"],
         [[g["model"], g["variant"], str(g["candidates"]), str(g["valid"]), str(g["invalid"]), str(g["apiErrors"]),
-          str(g["cleanBaseline"]), str(g["bornBroken"]), _pct(g["survival"]["mean"]), _pct(g["survival"]["min"]),
-          _pct(g["survival"]["max"])] for g in groups],
+          str(g["cleanBaseline"]), str(g["bornBroken"]), str(g["baselineCrash"]), _pct(g["survival"]["mean"]),
+          _pct(g["survival"]["min"]), _pct(g["survival"]["max"])] for g in groups],
     )
-    missing = [f"{label(g)}: {', '.join(g['missingBriefs'])}" for g in groups if g["missingBriefs"]]
-    not_stressed = [f"{label(g)}: {g['notStressed']}" for g in groups if g["notStressed"]]
+    own = [g for g in groups if not g["pooled"]]
+    missing = [f"{label(g)}: {', '.join(g['missingBriefs'])}" for g in own if g["missingBriefs"]]
+    not_stressed = [f"{label(g)}: {g['notStressed']}" for g in own if g["notStressed"]]
     if missing:
         out += ["", "Briefs with no candidate (skipped by the budget or never generated): " + "; ".join(missing) + "."]
     if not_stressed:
@@ -351,11 +421,11 @@ def render_report(summary: dict[str, Any]) -> str:
     else:
         out += ["No invalid candidates."]
 
-    out += ["", "## Failed cases per mutation", "", "Failed / applicable cases of clean-baseline candidates.", ""]
+    out += ["", "## Failed cases per case", "", "Failed / applicable cases of clean-baseline candidates.", ""]
     out += _table(
-        ["mutation", *map(label, groups)],
-        [[mutation, *(f"{g['failedByMutation'][mutation]['failed']}/{g['failedByMutation'][mutation]['applicable']}"
-                      for g in groups)] for mutation in MUTATIONS]
+        ["case", *map(label, groups)],
+        [[case, *(f"{g['failedByCase'][case]['failed']}/{g['failedByCase'][case]['applicable']}" for g in groups)]
+         for case in CASES]
         + [["all", *(f"{g['cases']['failed']}/{g['cases']['applicable']}" for g in groups)]],
     )
     out += ["", "## Failed cases per check", "",
@@ -366,11 +436,18 @@ def render_report(summary: dict[str, Any]) -> str:
         + [["render error", *(str(g["cases"]["renderErrors"]) for g in groups)],
            ["timeout", *(str(g["cases"]["timeouts"]) for g in groups)]],
     )
-    out += ["", "## Truncations", "", "Text cut with an ellipsis or a line clamp (D-021), per rendered case.", ""]
+    out += ["", "## Truncations and content hidden", "",
+            "Truncations: text cut with an ellipsis or a line clamp, per rendered case (D-021). Content hidden: "
+            "fixture values shown at 1280 and not shown at 320, at 200% text or in RTL, per measured case (D-036). "
+            "Neither fails a case.", ""]
     out += _table(
-        ["model", "variant", "truncations", "rendered cases", "per case"],
+        ["model", "variant", "truncations", "rendered cases", "per case", "content hidden", "measured cases",
+         "cases with hidden content", "per case"],
         [[g["model"], g["variant"], str(g["truncations"]["total"]), str(g["truncations"]["renderedCases"]),
-          "-" if g["truncations"]["perCase"] is None else f"{g['truncations']['perCase']:.2f}"] for g in groups],
+          "-" if g["truncations"]["perCase"] is None else f"{g['truncations']['perCase']:.2f}",
+          str(g["contentHidden"]["total"]), str(g["contentHidden"]["measuredCases"]),
+          str(g["contentHidden"]["casesWithHidden"]),
+          "-" if g["contentHidden"]["perCase"] is None else f"{g['contentHidden']['perCase']:.2f}"] for g in groups],
     )
     out += ["", "## Tokens and cost", ""]
     out += _table(
@@ -378,7 +455,7 @@ def render_report(summary: dict[str, Any]) -> str:
         [[g["model"], g["variant"], _num(g["tokens"]["input"]), _num(g["tokens"]["cachedInput"]), _num(g["tokens"]["output"]),
           _num(g["tokens"]["reasoning"]), _usd(g["cost"]["usd"]),
           f"{_usd(g['cost']['actualUsd'])} ({g['cost']['callsWithActualCost']}/{g['candidates']})",
-          _usd(g["cost"]["estimatedUsd"])] for g in groups],
+          _usd(g["cost"]["estimatedUsd"])] for g in own],
     )
     totals = summary["totals"]
     out += ["", f"Total: {totals['candidates']} candidates, {_num(totals['tokens']['input'])} input and "
@@ -388,7 +465,7 @@ def render_report(summary: dict[str, Any]) -> str:
     for variant, table in summary["survivalByBrief"].items():
         model_ids = [m["id"] for m in summary["models"]]
         out += ["", f"## Survival by brief, {variant}", "",
-                "Survived / applicable mutations per candidate; other states are named.", ""]
+                "Survived / applicable cases per candidate; other states are named.", ""]
         out += _table(["brief", *model_ids], [[brief, *(row[m] for m in model_ids)] for brief, row in table.items()])
     return "\n".join(out) + "\n"
 
@@ -397,7 +474,7 @@ def render_report(summary: dict[str, Any]) -> str:
 
 GALLERY_STYLE = """
 :root { --bg: #f8fafc; --card: #ffffff; --ink: #0f172a; --muted: #475569; --line: #e2e8f0;
-        --bad: #b91c1c; --bad-bg: #fef2f2; --ok: #15803d; --ok-bg: #f0fdf4; --warn: #b45309; }
+        --bad: #b91c1c; --bad-bg: #fef2f2; --ok: #15803d; --ok-bg: #f0fdf4; --warn: #b45309; --warn-bg: #fffbeb; }
 * { box-sizing: border-box; }
 body { margin: 0; font: 14px/1.45 system-ui, sans-serif; color: var(--ink); background: var(--bg); }
 header { position: sticky; top: 0; z-index: 1; background: var(--card); border-bottom: 1px solid var(--line);
@@ -411,12 +488,13 @@ select { font: inherit; padding: 2px 4px; }
 .cards { display: grid; gap: 16px; padding: 0 16px 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 720px), 1fr)); }
 .card { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--ok); border-radius: 6px;
         padding: 12px; min-width: 0; }
-.card.failed, .card.born-broken { border-left-color: var(--bad); }
+.card.failed, .card.born-broken, .card.baseline-crash { border-left-color: var(--bad); }
 .card h3 { font-size: 14px; margin: 0 0 4px; overflow-wrap: anywhere; }
 .meta { margin: 0 0 8px; color: var(--muted); overflow-wrap: anywhere; }
 .tag { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-.tag.failed, .tag.born-broken { color: var(--bad); background: var(--bad-bg); }
+.tag.failed, .tag.born-broken, .tag.baseline-crash { color: var(--bad); background: var(--bad-bg); }
 .tag.survived { color: var(--ok); background: var(--ok-bg); }
+.tag.hidden-content { color: var(--warn); background: var(--warn-bg); }
 .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 figure { margin: 0; min-width: 0; }
 figure img { display: block; width: 100%; height: auto; max-height: 420px; object-fit: contain; object-position: top left;
@@ -483,10 +561,13 @@ def _card(case: Case, out_dir: Path) -> str:
     attrs = {
         "model": case.model, "variant": case.variant, "brief": case.brief, "mutation": case.case,
         "checks": " ".join(case.checks), "outcome": case.outcome,
+        "hidden": "yes" if case.hidden_values else "no",
     }
     data = " ".join(f'data-{name}="{html.escape(value, quote=True)}"' for name, value in attrs.items())
     viewport = case.viewport or {}
     meta = [f'<span class="tag {case.outcome}">{case.outcome.replace("-", " ")}</span>', f"status {html.escape(case.status)}"]
+    if case.hidden_values:
+        meta.append(f'<span class="tag hidden-content">content hidden {len(case.hidden_values)}</span>')
     if viewport:
         meta.append(f"{viewport.get('width')}x{viewport.get('height')}")
     if case.checks:
@@ -499,11 +580,14 @@ def _card(case: Case, out_dir: Path) -> str:
         body.append(f'<p class="error">{html.escape(case.error)}</p>')
     body.append('<div class="shots">' + _figure(case.screenshot, "clean", out_dir) + _figure(case.annotated, "annotated", out_dir) + "</div>")
     if case.findings:
-        label = "new findings" if case.outcome != "born-broken" else "born-broken findings"
+        label = "new findings" if case.outcome == "failed" else "born-broken findings"
         body.append(f"<details><summary>{len(case.findings)} {label}</summary><ul>"
                     + "".join(_finding(finding) for finding in case.findings) + "</ul></details>")
+    if case.hidden_values:
+        body.append(f"<details><summary>{len(case.hidden_values)} hidden value(s), shown at 1280</summary><ul>"
+                    + "".join(f"<li>&ldquo;{html.escape(value)}&rdquo;</li>" for value in case.hidden_values) + "</ul></details>")
     if case.query:
-        body.append(f'<p class="meta"><code>{html.escape(case.query)}</code></p>')
+        body.append(f'<p class="meta"><code>{html.escape(case.query)}</code> at {viewport.get("width", "?")} px</p>')
     body.append("</article>")
     return "\n".join(body)
 
@@ -515,7 +599,7 @@ def _options(name: str, label: str, values: list[str]) -> str:
 
 def render_gallery(candidates: list[Candidate], out_dir: Path) -> str:
     cases = [case for c in candidates for case in c.cases]
-    order = {mutation: index for index, mutation in enumerate(("baseline", *MUTATIONS))}
+    order = {case: index for index, case in enumerate(("baseline", *CASES))}
     cases.sort(key=lambda case: (case.model, case.brief, VARIANT_ORDER.index(case.variant) if case.variant in VARIANT_ORDER else 9,
                                  case.sample, order.get(case.case, 99)))
     failing = [case for case in cases if case.outcome != "survived"]
@@ -524,7 +608,7 @@ def render_gallery(candidates: list[Candidate], out_dir: Path) -> str:
     def values(attribute: str) -> list[str]:
         found = {getattr(case, attribute) for case in cases}
         if attribute == "case":
-            return [m for m in ("baseline", *MUTATIONS) if m in found]
+            return [m for m in ("baseline", *CASES) if m in found]
         if attribute == "variant":
             return [v for v in VARIANT_ORDER if v in found]
         return sorted(found)
@@ -534,12 +618,13 @@ def render_gallery(candidates: list[Candidate], out_dir: Path) -> str:
         _options("model", "model", values("model")),
         _options("variant", "variant", values("variant")),
         _options("brief", "brief", values("brief")),
-        _options("mutation", "mutation", values("case")),
+        _options("mutation", "case", values("case")),
         _options("check", "check", checks),
+        _options("hidden", "content hidden", ["yes", "no"]),
     ])
     sections = []
     for key, title, members in (
-        ("failing", "Failed cases and born-broken baselines", failing),
+        ("failing", "Failed cases, born-broken and crashed baselines", failing),
         ("survived", "Survived cases", survived),
     ):
         cards = "\n".join(_card(case, out_dir) for case in members) or '<p class="meta">None.</p>'
@@ -551,8 +636,8 @@ def render_gallery(candidates: list[Candidate], out_dir: Path) -> str:
         "<title>Spike gallery</title>\n"
         f"<style>{GALLERY_STYLE}</style>\n</head>\n<body>\n"
         "<header><h1>Spike gallery</h1>"
-        f'<p class="meta">{len(failing)} failed cases and born-broken baselines, {len(survived)} survived cases. '
-        "Cases of clean-baseline candidates only, plus the baseline of each born-broken candidate. "
+        f'<p class="meta">{len(failing)} failed cases and born-broken or crashed baselines, {len(survived)} survived cases. '
+        "Cases of clean-baseline candidates only, plus the baseline of each born-broken or crashed candidate. "
         "Screenshots open full size on click.</p>"
         f'<form id="filters">{filters}</form></header>\n'
         + "\n".join(sections)
