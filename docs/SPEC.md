@@ -1102,7 +1102,7 @@ and replaced elements.
 10. Tiers and check refinements; re-stress (done)
 11. Suite v1 frozen; ten more briefs (20 in total) (done)
 12. Second run on free models (in progress; one model a day)
-13. Labelling tool and blind calibration, set 1
+13. Labelling tool and blind calibration, set 1 (done)
 14. Results site
 15. CLI packaging
 16. Decision on the comparison when the queue finishes; label set 2
