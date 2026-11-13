@@ -1,0 +1,48 @@
+{
+  "companyName": "Wickerlight",
+  "tagline": "Scheduling software for clinics and studios, built to keep every chair and room busy.",
+  "columns": [
+    {
+      "title": "Product",
+      "links": [
+        { "label": "Features", "href": "/features" },
+        { "label": "Pricing", "href": "/pricing" },
+        { "label": "Integrations", "href": "/integrations" },
+        { "label": "What's new", "href": "/changelog" }
+      ]
+    },
+    {
+      "title": "Company",
+      "links": [
+        { "label": "About us", "href": "/about" },
+        { "label": "Careers", "href": "/careers" },
+        { "label": "Press", "href": "/press" },
+        { "label": "Contact", "href": "/contact" }
+      ]
+    },
+    {
+      "title": "Resources",
+      "links": [
+        { "label": "Help center", "href": "/help" },
+        { "label": "Setup guides", "href": "/guides" },
+        { "label": "Webinars", "href": "/webinars" },
+        { "label": "System status", "href": "/status" }
+      ]
+    },
+    {
+      "title": "Legal",
+      "links": [
+        { "label": "Privacy policy", "href": "/privacy" },
+        { "label": "Terms of service", "href": "/terms" },
+        { "label": "Cookie settings", "href": "/cookies" }
+      ]
+    }
+  ],
+  "newsletter": {
+    "prompt": "Get product news and scheduling tips once a month.",
+    "label": "Email address",
+    "placeholder": "you@example.com",
+    "buttonLabel": "Subscribe"
+  },
+  "legal": "© 2026 Wickerlight Inc. All rights reserved."
+}

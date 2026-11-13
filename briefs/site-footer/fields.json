@@ -1,0 +1,14 @@
+{
+  "companyName": { "kind": "label", "required": true },
+  "tagline": { "kind": "prose" },
+  "columns": { "kind": "list", "max": 6 },
+  "columns[].title": { "kind": "label", "required": true },
+  "columns[].links": { "kind": "list", "min": 1, "max": 10 },
+  "columns[].links[].label": { "kind": "label", "required": true },
+  "columns[].links[].href": { "kind": "fixed" },
+  "newsletter.prompt": { "kind": "prose" },
+  "newsletter.label": { "kind": "label", "required": true },
+  "newsletter.placeholder": { "kind": "label" },
+  "newsletter.buttonLabel": { "kind": "label", "required": true },
+  "legal": { "kind": "prose" }
+}
