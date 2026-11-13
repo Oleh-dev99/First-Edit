@@ -77,6 +77,16 @@ def labels_path(set_path: Path) -> Path:
     return set_path.with_name(f"{set_path.stem}.labels.jsonl")
 
 
+def guided_path(set_path: Path) -> Path:
+    """The items discussed with someone before labelling (D-056): labels/set-01.guided.json."""
+    return set_path.with_name(f"{set_path.stem}.guided.json")
+
+
+def adjudication_path(set_path: Path) -> Path:
+    """The owner's answers to the disagreements (D-055): labels/set-01.adjudication.jsonl."""
+    return set_path.with_name(f"{set_path.stem}.adjudication.jsonl")
+
+
 def _relative(path: Path, root: Path) -> str:
     try:
         return path.resolve().relative_to(root.resolve()).as_posix()
