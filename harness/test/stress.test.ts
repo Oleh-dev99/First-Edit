@@ -49,7 +49,13 @@ describe('newFindings', () => {
 
   test('errorCounts counts errors per check', () => {
     const counts = errorCounts([finding('text-overlap', 'a'), finding('text-overlap', 'b'), finding('text-clipped', 'c', 'info')]);
-    assert.deepStrictEqual(counts, { 'page-overflow-x': 0, 'text-clipped': 0, 'content-spill': 0, 'text-overlap': 2 });
+    assert.deepStrictEqual(counts, {
+      'page-overflow-x': 0,
+      'text-clipped': 0,
+      'content-spill': 0,
+      'text-overlap': 2,
+      'off-screen': 0,
+    });
   });
 });
 

@@ -37,6 +37,8 @@ export interface ContentBox {
   fontSize: number;
   /** False if the box, or an ancestor inside the root, is position absolute or fixed. */
   inFlow: boolean;
+  /** True if the box, or an ancestor inside the root, is position fixed. */
+  inFixed: boolean;
   /** Ancestors that can clip this box, nearest first: its containing-block chain up to the root. */
   clipChain: Element[];
 }
@@ -44,6 +46,7 @@ export interface ContentBox {
 export interface ScannedElement {
   element: Element;
   inFlow: boolean;
+  inFixed: boolean;
   clipChain: Element[];
 }
 
@@ -71,16 +74,17 @@ export function scan(root: Element): Scan {
   const elements: ScannedElement[] = [];
   const range = root.ownerDocument.createRange();
 
-  const visit = (el: Element, ancestorOutOfFlow: boolean): void => {
+  const visit = (el: Element, ancestorOutOfFlow: boolean, ancestorFixed: boolean): void => {
     const style = getComputedStyle(el);
     if (style.display === 'none' || isScreenReaderOnly(el, style)) return;
 
     const mode: FlowMode = el === root ? 'flow' : flowMode(style);
     const outOfFlow = ancestorOutOfFlow || mode !== 'flow';
+    const inFixed = ancestorFixed || mode === 'fixed';
 
     if (el !== root && style.visibility === 'visible') {
       const clipChain = clipChainOf(el.parentElement ?? root, root, mode);
-      elements.push({ element: el, inFlow: !outOfFlow, clipChain });
+      elements.push({ element: el, inFlow: !outOfFlow, inFixed, clipChain });
       if (REPLACED.has(el.localName)) {
         const raw = boxOf(el.getBoundingClientRect());
         if (hasArea(raw)) {
@@ -92,6 +96,7 @@ export function scan(root: Element): Scan {
             visible: clipBox(raw, clipChain),
             fontSize: parseFloat(style.fontSize),
             inFlow: !outOfFlow,
+            inFixed,
             clipChain,
           });
         }
@@ -102,7 +107,7 @@ export function scan(root: Element): Scan {
     let textClipChain: Element[] | null = null;
     for (const child of Array.from(el.childNodes)) {
       if (child.nodeType === Node.ELEMENT_NODE) {
-        visit(child as Element, outOfFlow);
+        visit(child as Element, outOfFlow, inFixed);
         continue;
       }
       if (child.nodeType !== Node.TEXT_NODE) continue;
@@ -122,13 +127,14 @@ export function scan(root: Element): Scan {
           visible: clipBox(raw, textClipChain),
           fontSize: parseFloat(style.fontSize),
           inFlow: !outOfFlow,
+          inFixed,
           clipChain: textClipChain,
         });
       }
     }
   };
 
-  visit(root, false);
+  visit(root, false, false);
   return { boxes, elements };
 }
 
@@ -223,19 +229,20 @@ export function paddingBox(el: Element, style: CSSStyleDeclaration = getComputed
 
 /**
  * Visibly boxed: a non-transparent background colour, a background image,
- * a border with width and colour, a box shadow or an outline.
+ * a border on all four sides with width and colour, a box shadow or an
+ * outline. A border on some sides only (a divider line) does not make a
+ * box (D-034).
  */
 export function isVisiblyBoxed(style: CSSStyleDeclaration): boolean {
   if (!isTransparent(style.backgroundColor)) return true;
   if (style.backgroundImage !== 'none') return true;
-  for (const side of ['top', 'right', 'bottom', 'left']) {
+  const bordered = (side: string): boolean => {
     const width = parseFloat(style.getPropertyValue(`border-${side}-width`));
     const lineStyle = style.getPropertyValue(`border-${side}-style`);
     const color = style.getPropertyValue(`border-${side}-color`);
-    if (width > 0 && lineStyle !== 'none' && lineStyle !== 'hidden' && !isTransparent(color)) {
-      return true;
-    }
-  }
+    return width > 0 && lineStyle !== 'none' && lineStyle !== 'hidden' && !isTransparent(color);
+  };
+  if (['top', 'right', 'bottom', 'left'].every(bordered)) return true;
   if (hasVisibleShadow(style.boxShadow)) return true;
   return (
     style.outlineStyle !== 'none' &&

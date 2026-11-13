@@ -21,6 +21,10 @@ export interface LabCase {
   expected: Partial<Record<CheckName, { error?: number; info?: number }>>;
   /** Set when the case is a known failure; explains why. */
   knownFailure?: string;
+  /** Text direction of the page; "rtl" sets dir="rtl" on <html>. */
+  dir?: 'rtl';
+  /** The expected number of page-overflow-x culprits, when the case pins them. */
+  culprits?: number;
 }
 
 export const DEFAULT_VIEWPORT: Viewport = { width: 800, height: 600 };
@@ -47,6 +51,10 @@ const PILLS = ['Accessibility', 'Design systems', 'Prototyping'];
 const PILL =
   'flex:none; padding:2px 10px; border-radius:9999px; background:#e0e7ff; color:#3730a3; ' +
   'font-size:14px; white-space:nowrap';
+
+const FIXED_HEADER =
+  'position:fixed; top:0; left:0; right:0; display:flex; gap:16px; padding:8px 16px; ' +
+  'background:#fff; border-bottom:1px solid #e2e8f0';
 
 const SR_ONLY =
   'position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; ' +
@@ -80,6 +88,29 @@ export const LAB_CASES: LabCase[] = [
       `<div style="width:600px; padding:12px; white-space:nowrap">Wide content that scrolls inside its own container.</div>` +
       `</div>`,
     expected: {},
+  },
+  {
+    id: 'overflow-abs-culprit',
+    check: 'page-overflow-x',
+    description: '+ an absolutely positioned 600px box widens the page and is named as the culprit',
+    viewport: NARROW,
+    html:
+      `<div style="position:relative; height:40px">` +
+      `<div style="position:absolute; top:0; left:0; width:600px; height:20px; background:#e2e8f0"></div>` +
+      `</div>`,
+    expected: { 'page-overflow-x': { error: 1 } },
+    culprits: 1,
+  },
+  {
+    id: 'overflow-fixed-culprit',
+    check: 'page-overflow-x',
+    description: '+ an in-flow 600px block widens the page; a fixed bar past the edge is named as a culprit too',
+    viewport: NARROW,
+    html:
+      `<div style="width:600px; height:20px; background:#e2e8f0"></div>` +
+      `<div style="position:fixed; top:40px; left:0; width:500px; height:20px; background:#fecaca"></div>`,
+    expected: { 'page-overflow-x': { error: 1 } },
+    culprits: 2,
   },
 
   // text-clipped
@@ -243,6 +274,29 @@ export const LAB_CASES: LabCase[] = [
     expected: {},
   },
 
+  // content-spill: a border makes a box only on all four sides (D-034)
+  {
+    id: 'spill-full-border',
+    check: 'content-spill',
+    description: '+ nowrap text running out of a box with a border on all four sides',
+    html: `<div style="width:160px; padding:8px; border:1px solid #94a3b8; white-space:nowrap">This label is much too long for its box</div>`,
+    expected: { 'content-spill': { error: 1 } },
+  },
+  {
+    id: 'spill-border-top-only',
+    check: 'content-spill',
+    description: '- nowrap text running past a block that has only a top border (a divider)',
+    html: `<div style="width:160px; padding:8px 0; border-top:1px solid #94a3b8; white-space:nowrap">This label runs past the divider line</div>`,
+    expected: {},
+  },
+  {
+    id: 'spill-border-top-bottom',
+    check: 'content-spill',
+    description: '- nowrap text running past a block with top and bottom borders only',
+    html: `<div style="width:160px; padding:8px 0; border-top:1px solid #94a3b8; border-bottom:1px solid #94a3b8; white-space:nowrap">This label runs past both rules</div>`,
+    expected: {},
+  },
+
   // readiness: images that fail or are lazy must never hang __FE_READY__
   {
     id: 'ready-broken-and-lazy-images',
@@ -341,5 +395,72 @@ export const LAB_CASES: LabCase[] = [
         .join('') +
       `</div>`,
     expected: {},
+  },
+
+  // off-screen (D-035)
+  {
+    id: 'offscreen-fixed-header-text',
+    check: 'off-screen',
+    description: "+ a fixed header whose right-hand text passes the viewport's right edge",
+    viewport: NARROW,
+    html:
+      `<header style="${FIXED_HEADER}; white-space:nowrap">` +
+      `<span style="flex:none; width:200px">Ledgerloom</span><span style="flex:none">Account settings</span>` +
+      `</header>`,
+    expected: { 'off-screen': { error: 1 } },
+  },
+  {
+    id: 'offscreen-fixed-button-past-edge',
+    check: 'off-screen',
+    description: '+ a fixed header whose last button lies entirely past the right edge',
+    viewport: NARROW,
+    html:
+      `<header style="${FIXED_HEADER}">` +
+      `<span style="flex:none; width:320px">Ledgerloom</span><button style="flex:none">New invoice</button>` +
+      `</header>`,
+    expected: { 'off-screen': { error: 1 } },
+  },
+  {
+    id: 'offscreen-negative-margin',
+    check: 'off-screen',
+    description: "+ an in-flow paragraph pulled left past the page's left edge by a negative margin",
+    html: `<p style="margin-left:-60px">This paragraph is pulled left past the edge of the page by a negative margin.</p>`,
+    expected: { 'off-screen': { error: 1 } },
+  },
+  {
+    id: 'offscreen-fixed-fits',
+    check: 'off-screen',
+    description: '- a fixed header that fits the viewport',
+    viewport: NARROW,
+    html: `<header style="${FIXED_HEADER}"><span>Ledgerloom</span><button>Menu</button></header>`,
+    expected: {},
+  },
+  {
+    id: 'offscreen-fixed-scroller',
+    check: 'off-screen',
+    description: '- a fixed bar whose inner row of tabs scrolls (overflow-x auto)',
+    viewport: NARROW,
+    html:
+      `<nav style="position:fixed; bottom:0; left:0; right:0; padding:8px; background:#fff; border-top:1px solid #e2e8f0">` +
+      `<div style="display:flex; gap:16px; overflow-x:auto; white-space:nowrap">` +
+      ['Overview', 'Invoices', 'Expenses', 'Reports', 'Settings', 'Integrations'].map((tab) => `<a href="#${tab}">${tab}</a>`).join('') +
+      `</div></nav>`,
+    expected: {},
+  },
+  {
+    id: 'offscreen-parked',
+    check: 'off-screen',
+    description: '- a skip link parked at left -9999px',
+    html: `<a href="#main" style="position:absolute; left:-9999px">Skip to content</a><p id="main">Main content.</p>`,
+    expected: {},
+  },
+  {
+    id: 'offscreen-rtl-left-overflow',
+    check: 'off-screen',
+    description: '- in a right-to-left page, text past the left edge, where the page can scroll',
+    viewport: NARROW,
+    dir: 'rtl',
+    html: `<div style="width:600px; padding:12px; background:#e2e8f0; white-space:nowrap">A block six hundred pixels wide with a long line of text.</div>`,
+    expected: { 'page-overflow-x': { error: 1 } },
   },
 ];

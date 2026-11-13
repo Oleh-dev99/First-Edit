@@ -1,5 +1,5 @@
 // Renders every check-lab case in headless Chromium and asserts the exact
-// error and info counts for all four checks, so a "-" case also proves that
+// error and info counts for every check, so a "-" case also proves that
 // no other check fires.
 
 import assert from 'node:assert/strict';
@@ -38,6 +38,10 @@ for (const labCase of LAB_CASES) {
         for (const finding of findings) t.diagnostic(JSON.stringify(finding));
       }
       assert.deepStrictEqual(actual, expected);
+      if (labCase.culprits !== undefined) {
+        const overflow = findings.find((finding) => finding.check === 'page-overflow-x');
+        assert.equal((overflow?.detail.culprits as string[] | undefined)?.length, labCase.culprits, 'page-overflow-x culprits');
+      }
     } finally {
       await context.close();
     }

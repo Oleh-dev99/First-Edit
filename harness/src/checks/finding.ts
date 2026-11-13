@@ -1,7 +1,7 @@
 // The finding shape shared by every check. No imports from the app, so the
 // checks can later be bundled and injected into any page.
 
-export const CHECK_NAMES = ['page-overflow-x', 'text-clipped', 'content-spill', 'text-overlap'] as const;
+export const CHECK_NAMES = ['page-overflow-x', 'text-clipped', 'content-spill', 'text-overlap', 'off-screen'] as const;
 
 export type CheckName = (typeof CHECK_NAMES)[number];
 
