@@ -113,6 +113,19 @@ def test_the_page_itself_names_no_check_or_verdict(label_set) -> None:
         assert word not in page, word
 
 
+def test_the_first_screen_states_the_ellipsis_rule(label_set) -> None:
+    # D-052: an ellipsis is fine; one that hides something essential is "other" with a note
+    path, data = label_set
+    server = open_tool(path, data, port=0, root=path.parent.parent)
+    with running(server) as origin:
+        _, body = get(f"{origin}/")
+    labels = re.search(r'<dl class="labels">(.*?)</dl>', body.decode("utf-8"), re.S).group(1)
+    fine, other = (re.search(rf"{key}</dt>\s*<dd>(.*?)</dd>", labels, re.S).group(1)
+                   for key in ("fine", "other"))
+    assert "text shortened with an ellipsis" in " ".join(fine.split())
+    assert "an ellipsis that hides something essential: then write a note" in " ".join(other.split())
+
+
 def test_pictures_are_served_only_by_item_id(label_set) -> None:
     path, data = label_set
     root = path.parent.parent
