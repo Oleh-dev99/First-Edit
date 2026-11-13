@@ -11,6 +11,8 @@ description = "Generation runner for the First Edit benchmark."
 requires-python = ">=3.13"
 dependencies = [
   "httpx==0.28.1",
+  # export-site writes the site's screenshots as WebP.
+  "pillow==12.2.0",
   "python-dotenv==1.2.4",
 ]
 
