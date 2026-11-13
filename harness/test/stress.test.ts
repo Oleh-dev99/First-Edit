@@ -1,5 +1,5 @@
 // The new-finding rule, and the stress matrix: both hello-card samples
-// through every mutation in headless Chromium.
+// through every case in headless Chromium.
 
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
@@ -84,13 +84,21 @@ describe('stress matrix', () => {
     return summary;
   };
 
-  test('robust survives every applicable mutation', async (t) => {
+  test('robust survives every applicable case and hides no content', async (t) => {
     const summary = await stress('robust', t);
+    assert.equal(summary.schemaVersion, 2);
     assert.equal(summary.baseline.status, 'ok');
     assert.equal(summary.baseline.errors, 0);
-    assert.equal(summary.totals.applicable, 10);
-    const failed = summary.mutations.filter((entry) => entry.applicable && entry.survived !== true);
+    assert.equal(summary.totals.applicable, 17);
+    const failed = summary.cases.filter((entry) => entry.applicable && entry.survived !== true);
     assert.deepStrictEqual(failed.map((entry) => entry.id), []);
+    assert.equal(summary.totals.contentHidden, 0);
+    // content-hidden is measured at 320, at 200% text and in RTL, and nowhere else.
+    const measured = summary.cases.filter((entry) => entry.contentHidden !== null).map((entry) => entry.id);
+    assert.deepStrictEqual(measured, [
+      'viewport-320', 'text-200pct', 'dir-rtl',
+      'text-long@320', 'text-unbroken@320', 'text-empty@320', 'list-0@320', 'list-1@320', 'list-many@320', 'number-large@320',
+    ]);
   });
 
   test('brittle has no baseline errors and fails text-unbroken, list-many and viewport-320', async (t) => {
@@ -98,14 +106,19 @@ describe('stress matrix', () => {
     assert.equal(summary.baseline.status, 'ok');
     assert.equal(summary.baseline.errors, 0);
     for (const id of ['text-unbroken', 'list-many', 'viewport-320']) {
-      const entry = summary.mutations.find((candidate) => candidate.id === id);
+      const entry = summary.cases.find((candidate) => candidate.id === id);
       assert.equal(entry?.status, 'ok', `${id} rendered`);
       assert.equal(entry?.survived, false, `${id} fails`);
     }
     // The tag pills run out of the card under these two (the step 4 spill gap).
     for (const id of ['text-long', 'text-200pct']) {
-      const entry = summary.mutations.find((candidate) => candidate.id === id);
+      const entry = summary.cases.find((candidate) => candidate.id === id);
       assert.ok((entry?.newErrors?.['content-spill'] ?? 0) >= 1, `${id} reports content-spill`);
     }
+    // At 320 the page already overflows (viewport-320), so a phone-width case
+    // counts only what its content adds: list-0 removes the pills and adds nothing.
+    const list0 = summary.cases.find((candidate) => candidate.id === 'list-0@320');
+    assert.equal(list0?.reference, 'viewport-320');
+    assert.equal(list0?.survived, true);
   });
 });

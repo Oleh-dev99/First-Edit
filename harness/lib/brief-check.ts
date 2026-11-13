@@ -108,7 +108,11 @@ export function checkBriefStatic(id: string): BriefCheck {
   return result;
 }
 
-/** Stress-runs the reference: its baseline must be clean and every applicable mutation must survive. */
+/**
+ * Stress-runs the reference: its baseline must be clean, every applicable
+ * case (the @320 cases included) must survive, and no case may hide content
+ * (content-hidden 0, D-019).
+ */
 export async function checkReference(check: BriefCheck, browser: Browser, origin: string): Promise<void> {
   if (!check.reference) return;
   const outDir = path.join(resultsDir, 'runs', check.id, check.reference.split('/').join('__'));
@@ -119,9 +123,12 @@ export async function checkReference(check: BriefCheck, browser: Browser, origin
   } else if (summary.baseline.errors > 0) {
     check.problems.push(`reference baseline has ${summary.baseline.errors} error finding(s)`);
   }
-  for (const entry of summary.mutations) {
+  for (const entry of summary.cases) {
     if (entry.applicable && entry.survived !== true) {
       check.problems.push(`reference fails ${entry.id} (${entry.status})`);
+    }
+    if ((entry.contentHidden ?? 0) > 0) {
+      check.problems.push(`reference hides ${entry.contentHidden} value(s) in ${entry.id} (see ${entry.files?.result})`);
     }
   }
 }

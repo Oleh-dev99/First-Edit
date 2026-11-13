@@ -1,6 +1,7 @@
 import { Component, useEffect, type ComponentType, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { applyEnvironment } from './environment.ts';
+import { contentValues } from './measures/visible-values.ts';
 import { applyContentMutation } from './mutations/content.ts';
 import { assertValidFields } from './mutations/fields.ts';
 import { isContentMutation, isMutationId, MUTATION_IDS, type MutationId } from './mutations/index.ts';
@@ -91,6 +92,7 @@ export async function renderCandidate(root: HTMLElement, params: URLSearchParams
   } else if (mutation !== null) {
     applyEnvironment(mutation);
   }
+  window.__FE_CONTENT_VALUES__ = contentValues(props, fields);
 
   await new Promise<void>((resolve) => {
     createRoot(root).render(

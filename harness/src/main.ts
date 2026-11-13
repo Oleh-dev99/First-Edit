@@ -4,6 +4,7 @@ import './styles.css';
 
 import { runChecks } from './checks/index.ts';
 import { renderLab } from './lab/render-lab.ts';
+import { visibleValues } from './measures/visible-values.ts';
 import { renderCandidate } from './render-candidate.tsx';
 import { describe, fail, markReady } from './status.ts';
 
@@ -20,6 +21,7 @@ async function main(): Promise<void> {
   const root = document.getElementById('fe-root');
   if (!root) throw new Error('Missing #fe-root element');
   window.__FE_RUN_CHECKS__ = () => runChecks(root);
+  window.__FE_VISIBLE_VALUES__ = () => visibleValues(root, window.__FE_CONTENT_VALUES__ ?? []);
 
   const fontFaces = await document.fonts.load(`16px "${FONT_FAMILY}"`);
   if (fontFaces.length === 0) throw new Error(`Font "${FONT_FAMILY}" is not available`);
