@@ -1,0 +1,54 @@
+{
+  "heading": "Finance teams close the month faster with Kiteward",
+  "subheading": "More than 2,000 companies use Kiteward to collect receipts, approve spending and reconcile company cards.",
+  "testimonials": [
+    {
+      "id": "t-1",
+      "quote": "We used to spend the first week of every month chasing receipts. Now our close takes two days, and nobody on the team dreads it anymore.",
+      "authorName": "Elena Petrova",
+      "jobTitle": "Financial Controller",
+      "company": "Quenby Freight",
+      "rating": 5
+    },
+    {
+      "id": "t-2",
+      "quote": "Approvals happen on the go. Managers approve from their phones between meetings, so reimbursements go out the same week.",
+      "authorName": "Marcus Adeyemi",
+      "jobTitle": "Head of Operations",
+      "company": "Marrowstone Architects",
+      "rating": 5
+    },
+    {
+      "id": "t-3",
+      "quote": "The card reconciliation alone saved us a part-time hire. Matching statements to receipts is finally automatic.",
+      "authorName": "Hannah Kowalski",
+      "jobTitle": "Accountant",
+      "company": "Hatchling Health",
+      "rating": 4
+    },
+    {
+      "id": "t-4",
+      "quote": "Setup took an afternoon. Our auditors now get a clean export instead of a shoebox of paper.",
+      "authorName": "Diego Salazar",
+      "jobTitle": "Chief Financial Officer",
+      "company": "Fennick Robotics",
+      "rating": 5
+    },
+    {
+      "id": "t-5",
+      "quote": "Spending limits per team mean I no longer approve every coffee. I only see the expenses that actually need me.",
+      "authorName": "Aisha Rahman",
+      "jobTitle": "Finance Manager",
+      "company": "Orrin & Vale",
+      "rating": 5
+    },
+    {
+      "id": "t-6",
+      "quote": "Support answered within minutes when we moved over our old categories. The migration was painless.",
+      "authorName": "Tobias Lindgren",
+      "jobTitle": "Office Manager",
+      "company": "Brackenfold Studios",
+      "rating": 4
+    }
+  ]
+}

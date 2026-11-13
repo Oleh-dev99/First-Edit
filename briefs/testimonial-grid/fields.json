@@ -1,0 +1,11 @@
+{
+  "heading": { "kind": "label", "required": true },
+  "subheading": { "kind": "prose" },
+  "testimonials": { "kind": "list", "max": 24 },
+  "testimonials[].id": { "kind": "id" },
+  "testimonials[].quote": { "kind": "prose", "required": true },
+  "testimonials[].authorName": { "kind": "label", "required": true },
+  "testimonials[].jobTitle": { "kind": "label" },
+  "testimonials[].company": { "kind": "label" },
+  "testimonials[].rating": { "kind": "fixed" }
+}
