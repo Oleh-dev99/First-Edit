@@ -1,0 +1,32 @@
+[
+  {
+    "kind": "Cut off",
+    "caption": "The sentence on the right stops partway through a word: the rest is hidden by its box.",
+    "left": { "lab": "clipped-card-fits", "screen": 800 },
+    "right": { "lab": "clipped-nowrap", "screen": 800 }
+  },
+  {
+    "kind": "Spills out of its box",
+    "caption": "The long word runs out of its bordered box. On the left it breaks across lines, which is fine.",
+    "left": { "lab": "spill-token-wrapped", "screen": 800 },
+    "right": { "lab": "spill-token", "screen": 800 }
+  },
+  {
+    "kind": "Overlaps other content",
+    "caption": "The second line of the row runs into the paragraph below it.",
+    "left": { "lab": "overlap-heading-lh1", "screen": 800 },
+    "right": { "lab": "overlap-fixed-row", "screen": 800 }
+  },
+  {
+    "kind": "Pushed off the screen",
+    "caption": "The header's right-hand text is cut off by the edge of the screen and cannot be scrolled into view.",
+    "left": { "lab": "offscreen-fixed-fits", "screen": 320 },
+    "right": { "lab": "offscreen-fixed-header-text", "screen": 320 }
+  },
+  {
+    "kind": "The page scrolls sideways",
+    "caption": "The block is wider than the screen, so the page scrolls sideways. The dashed line marks the screen's edge.",
+    "left": { "lab": "overflow-max-width", "screen": 320 },
+    "right": { "lab": "overflow-fixed-block", "screen": 320 }
+  }
+]

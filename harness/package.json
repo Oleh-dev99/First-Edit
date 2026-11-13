@@ -12,6 +12,7 @@
     "candidate:check": "node scripts/candidate-check.ts",
     "check": "node scripts/check.ts",
     "dev": "vite",
+    "label:examples": "node scripts/label-examples.ts",
     "smoke": "node scripts/smoke.ts",
     "stress": "node scripts/stress.ts",
     "test": "node --test --test-concurrency=1 \"test/*.test.ts\"",
