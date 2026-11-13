@@ -97,6 +97,26 @@ def test_a_cut_off_reply_is_invalid(tmp_path: Path, entry: ModelEntry, run) -> N
     assert record["warnings"] == ["no fenced code block in the reply; used the whole reply"]
 
 
+def test_an_empty_reply_whose_budget_went_on_reasoning(tmp_path: Path, entry: ModelEntry, run) -> None:
+    raw = chat_response("", finish_reason="length", prompt_tokens=900, completion_tokens=32000)
+    raw["choices"][0]["message"]["content"] = None
+    raw["usage"]["completion_tokens_details"] = {"reasoning_tokens": 32000}
+    gate_calls = []
+    gate = lambda brief, candidate: gate_calls.append(candidate) or {"valid": False, "reasons": [{"rule": "default-export", "message": "x"}]}  # noqa: E731
+    (result,) = run(entry, FakeProvider(raw=raw), ["pricing-table"], gate=gate)
+    assert result.valid is False
+    assert [reason["rule"] for reason in result.reasons] == ["empty", "reasoning-exhausted", "truncated"]
+    assert result.reasons[1]["message"] == "the output budget was spent on reasoning (32000 of 32000 output tokens)"
+    # The gate is not run on an empty file, so no "default-export" reason.
+    assert gate_calls == []
+    assert generation(tmp_path, "test-model/pricing-table/plain-s1")["reasons"] == result.reasons
+
+
+def test_an_empty_reply_that_finished_is_only_empty(entry: ModelEntry, run) -> None:
+    (result,) = run(entry, FakeProvider(content="  \n "), ["pricing-table"])
+    assert [reason["rule"] for reason in result.reasons] == ["empty"]
+
+
 def test_invalid_output_is_recorded_and_never_re_rolled(tmp_path: Path, entry: ModelEntry, run) -> None:
     provider = FakeProvider()
     gate = lambda _brief, _candidate: {"valid": False, "reasons": [{"rule": "imports", "message": 'imports "clsx"'}]}  # noqa: E731

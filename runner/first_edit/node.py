@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+from pathlib import Path
 from typing import Any
 
 from .paths import HARNESS_DIR
@@ -40,5 +41,5 @@ def check_candidate(brief_id: str, candidate_id: str) -> dict[str, Any]:
     return json.loads(lines[-1])
 
 
-def run_stress(brief_id: str, candidate_id: str) -> subprocess.CompletedProcess[str]:
-    return run_npm("stress", "--brief", brief_id, "--candidate", candidate_id)
+def run_stress(brief_id: str, candidate_id: str, runs_dir: Path) -> subprocess.CompletedProcess[str]:
+    return run_npm("stress", "--brief", brief_id, "--candidate", candidate_id, "--runs-dir", str(runs_dir.resolve()))

@@ -18,7 +18,7 @@ from .generate import generate, summarize
 from .ledger import FreeRequestLedger, is_free
 from .models import ModelsError, get_model, load_models
 from .node import check_candidate, run_stress
-from .paths import ENV_FILE
+from .paths import ENV_FILE, RUNS_DIR
 from .prompts import VARIANTS
 from .providers import SetupError, make_provider
 from .stress import format_table, stress
@@ -47,11 +47,13 @@ def _parser() -> argparse.ArgumentParser:
     which.add_argument("--brief")
     which.add_argument("--all", action="store_true")
     run.add_argument("--variant", choices=VARIANTS, help="default: every variant found")
+    run.add_argument("--runs-dir", type=Path, default=RUNS_DIR, help="where the stress results go (default results/runs)")
 
     report = commands.add_parser("summarize", help="write summary.json, report.md and gallery.html for generated runs")
     report.add_argument("--out", required=True, type=Path, help="output directory, e.g. results/spike")
     report.add_argument("--model", action="append", dest="models",
                         help="a model id; repeat for several (default: every non-mock model in runner/models.toml)")
+    report.add_argument("--runs-dir", type=Path, default=RUNS_DIR, help="the stress results to read (default results/runs)")
     return parser
 
 
@@ -61,7 +63,7 @@ def _summarize(args: argparse.Namespace) -> int:
     for model_id in model_ids:
         get_model(model_id)  # fails on an unknown id
     brief_ids = list_briefs(corpus_only=True)
-    candidates = load_candidates(model_ids, brief_ids)
+    candidates = load_candidates(model_ids, brief_ids, runs_dir=args.runs_dir)
     summary = build_summary(candidates, model_ids, brief_ids, {e.id: e.describe() for e in entries.values()})
     for path in write_outputs(candidates, summary, args.out):
         print(f"wrote {path}")
@@ -103,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
             if ledger is not None:
                 print(ledger.status())
             return 0
-        rows = stress(entry.id, brief_ids, args.variant, run=run_stress)
+        rows = stress(entry.id, brief_ids, args.variant, run=run_stress, runs_dir=args.runs_dir)
         print(format_table(rows))
         harness_errors = [row for row in rows if row.status == "harness-error"]
         for row in harness_errors:

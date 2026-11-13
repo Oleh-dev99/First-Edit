@@ -46,6 +46,22 @@ def spend(entry: ModelEntry, reply: Reply) -> float | None:
     return call_cost(entry.price, reply.input_tokens, reply.output_tokens)
 
 
+def empty_reply_reasons(reply: Reply) -> list[dict[str, str]]:
+    """Reasons for a reply with no content: "empty", plus "reasoning-exhausted"
+    when the output budget ran out and the provider reports reasoning tokens
+    (the model spent the budget thinking and never answered)."""
+    if reply.content.strip():
+        return []
+    reasons = [{"rule": "empty", "message": "the reply has no content"}]
+    if reply.finish_reason == "length" and (reply.reasoning_tokens or 0) > 0:
+        reasons.append({
+            "rule": "reasoning-exhausted",
+            "message": f"the output budget was spent on reasoning ({reply.reasoning_tokens} of "
+                       f"{reply.output_tokens} output tokens)",
+        })
+    return reasons
+
+
 def candidate_id(model_id: str, brief_id: str, variant: str, sample: int) -> str:
     return f"{model_id}/{brief_id}/{variant}-s{sample}"
 
@@ -159,11 +175,16 @@ def generate(
             _reset(directory)
             (directory / "Component.tsx").write_text(extraction.code, encoding="utf-8", newline="\n")
 
-            verdict = gate(brief_id, cid)
-            reasons = list(verdict.get("reasons", []))
+            reasons = empty_reply_reasons(reply)
+            gate_valid = not reasons
+            if not reasons:
+                # An empty file would only fail the gate for having no default export.
+                verdict = gate(brief_id, cid)
+                reasons = list(verdict.get("reasons", []))
+                gate_valid = bool(verdict.get("valid"))
             if reply.finish_reason == "length":
                 reasons.append({"rule": "truncated", "message": "the reply was cut off by the token limit"})
-            valid = bool(verdict.get("valid")) and not reasons
+            valid = gate_valid and not reasons
 
             _write_json(
                 directory / "generation.json",
