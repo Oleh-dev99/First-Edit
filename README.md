@@ -10,7 +10,18 @@ Status: early development
 
 The results are published at **https://oleh-dev99.github.io/First-Edit/**.
 They are preliminary: every page says how many of the run's models have
-finished, until all have (D-054). The site in `site/` is built only from
+finished, until all have (D-054).
+
+Every model in the run is a free-tier variant (an OpenRouter model id
+ending in `:free`), and no frontier model was tested (D-057). Which models
+ran, where, with which parameters and when is in the run record,
+[docs/RUNS.md](docs/RUNS.md), written from the generation records.
+
+All product, company and person names in the briefs and fixtures were
+invented for this benchmark. Any match with a real name is coincidental,
+and no real organisation or person is described.
+
+The site in `site/` is built only from
 the committed data in `site/public/data`. The workflow
 `.github/workflows/pages.yml` builds it and deploys it to GitHub Pages
 whenever `main` is pushed, so pushing `main` publishes.
@@ -19,11 +30,13 @@ Once, in the repository on GitHub, open Settings, then Pages, and under
 "Build and deployment" choose **GitHub Actions** as the source. Until
 then the workflow cannot deploy.
 
-To refresh the data once `run-next` has moved the run on (it rewrites
-`results/run2`), from the repo root (on Windows; use `.venv/bin/python`
-elsewhere). None of these steps calls a model:
+To refresh the record and the data once `run-next` has moved the run on
+(it rewrites `results/run2`), from the repo root (on Windows; use
+`.venv/bin/python` elsewhere). None of these steps calls a model; the
+whole routine is in [docs/SPEC.md](docs/SPEC.md), Daily routine:
 
 ```sh
+.venv\Scripts\python -m first_edit run-record --out docs/RUNS.md
 cd harness && npm run briefs:check && cd ..
 .venv\Scripts\python -m first_edit calibrate --set labels/set-01.json --runs results/runs-run2 --out results/calibration
 .venv\Scripts\python -m first_edit export-site --run results/run2 --runs results/runs-run2 --calibration results/calibration --out site/public/data
@@ -35,7 +48,7 @@ Briefs page shows. `export-site` refuses to write anything that holds an
 API key, an email address outside the fixtures' example domains or an
 absolute local path. `npm run site:check` builds the site and runs the
 suite's checks on every page at 1280 and 320 px. Then commit
-`site/public/data` and push `main`. Before the first push, work through
+`docs/RUNS.md` and `site/public/data` and push `main`. Before the first push, work through
 [docs/PUBLISH-CHECKLIST.md](docs/PUBLISH-CHECKLIST.md).
 
 To look at the site locally:

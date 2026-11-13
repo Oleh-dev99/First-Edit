@@ -104,7 +104,8 @@ survives when the content changes.
   committed (see Results site)
 - .github/workflows/pages.yml : builds the site and deploys it to GitHub
   Pages when main is pushed
-- docs/ : spec, methodology, decisions
+- docs/ : spec, methodology, decisions, and docs/RUNS.md, the run record
+  (see Run record)
 
 ## Brief format
 briefs/<id>/ contains exactly:
@@ -145,6 +146,11 @@ Rules for writing a corpus brief:
 
 props.ts is sent to models too, so rules 2, 3, 8 and 9 apply to its
 comments as well.
+
+The 20 corpus briefs are corpus v1, and it is frozen (D-058): their text,
+props, fixtures and fields maps are part of the prompts already sent, so
+none of them changes, the invented names included. What the
+pre-publication search found for each name is in docs/PUBLISH-CHECKLIST.md.
 
 `npm run briefs:check [-- --brief <id>]` (in harness/, separate from
 `npm test`) validates every brief: the files and meta.json, the fields
@@ -562,6 +568,7 @@ python -m first_edit doctor
 python -m first_edit summarize --out <dir> [--model <id> ...] [--runs-dir <dir>]
   [--plan <file>]
 python -m first_edit run-next [--dry-run] [--plan <file>]
+python -m first_edit run-record --out <file> [--plan <file>]
 python -m first_edit cli-probe --model <claude-cli model id>
 python -m first_edit label-set --runs <dir> --name <name> --seed N
 python -m first_edit label --set <file> [--port N] [--adjudicate]
@@ -862,6 +869,48 @@ only_if_blocked = []               # optional: a fallback, run only if one of th
 and writes nothing. run-next is safe to run any number of times; it never
 re-runs a sample to get a better result and never clears the cache.
 
+### Run record
+`python -m first_edit run-record --out docs/RUNS.md [--plan <file>]` writes
+the run record (D-057) from the generation records of the models of the
+plan's active jobs, in plan order, and from their stress summaries in the
+plan's runs directory. Like summarize, it covers every generated sample of
+those models for the corpus briefs, the samples of earlier steps that the
+run reuses included. Per model:
+- the provider type and base URL, the provider's model id, and the model
+  and the upstream provider the responses reported (reportedModel,
+  reportedProvider);
+- the first and last call: a reply's receivedAt, or for a failed call the
+  time its record was written (generatedAt);
+- per variant, the samples, their numbers and the briefs they cover, and
+  the counts of valid, invalid (the gate failed) and failed (API error)
+  calls;
+- the request parameters each record names;
+- the stress summaries: how many valid candidates were stressed and how
+  many not, and the counts per suite version, harness commit (dirty
+  marked) and Playwright and Chromium version.
+It also says whether every model is a free variant, names the blocked
+models and the fallback jobs that are not active. It has no timestamp of
+its own, so the same records give the same file. It calls nothing and is
+regenerated whenever the run advances (Daily routine).
+
+### Daily routine
+While the run is going, once a UTC day after the free ledger resets
+(00:00 UTC), from the repo root. Only run-next calls a model:
+1. `python -m first_edit run-next`: generates what the day's ledger
+   allows, stresses the new candidates and rewrites results/run2.
+2. `python -m first_edit run-record --out docs/RUNS.md`: the run record.
+3. `npm run briefs:check` in harness/: the references' runs, whose
+   baseline screenshots the Briefs page shows.
+4. `python -m first_edit calibrate --set labels/set-01.json --runs
+   results/runs-run2 --out results/calibration`.
+5. `python -m first_edit export-site --run results/run2 --runs
+   results/runs-run2 --calibration results/calibration --out
+   site/public/data`.
+6. `npm run site:check` in harness/: the site builds and passes its own
+   suite.
+7. Commit docs/RUNS.md and site/public/data. The owner pushes main, which
+   publishes the site.
+
 ### Stress
 `python -m first_edit stress [--runs-dir <dir>]` runs `npm run stress`
 on every valid candidate, writing to the runs directory (default
@@ -1051,11 +1100,17 @@ the failure rate per case with its tier, the sensitivity table, the
 decision lines and their status, the candidates), Gallery (the cases as
 before and after pairs at one scale, with the annotated screenshot and
 findings on demand, filters for outcome, model, variant, brief, case, tier
-and check, and a link to each source), Method (the prompt word for word,
-cases and tiers, checks, the new-finding rule, references, calibration,
-the site's own test, limitations and known gaps, how the project was
-built) and Briefs. Every page carries a banner from run.json
-("Preliminary: N of M models have finished" until all have); every rate
+and check, and a link to each source), Method (the prompt word for word
+with the notice on invented names, the run record (a link to
+docs/RUNS.md), cases and tiers, checks, the new-finding rule, references,
+calibration, the site's own test, limitations and known gaps, how the
+project was built) and Briefs. Every page carries a banner from run.json
+("Preliminary: N of M models have finished" until all have) that says every
+model in the run is a free-tier variant and no frontier model was tested
+(D-057), and a footer with the notice: "All product, company and person
+names in the briefs and fixtures were invented for this benchmark. Any
+match with a real name is coincidental, and no real organisation or person
+is described." (D-058). Every rate
 is shown with its count and 95% interval, recomputed from the counts as
 the run report does, so the figures match report.md; the core headline
 never appears without the all-cases figure; calibration shows the blind
@@ -1198,8 +1253,7 @@ and replaced elements.
 11. Suite v1 frozen; ten more briefs (20 in total) (done)
 12. Second run on free models (in progress; one model a day)
 13. Labelling tool and blind calibration, set 1 (done)
-14. Calibration follow-ups and results site (in progress until the owner
-    has adjudicated set 1)
+14. Calibration follow-ups and results site (done)
 15. CLI packaging
 16. Decision on the comparison when the queue finishes; label set 2
 17. Write-up and README

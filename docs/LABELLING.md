@@ -272,3 +272,8 @@ set-01's disagreements. The adjudication tool does not show it.
   than its screen. Content pushed past the left edge of the screen, which
   cannot be scrolled to, has no marker: it shows only as text that starts
   mid-word at the picture's edge.
+- **The adjudication was not blind.** The labeller saw the suite's
+  findings, and the suite author's reading of these items
+  (docs/CALIBRATION-set-01.md) was available beforehand. Either can pull an
+  answer towards the suite, so the adjudicated rates always come second
+  (D-055).

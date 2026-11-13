@@ -199,6 +199,8 @@ output. It is not the published comparison: free variants can be
 previews and are rate limited and served apart from the paid endpoints,
 two models are no cross-vendor sample, and one sample per brief and
 variant is no estimate of a model's rate.
+The last sentence is superseded by D-057: the free-model run is the run
+that is published.
 
 ## D-031 Spike outcome: pipeline and trust met, signal not met (2026-11-13)
 The step 8 spike (two free models, plain and hinted, one sample of each
@@ -467,3 +469,25 @@ discussion moves the numbers. An item and its repeat show one case, so both
 count as guided when either is. For set-01 the owner discussed nine items
 with an adviser before labelling; all nine are cases the suite failed,
 labelled broken.
+
+## D-057 The free-model run is the published run (2026-11-13)
+The owner has chosen free models only, so the free-model run (the jobs of
+runner/plan.toml, reported in results/run2) is the run that is published.
+This supersedes the last sentence of D-030, which said that free variants
+are not the published comparison. Its reasons still hold, and they are now
+limitations of what is published: free variants can be previews, are rate
+limited and are served apart from the paid endpoints. The site and the
+README say plainly that every model in the run is a free-tier variant and
+that no frontier model was tested. The paid entries in runner/models.toml
+stay unused, and docs/RUNS.md, written by `run-record` from the generation
+records, is the record of every model in the run.
+
+## D-058 Corpus v1 is frozen (2026-11-13)
+The 20 corpus briefs, their text, props, fixtures and fields maps, are
+frozen as corpus v1. The text, props and baseline fixture are part of every
+prompt already sent (D-028), and the fields map decides every mutation, so
+changing any of them would invalidate the candidates generated from them.
+Invented names are therefore not renamed now, even where the
+pre-publication search finds a business with the same name: what the
+search found is recorded in docs/PUBLISH-CHECKLIST.md, and the site and the
+README state that every name was invented and any match is coincidental.
