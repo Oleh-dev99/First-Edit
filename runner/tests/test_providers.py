@@ -1,9 +1,11 @@
 import json
+from dataclasses import replace
 
 import httpx
 import pytest
 
 from first_edit.briefs import load_brief
+from first_edit.ledger import DailyLimitReached, FreeRequestLedger
 from first_edit.models import ModelEntry
 from first_edit.providers import MockProvider, OpenAICompatibleProvider, ProviderError, make_provider, parse_reply
 
@@ -13,8 +15,9 @@ MESSAGES = [{"role": "system", "content": "sys"}, {"role": "user", "content": "h
 BRIEF = load_brief("pricing-table")
 
 
-def make(responses: list, params: dict | None = None):
-    """A provider whose transport replays `responses` (ints are statuses, "timeout" raises)."""
+def make(responses: list, params: dict | None = None, **options):
+    """A provider whose transport replays `responses` (ints are statuses, "timeout" raises).
+    `options` go to the provider (max_attempts, before_request)."""
     requests: list[httpx.Request] = []
     sleeps: list[float] = []
 
@@ -32,7 +35,7 @@ def make(responses: list, params: dict | None = None):
     entry = ModelEntry(id="m", provider="openai-compatible", base_url="https://api.example.test/v1/",
                        api_key_env="KEY", model="vendor/model", params=params or {})
     provider = OpenAICompatibleProvider(entry, "secret", client=httpx.Client(transport=httpx.MockTransport(handler)),
-                                        sleep=sleeps.append, backoff_seconds=1.0)
+                                        sleep=sleeps.append, backoff_seconds=1.0, **options)
     return provider, requests, sleeps
 
 
@@ -92,6 +95,50 @@ def test_mock_replies_with_the_reference_in_one_tsx_fence() -> None:
 def test_mock_fails_for_a_brief_without_reference() -> None:
     with pytest.raises(ProviderError, match="no reference candidate"):
         MockProvider(ModelEntry(id="mock-reference", provider="mock")).complete(MESSAGES, load_brief("hello-card"))
+
+
+def test_before_request_runs_before_every_attempt_and_max_attempts_applies() -> None:
+    seen: list[int] = []
+    requests_so_far = lambda: seen.append(len(requests))  # noqa: E731
+    provider, requests, sleeps = make([429, 503], max_attempts=2, before_request=requests_so_far)
+    with pytest.raises(ProviderError, match="gave up after 2 attempts") as raised:
+        provider.complete(MESSAGES, BRIEF)
+    assert (raised.value.attempts, len(requests), seen, sleeps) == (2, 2, [0, 1], [1.0])
+
+
+def test_a_refusal_before_a_request_sends_nothing() -> None:
+    def refuse() -> None:
+        raise DailyLimitReached("limit reached")
+
+    provider, requests, _ = make([200], before_request=refuse)
+    with pytest.raises(DailyLimitReached):
+        provider.complete(MESSAGES, BRIEF)
+    assert requests == []
+
+
+FREE_ENTRY = ModelEntry(id="m-free", provider="openai-compatible", base_url="https://x", api_key_env="KEY",
+                        model="vendor/model:free")
+
+
+def test_a_free_model_gets_two_attempts_and_the_ledger(tmp_path) -> None:
+    book = FreeRequestLedger(tmp_path / "free-requests.json")
+    free = make_provider(FREE_ENTRY, environ={"KEY": "secret"}, ledger=book)
+    assert (free.max_attempts, free.before_request) == (2, book.before_request)
+    paid = make_provider(replace(FREE_ENTRY, model="vendor/model"), environ={"KEY": "secret"}, ledger=book)
+    assert (paid.max_attempts, paid.before_request) == (4, None)
+
+
+def test_the_ledger_counts_retries_and_stops_a_retry_past_the_limit(tmp_path) -> None:
+    sleeps: list[float] = []
+    book = FreeRequestLedger(tmp_path / "free-requests.json", limit=3, sleep=sleeps.append)
+    provider, requests, _ = make([429, 200], max_attempts=2, before_request=book.before_request)
+    assert provider.complete(MESSAGES, BRIEF).attempts == 2
+    assert (len(requests), book.used()) == (2, 2)
+    # One request left: the first attempt is sent, the retry is refused.
+    provider, requests, _ = make([429, 200], max_attempts=2, before_request=book.before_request)
+    with pytest.raises(DailyLimitReached):
+        provider.complete(MESSAGES, BRIEF)
+    assert (len(requests), book.used()) == (1, 3)
 
 
 def test_a_real_provider_needs_its_key() -> None:

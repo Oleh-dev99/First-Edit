@@ -15,6 +15,7 @@ from .briefs import BriefError, list_briefs, load_brief
 from .budget import Budget
 from .doctor import run_doctor
 from .generate import generate, summarize
+from .ledger import FreeRequestLedger, is_free
 from .models import ModelsError, get_model, load_models
 from .node import check_candidate, run_stress
 from .paths import ENV_FILE
@@ -93,10 +94,14 @@ def main(argv: list[str] | None = None) -> int:
             if args.max_cost is not None and entry.price is None:
                 print(f'note: model "{entry.id}" has no prices, so --max-cost cannot apply')
             budget = Budget(max_requests=args.max_requests, max_cost=args.max_cost)
+            ledger = FreeRequestLedger() if is_free(entry) else None
             print(f"generate {entry.id}, variant {args.variant}, {args.samples} sample(s) per brief, {len(brief_ids)} brief(s)")
             results = generate(entry, brief_ids, args.variant, args.samples, budget,
-                               provider_factory=make_provider, gate=check_candidate)
+                               provider_factory=lambda e: make_provider(e, ledger=ledger),
+                               gate=check_candidate, ledger=ledger)
             print("\n".join(summarize(results, budget)))
+            if ledger is not None:
+                print(ledger.status())
             return 0
         rows = stress(entry.id, brief_ids, args.variant, run=run_stress)
         print(format_table(rows))

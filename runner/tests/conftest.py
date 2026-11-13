@@ -54,13 +54,14 @@ def run(tmp_path: Path):
     """generate() into tmp_path with a fake gate that accepts everything."""
 
     def _run(entry: ModelEntry, provider: FakeProvider, briefs: list[str], *, budget: Budget | None = None,
-             samples: int = 1, gate=None) -> list[SampleResult]:
+             samples: int = 1, gate=None, ledger=None) -> list[SampleResult]:
         return generate(
             entry, briefs, "plain", samples, budget or Budget(),
             provider_factory=lambda _entry: provider,
             gate=gate or (lambda _brief, _candidate: {"valid": True, "reasons": []}),
             cache=Cache(tmp_path / "cache"),
             candidates_dir=tmp_path / "candidates",
+            ledger=ledger,
             out=lambda _line: None,
         )
 

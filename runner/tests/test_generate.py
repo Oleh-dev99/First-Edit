@@ -6,6 +6,7 @@ from pathlib import Path
 
 from first_edit.budget import Budget, estimate_call_cost
 from first_edit.cache import cache_key
+from first_edit.ledger import DailyLimitReached, FreeRequestLedger
 from first_edit.models import ModelEntry, Price
 from first_edit.prompts import build_messages
 from first_edit.briefs import load_brief
@@ -143,6 +144,36 @@ def test_max_cost_stops_before_a_call_that_could_exceed_it(entry: ModelEntry, ru
 
     results = run(priced, provider, ["pricing-table"], budget=Budget(max_cost=estimate * 2))
     assert (provider.calls, results[0].status) == (1, "called")
+
+
+def test_a_used_up_daily_allowance_skips_calls_but_not_cache_hits(tmp_path: Path, entry: ModelEntry, run) -> None:
+    provider = FakeProvider()
+    run(entry, provider, ["pricing-table"])
+    book = FreeRequestLedger(tmp_path / "free-requests.json", limit=0)
+    results = run(entry, provider, BRIEFS, ledger=book)
+    assert [result.status for result in results] == ["cached", "skipped"]
+    assert provider.calls == 1
+    # A skipped sample gets no files, so a later run calls it.
+    assert not (tmp_path / "candidates/test-model/data-table/plain-s1").exists()
+
+
+def test_the_daily_limit_during_a_sample_skips_it_and_every_later_call(tmp_path: Path, entry: ModelEntry, run) -> None:
+    class RunsOut(FakeProvider):
+        """Answers once, then the ledger refuses (for example a retry)."""
+
+        def complete(self, messages, brief):
+            if self.calls:
+                self.calls += 1
+                raise DailyLimitReached("daily free-request limit reached")
+            return super().complete(messages, brief)
+
+    provider = RunsOut()
+    results = run(entry, provider, BRIEFS, samples=2)
+    assert [result.status for result in results] == ["called", "skipped", "skipped", "skipped"]
+    assert provider.calls == 2
+    assert generation(tmp_path, "test-model/pricing-table/plain-s1")["valid"] is True
+    assert not (tmp_path / "candidates/test-model/pricing-table/plain-s2").exists()
+    assert len(list((tmp_path / "cache").glob("*.json"))) == 1
 
 
 def test_max_cost_is_ignored_without_prices(entry: ModelEntry, run) -> None:

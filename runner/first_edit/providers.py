@@ -12,6 +12,7 @@ from typing import Any, Protocol
 import httpx
 
 from .briefs import Brief, reference_component
+from .ledger import FREE_MAX_ATTEMPTS, FreeRequestLedger, is_free
 from .models import ModelEntry
 
 MAX_ATTEMPTS = 4
@@ -131,7 +132,9 @@ class OpenAICompatibleProvider:
     """POST {base_url}/chat/completions with a Bearer key.
 
     Timeouts, HTTP 429 and 5xx are retried with exponential backoff, at most
-    MAX_ATTEMPTS attempts in all. Any other error fails the call at once.
+    max_attempts attempts in all. Any other error fails the call at once.
+    before_request, if given, runs before every HTTP request, retries
+    included; it may wait, and it may raise to stop the request being sent.
     """
 
     def __init__(
@@ -143,12 +146,16 @@ class OpenAICompatibleProvider:
         sleep: Callable[[float], None] = time.sleep,
         backoff_seconds: float = DEFAULT_BACKOFF_SECONDS,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+        max_attempts: int = MAX_ATTEMPTS,
+        before_request: Callable[[], None] | None = None,
     ) -> None:
         self.entry = entry
         self.api_key = api_key
         self.client = client or httpx.Client(timeout=timeout_seconds)
         self.sleep = sleep
         self.backoff_seconds = backoff_seconds
+        self.max_attempts = max_attempts
+        self.before_request = before_request
 
     def request_body(self, messages: list[dict[str, str]]) -> dict[str, Any]:
         """Model and messages plus the entry's params; no temperature or seed unless params sets them."""
@@ -158,7 +165,9 @@ class OpenAICompatibleProvider:
         url = f"{(self.entry.base_url or '').rstrip('/')}/chat/completions"
         headers = {"Authorization": f"Bearer {self.api_key}"}
         body = self.request_body(messages)
-        for attempt in range(1, MAX_ATTEMPTS + 1):
+        for attempt in range(1, self.max_attempts + 1):
+            if self.before_request is not None:
+                self.before_request()
             started = time.monotonic()
             try:
                 response = self.client.post(url, json=body, headers=headers)
@@ -176,17 +185,26 @@ class OpenAICompatibleProvider:
                 if status != 429 and status < 500:
                     raise ProviderError(f"HTTP {status}: {response.text[:300]}", attempt)
                 problem = f"HTTP {status}"
-            if attempt == MAX_ATTEMPTS:
+            if attempt == self.max_attempts:
                 raise ProviderError(f"{problem}; gave up after {attempt} attempts", attempt)
             self.sleep(self.backoff_seconds * 2 ** (attempt - 1))
         raise AssertionError("unreachable")
 
 
-def make_provider(entry: ModelEntry, environ: Mapping[str, str] = os.environ) -> Provider:
+def make_provider(
+    entry: ModelEntry, environ: Mapping[str, str] = os.environ, *, ledger: FreeRequestLedger | None = None
+) -> Provider:
+    """The provider for an entry. A free model variant (":free") gets
+    FREE_MAX_ATTEMPTS attempts per sample, and every request goes through the
+    daily ledger, which spaces requests and refuses the one past the limit."""
     if entry.provider == "mock":
         return MockProvider(entry)
     key_name = entry.api_key_env or ""
     api_key = environ.get(key_name, "")
     if not api_key:
         raise SetupError(f'model "{entry.id}" needs the environment variable {key_name} (put it in .env)')
+    if is_free(entry):
+        ledger = ledger or FreeRequestLedger()
+        return OpenAICompatibleProvider(entry, api_key, max_attempts=FREE_MAX_ATTEMPTS,
+                                        before_request=ledger.before_request)
     return OpenAICompatibleProvider(entry, api_key)

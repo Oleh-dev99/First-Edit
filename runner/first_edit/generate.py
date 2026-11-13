@@ -14,6 +14,7 @@ from .briefs import load_brief
 from .budget import Budget, call_cost, estimate_call_cost
 from .cache import Cache, cache_key
 from .extract import extract_code
+from .ledger import DailyLimitReached, FreeRequestLedger
 from .models import ModelEntry
 from .paths import CANDIDATES_DIR, REPO_ROOT
 from .prompts import build_messages, prompt_hash
@@ -74,14 +75,19 @@ def generate(
     gate: Gate,
     cache: Cache | None = None,
     candidates_dir: Path = CANDIDATES_DIR,
+    ledger: FreeRequestLedger | None = None,
     out: Callable[[str], None] = print,
 ) -> list[SampleResult]:
     """Generates `samples` candidates per brief. Replies come from the cache
-    when they can; otherwise the provider is called within the budget. Every
-    sample gets a generation.json; invalid output is recorded, never re-rolled."""
+    when they can; otherwise the provider is called within the budget and,
+    for a free model, within the daily ledger. Every sample that is not
+    skipped gets a generation.json; invalid output is recorded, never
+    re-rolled."""
     cache = cache or Cache()
     provider: Provider | None = None
     results: list[SampleResult] = []
+    #: Set once the daily free-request limit stops a call; later calls are skipped.
+    exhausted: str | None = None
 
     for brief_id in brief_ids:
         brief = load_brief(brief_id)
@@ -105,7 +111,11 @@ def generate(
             record = cache.get(key)
             cached = record is not None
             if record is None:
-                refusal = budget.refusal(estimate_call_cost(entry, messages))
+                refusal = (
+                    budget.refusal(estimate_call_cost(entry, messages))
+                    or exhausted
+                    or (ledger.refusal() if ledger is not None else None)
+                )
                 if refusal:
                     results.append(SampleResult(brief_id, variant, sample, cid, "skipped"))
                     out(f"  {brief_id} {variant}-s{sample}: skipped, {refusal}")
@@ -113,6 +123,13 @@ def generate(
                 provider = provider or provider_factory(entry)
                 try:
                     completion = provider.complete(messages, brief)
+                except DailyLimitReached as error:
+                    # Stopped before a request (a retry, perhaps) was sent. The
+                    # sample is left without files, so a later run calls it again.
+                    exhausted = str(error)
+                    results.append(SampleResult(brief_id, variant, sample, cid, "skipped"))
+                    out(f"  {brief_id} {variant}-s{sample}: skipped, {exhausted}")
+                    continue
                 except ProviderError as error:
                     budget.record(None)
                     _reset(directory)
@@ -194,5 +211,5 @@ def summarize(results: list[SampleResult], budget: Budget) -> list[str]:
     ]
     skipped = [result for result in results if result.status == "skipped"]
     if skipped:
-        lines.append("skipped (budget): " + ", ".join(f"{r.brief} {r.variant}-s{r.sample}" for r in skipped))
+        lines.append("skipped (budget or daily limit): " + ", ".join(f"{r.brief} {r.variant}-s{r.sample}" for r in skipped))
     return lines
