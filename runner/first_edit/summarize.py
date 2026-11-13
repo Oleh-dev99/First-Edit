@@ -19,6 +19,7 @@ import html
 import json
 import math
 import os
+import re
 import statistics
 from collections import Counter
 from dataclasses import dataclass, field
@@ -35,8 +36,16 @@ STRESS_SCHEMA_VERSION = 3
 #: The stress suite these numbers come from: cases, tiers, checks, tolerances
 #: and the new-finding rule, frozen as suite v1 (D-044). Stress summaries
 #: record it; a schema 3 summary without the field was written by the step 10
-#: harness before the field existed, and that harness is suite v1.
+#: harness before the field existed, and that harness is suite v1. A suite
+#: bug fix bumps the patch number (v1.1, v1.2), which this module also reads.
 SUITE_VERSION = "v1"
+SUITE_PATTERN = re.compile(r"^v1(\.[1-9][0-9]*)?$")
+#: Decision line a (D-049): clean-baseline candidates every model and variant needs.
+COVERAGE_MIN = 15
+#: Decision line b (D-049): the pooled paired test's significance level.
+ALPHA = 0.05
+#: The provider type that runs Claude Code's command line (D-047).
+CLAUDE_CLI = "claude-cli"
 CHECKS = ("page-overflow-x", "text-clipped", "content-spill", "text-overlap", "off-screen")
 CONTENT_MUTATIONS = ("text-long", "text-longword", "text-unbroken", "text-empty", "list-0", "list-1", "list-many",
                      "number-large")
@@ -226,9 +235,9 @@ def load_candidates(model_ids: list[str], brief_ids: list[str], *, candidates_di
             if summary is not None and summary.get("schemaVersion") != STRESS_SCHEMA_VERSION:
                 raise SetupError(f"{run_dir / 'summary.json'} has stress schema {summary.get('schemaVersion')}; "
                                  f"summarize reads schema {STRESS_SCHEMA_VERSION}, so re-run stress into this runs directory")
-            if summary is not None and summary.get("suite", SUITE_VERSION) != SUITE_VERSION:
+            if summary is not None and not SUITE_PATTERN.match(str(summary.get("suite", SUITE_VERSION))):
                 raise SetupError(f"{run_dir / 'summary.json'} was run with suite {summary.get('suite')}; "
-                                 f"summarize reads suite {SUITE_VERSION}")
+                                 f"summarize reads suite {SUITE_VERSION} and its bug-fix patches (v1.1, v1.2, ...)")
             candidate = Candidate(model_id, brief_id, variant, sample, cid, generation, summary, run_dir)
             state = candidate.state
             if state in ("born-broken", "baseline-crash"):
@@ -378,8 +387,95 @@ def sensitivity(candidates: list[Candidate]) -> dict[str, list[dict[str, Any]]]:
     return rows
 
 
+def mcnemar_exact(plain_only: int, hinted_only: int) -> float:
+    """The exact two-sided McNemar test: a binomial test of the discordant
+    pairs against p = 1/2. Two times the smaller tail, capped at 1; 1 when
+    there are no discordant pairs."""
+    n = plain_only + hinted_only
+    if n == 0:
+        return 1.0
+    tail = sum(math.comb(n, k) for k in range(min(plain_only, hinted_only) + 1)) / 2 ** n
+    return min(1.0, 2 * tail)
+
+
+def _pair_counts(pairs: list[tuple[bool, bool]]) -> dict[str, Any]:
+    plain_only = sum(1 for plain, hinted in pairs if plain and not hinted)
+    hinted_only = sum(1 for plain, hinted in pairs if hinted and not plain)
+    return {
+        "pairs": len(pairs),
+        "bothBroke": sum(1 for plain, hinted in pairs if plain and hinted),
+        "plainOnly": plain_only,
+        "hintedOnly": hinted_only,
+        "neither": sum(1 for plain, hinted in pairs if not plain and not hinted),
+        "p": mcnemar_exact(plain_only, hinted_only),
+    }
+
+
+def hint_pairs(candidates: list[Candidate], model_ids: list[str]) -> dict[str, list[tuple[bool, bool]]]:
+    """Per model: (plain broke, hinted broke) in a core case, for every brief
+    and sample where the plain and the hinted candidate both have a clean
+    baseline."""
+    by_key = {(c.model, c.brief, c.sample, c.variant): c for c in candidates}
+    pairs: dict[str, list[tuple[bool, bool]]] = {model_id: [] for model_id in model_ids}
+    for (model_id, brief_id, sample, variant), plain in sorted(by_key.items()):
+        hinted = by_key.get((model_id, brief_id, sample, "hinted"))
+        if variant == "plain" and hinted is not None and plain.state == "clean" and hinted.state == "clean":
+            pairs.setdefault(model_id, []).append((plain.broke("core"), hinted.broke("core")))
+    return pairs
+
+
+def hint_effect(pairs: dict[str, list[tuple[bool, bool]]]) -> dict[str, Any]:
+    """The paired hint effect per model and pooled over the given models."""
+    return {
+        "perModel": {model_id: _pair_counts(model_pairs) for model_id, model_pairs in pairs.items()},
+        "pooled": _pair_counts([pair for model_pairs in pairs.values() for pair in model_pairs]),
+    }
+
+
+def _overlap(a: list[float], b: list[float]) -> bool:
+    return a[0] <= b[1] and b[0] <= a[1]
+
+
+def decision_lines(groups: list[dict[str, Any]], pairs: dict[str, list[tuple[bool, bool]]],
+                   finished: list[str]) -> dict[str, Any]:
+    """The three decision lines of D-049, over the finished models only."""
+    own = [g for g in groups if not g["pooled"] and g["model"] in finished]
+    if not finished:
+        return {"models": [], "lines": None}
+
+    short = [f"{g['model']} {g['variant']} {g['cleanBaseline']}" for g in own if g["cleanBaseline"] < COVERAGE_MIN]
+    covered = {(g["model"], g["variant"]) for g in own}
+    absent = [f"{model_id} {variant} 0" for model_id in finished for variant in ("plain", "hinted")
+              if (model_id, variant) not in covered]
+    coverage = {
+        "met": not short and not absent,
+        "detail": ("every model and variant has at least "
+                   f"{COVERAGE_MIN} clean-baseline candidates" if not short and not absent else
+                   "below " + str(COVERAGE_MIN) + ": " + ", ".join(short + absent)),
+    }
+
+    pooled = _pair_counts([pair for model_id in finished for pair in pairs.get(model_id, [])])
+    hint = {
+        "met": pooled["p"] < ALPHA,
+        "detail": (f"{pooled['pairs']} pairs, plain only {pooled['plainOnly']}, hinted only {pooled['hintedOnly']}, "
+                   f"p = {pooled['p']:.4f}"),
+    }
+
+    plain = [g for g in own if g["variant"] == "plain" and g["brokeOnce"]["core"]["ci95"] is not None]
+    apart = [(a["model"], b["model"]) for index, a in enumerate(plain) for b in plain[index + 1:]
+             if not _overlap(a["brokeOnce"]["core"]["ci95"], b["brokeOnce"]["core"]["ci95"])]
+    model = {
+        "met": bool(apart),
+        "detail": ("intervals apart: " + ", ".join(f"{a} and {b}" for a, b in apart) if apart else
+                   f"no two of {len(plain)} models have plain core intervals that do not overlap"),
+    }
+    return {"models": list(finished), "lines": {"coverage": coverage, "hintEffect": hint, "modelEffect": model}}
+
+
 def build_summary(candidates: list[Candidate], model_ids: list[str], brief_ids: list[str],
-                  models: dict[str, dict[str, Any]]) -> dict[str, Any]:
+                  models: dict[str, dict[str, Any]], finished: list[str] | None = None) -> dict[str, Any]:
+    """`finished`: the models whose queued jobs are all finished, which the
+    decision lines cover; None when there is no run plan to tell."""
     groups = []
     for model_id in model_ids:
         for variant in VARIANT_ORDER:
@@ -398,6 +494,7 @@ def build_summary(candidates: list[Candidate], model_ids: list[str], brief_ids: 
         received = sorted(c.generation["receivedAt"] for c in members if c.generation.get("receivedAt"))
         model_info.append({
             "id": model_id,
+            "provider": models.get(model_id, {}).get("provider"),
             "model": models.get(model_id, {}).get("model"),
             "reportedModels": sorted({c.generation["reportedModel"] for c in members if c.generation.get("reportedModel")}),
             "calls": {"first": received[0] if received else None, "last": received[-1] if received else None},
@@ -422,11 +519,19 @@ def build_summary(candidates: list[Candidate], model_ids: list[str], brief_ids: 
         "costUsd": round(sum(g["cost"]["usd"] for g in own), 6),
     }
     stressed = [c.summary for c in candidates if c.summary is not None]
+    pairs = hint_pairs(candidates, model_ids)
     return {
         "schemaVersion": SUMMARY_SCHEMA_VERSION,
         # Stress summaries without the field come from the step 10 harness (suite v1).
-        "suite": {"version": SUITE_VERSION, "stressSummaries": len(stressed),
-                  "recorded": sum(1 for summary in stressed if "suite" in summary)},
+        "suite": {
+            "version": SUITE_VERSION,
+            "stressSummaries": len(stressed),
+            "recorded": sum(1 for summary in stressed if "suite" in summary),
+            "versions": dict(sorted(Counter(str(summary.get("suite", SUITE_VERSION)) for summary in stressed).items())),
+            "commits": dict(sorted(Counter(_commit_label(summary) for summary in stressed).items())),
+        },
+        "hintEffect": hint_effect(pairs),
+        "decisions": None if finished is None else decision_lines(groups, pairs, finished),
         "cases": [{"id": case, "tier": CASE_TIERS[case]} for case in CASES],
         "checks": list(CHECKS),
         "models": model_info,
@@ -469,12 +574,66 @@ def _table(header: list[str], rows: list[list[str]]) -> list[str]:
 
 def _suite_line(suite: dict[str, Any]) -> str:
     line = (f"Suite {suite['version']} (D-044): the cases, tiers, checks, tolerances and new-finding rule are "
-            f"frozen; only bug fixes change them, each recorded in DECISIONS.")
+            f"frozen; only bug fixes change them, each bumping the patch number and recorded in DECISIONS.")
+    versions = suite.get("versions") or {}
+    commits = suite.get("commits") or {}
+    if versions:
+        line += " Stress summaries by suite: " + ", ".join(f"{v} {n}" for v, n in versions.items()) + "."
+    if commits:
+        line += " By harness commit: " + ", ".join(f"{c} {n}" for c, n in commits.items()) + "."
     unrecorded = suite["stressSummaries"] - suite["recorded"]
     if unrecorded:
         line += (f" {unrecorded} of {suite['stressSummaries']} stress summaries predate the suite field; they were "
                  f"written by the step 10 harness, which is suite {suite['version']}.")
     return line
+
+
+def _cli_note(summary: dict[str, Any]) -> str | None:
+    """The disclosure for models run through Claude Code's command line (D-047)."""
+    cli = [m["id"] for m in summary["models"] if m.get("provider") == CLAUDE_CLI]
+    if not cli:
+        return None
+    return (f"{', '.join(cli)}: run through the Claude Code command line (`claude -p`) on the owner's subscription, "
+            "with our system prompt replacing Claude Code's own and every tool disabled. This is not the raw API "
+            "(D-047). Calls are not billed per call; the command line's own cost figure is kept in generation.json "
+            "as an estimate and is not counted here.")
+
+
+def _hint_section(effect: dict[str, Any]) -> list[str]:
+    out = ["", "## Hint effect, paired", "",
+           "Briefs where the plain and the hinted candidate (the same sample) both have a clean baseline, counted "
+           "by whether each broke in a core case. p is an exact two-sided McNemar test on the discordant pairs "
+           "(plain only against hinted only).", ""]
+    rows = [[model_id, str(c["pairs"]), str(c["bothBroke"]), str(c["plainOnly"]), str(c["hintedOnly"]),
+             str(c["neither"]), f"{c['p']:.4f}"] for model_id, c in effect["perModel"].items()]
+    pooled = effect["pooled"]
+    rows.append([POOLED, str(pooled["pairs"]), str(pooled["bothBroke"]), str(pooled["plainOnly"]),
+                 str(pooled["hintedOnly"]), str(pooled["neither"]), f"{pooled['p']:.4f}"])
+    return out + _table(["model", "pairs", "both broke", "plain only", "hinted only", "neither", "p"], rows)
+
+
+def _decision_section(decisions: dict[str, Any] | None) -> list[str]:
+    out = ["", "## Decision lines (D-049)", ""]
+    if decisions is None:
+        return out + ["Not evaluated: summarize was run without the run plan, so it cannot tell which models have "
+                      "finished their queued jobs."]
+    if decisions["lines"] is None:
+        return out + ["Not evaluated: no model has finished its queued jobs yet."]
+    out += [f"Covering the models whose queued jobs are all finished: {', '.join(decisions['models'])}.", ""]
+    names = {"coverage": f"a. Coverage: every model and variant has at least {COVERAGE_MIN} clean-baseline candidates",
+             "hintEffect": f"b. Hint effect: the pooled paired test has p below {ALPHA}",
+             "modelEffect": "c. Model effect: at least two models whose plain core intervals do not overlap"}
+    for key, name in names.items():
+        line = decisions["lines"][key]
+        out.append(f"- {name}: **{'met' if line['met'] else 'not met'}** ({line['detail']}).")
+    return out
+
+
+def _commit_label(summary: dict[str, Any]) -> str:
+    harness = summary.get("harness")
+    if not isinstance(harness, dict) or not harness.get("commit"):
+        return "not recorded"
+    return f"{harness['commit']}{' (dirty)' if harness.get('dirty') else ''}"
 
 
 def _sensitivity_section(rows: dict[str, list[dict[str, Any]]]) -> list[str]:
@@ -523,10 +682,13 @@ def render_report(summary: dict[str, Any]) -> str:
         "",
     ]
     out += _table(
-        ["id", "provider model", "reported model", "first call", "last call"],
-        [[m["id"], m["model"] or "-", ", ".join(m["reportedModels"]) or "-", m["calls"]["first"] or "-",
-          m["calls"]["last"] or "-"] for m in summary["models"]],
+        ["id", "provider", "provider model", "reported model", "first call", "last call"],
+        [[m["id"], m.get("provider") or "-", m["model"] or "-", ", ".join(m["reportedModels"]) or "-",
+          m["calls"]["first"] or "-", m["calls"]["last"] or "-"] for m in summary["models"]],
     )
+    note = _cli_note(summary)
+    if note:
+        out += ["", note]
     if not groups:
         return "\n".join([*out, "", "No generated candidates for these models."]) + "\n"
 
@@ -542,6 +704,8 @@ def render_report(summary: dict[str, Any]) -> str:
          for g in groups],
     )
     out += _sensitivity_section(summary["sensitivity"])
+    out += _hint_section(summary["hintEffect"])
+    out += _decision_section(summary["decisions"])
     out += ["", "## Failure rate and mean survival per tier", "",
             "Failed / applicable cases of clean-baseline candidates, with a 95% Wilson interval, and the mean, "
             "minimum and maximum of each candidate's survival rate over the tier's cases.", ""]
@@ -777,6 +941,11 @@ def render_gallery(candidates: list[Candidate], out_dir: Path) -> str:
         return sorted(found)
 
     checks = [check for check in CHECKS if any(check in case.checks for case in cases)]
+    # Models run through Claude Code's command line are disclosed wherever results are shown (D-047).
+    cli_models = sorted({c.model for c in candidates if (c.generation.get("model") or {}).get("provider") == CLAUDE_CLI})
+    cli_note = (f'<p class="meta">{html.escape(", ".join(cli_models))}: run through the Claude Code command line '
+                "(<code>claude -p</code>) on the owner's subscription, with our system prompt replacing Claude Code's "
+                "own and every tool disabled; not the raw API (D-047).</p>") if cli_models else ""
     filters = "".join([
         _options("model", "model", values("model")),
         _options("variant", "variant", values("variant")),
@@ -803,7 +972,8 @@ def render_gallery(candidates: list[Candidate], out_dir: Path) -> str:
         f'<p class="meta">{len(failing)} failed cases and born-broken or crashed baselines, {len(survived)} survived cases. '
         "Cases of clean-baseline candidates only, plus the baseline of each born-broken or crashed candidate. "
         "Screenshots open full size on click.</p>"
-        f'<form id="filters">{filters}</form></header>\n'
+        + cli_note
+        + f'<form id="filters">{filters}</form></header>\n'
         + "\n".join(sections)
         + f"\n<script>{GALLERY_SCRIPT}</script>\n</body>\n</html>\n"
     )

@@ -12,7 +12,9 @@ from first_edit.summarize import (
     CASES,
     CORE_FAMILIES,
     build_summary,
+    decision_lines,
     load_candidates,
+    mcnemar_exact,
     render_gallery,
     render_report,
     rounded,
@@ -32,8 +34,9 @@ def write_json(path: Path, value: dict) -> None:
 
 
 def add_candidate(root: Path, cid: str, *, valid: bool = True, status: str = "generated", reasons=None,
-                  usage=None, actual=None, estimated=0.01, reported_model="vendor/m-1") -> None:
+                  usage=None, actual=None, estimated=0.01, reported_model="vendor/m-1", provider="openai-compatible") -> None:
     write_json(root / "candidates" / cid / "generation.json", {
+        "model": {"id": cid.split("/")[0], "provider": provider},
         "status": status, "valid": valid, "reasons": reasons or [], "receivedAt": "2026-11-13T10:00:00+00:00",
         "reportedModel": reported_model,
         "usage": usage or {"inputTokens": 1000, "cachedInputTokens": None, "outputTokens": 2000, "reasoningTokens": 500},
@@ -43,7 +46,8 @@ def add_candidate(root: Path, cid: str, *, valid: bool = True, status: str = "ge
 
 def add_run(root: Path, cid: str, *, baseline_errors: int = 0, baseline_status: str = "ok",
             failed: dict[str, dict] | None = None, hidden: dict[str, list[str]] | None = None,
-            truncations: int = 0, screenshots: bool = True, schema: int = 3, suite: str | None = None) -> None:
+            truncations: int = 0, screenshots: bool = True, schema: int = 3, suite: str | None = None,
+            harness: dict | None = None) -> None:
     """A stress run where every case applies; `failed` maps a case id to
     {"status": ..., "newErrors": {...}, "findings": [...]}, and `hidden` maps a
     measured case id to its content-hidden values. `suite` None leaves the
@@ -91,6 +95,7 @@ def add_run(root: Path, cid: str, *, baseline_errors: int = 0, baseline_status: 
     write_json(run_dir / "summary.json", {
         "schemaVersion": schema,
         **({"suite": suite} if suite is not None else {}),
+        **({"harness": harness} if harness is not None else {}),
         "baseline": {"status": baseline_status, "errors": baseline_errors,
                      "truncations": truncations if baseline_status == "ok" else None, "files": files("baseline")},
         "cases": cases,
@@ -233,7 +238,7 @@ def test_survival_by_brief_and_models(corpus: Path) -> None:
         "brief-c": {"m1": "invalid"}}
     assert summary["survivalByBrief"]["hinted"] == {
         "brief-a": {"m1": "born broken"}, "brief-b": {"m1": "not stressed"}, "brief-c": {"m1": "api error"}}
-    assert summary["models"] == [{"id": "m1", "model": "vendor/m", "reportedModels": ["vendor/m-1"],
+    assert summary["models"] == [{"id": "m1", "provider": None, "model": "vendor/m", "reportedModels": ["vendor/m-1"],
                                   "calls": {"first": "2026-11-13T10:00:00+00:00", "last": "2026-11-13T10:00:00+00:00"}}]
     assert summary["totals"]["costUsd"] == 0.11
     assert summary["cases"] == [{"id": case, "tier": CASE_TIERS[case]} for case in CASES]
@@ -255,14 +260,20 @@ def test_a_stress_run_of_another_schema_is_an_error(tmp_path: Path) -> None:
 
 def test_suite_version(corpus: Path) -> None:
     # The corpus runs leave the suite field out, as the step 10 harness did.
-    assert summarize(corpus)[1]["suite"] == {"version": "v1", "stressSummaries": 4, "recorded": 0}
+    assert summarize(corpus)[1]["suite"] == {"version": "v1", "stressSummaries": 4, "recorded": 0,
+                                             "versions": {"v1": 4}, "commits": {"not recorded": 4}}
     add_candidate(corpus, "m2/brief-a/plain-s1")
-    add_run(corpus, "m2/brief-a/plain-s1", suite="v1")
+    add_run(corpus, "m2/brief-a/plain-s1", suite="v1", harness={"commit": "abc1234", "dirty": False})
+    add_candidate(corpus, "m2/brief-b/plain-s1")
+    add_run(corpus, "m2/brief-b/plain-s1", suite="v1.1", harness={"commit": "def5678", "dirty": True})
     _, summary = summarize(corpus, ("m1", "m2"))
-    assert summary["suite"] == {"version": "v1", "stressSummaries": 5, "recorded": 1}
+    assert summary["suite"] == {"version": "v1", "stressSummaries": 6, "recorded": 2,
+                                "versions": {"v1": 5, "v1.1": 1},
+                                "commits": {"abc1234": 1, "def5678 (dirty)": 1, "not recorded": 4}}
     report = render_report(summary)
     assert "Suite v1 (D-044): the cases, tiers, checks, tolerances and new-finding rule are frozen" in report
-    assert "4 of 5 stress summaries predate the suite field" in report
+    assert "Stress summaries by suite: v1 5, v1.1 1. By harness commit: abc1234 1, def5678 (dirty) 1, not recorded 4." in report
+    assert "4 of 6 stress summaries predate the suite field" in report
 
 
 def test_a_stress_run_of_another_suite_is_an_error(tmp_path: Path) -> None:
@@ -385,4 +396,87 @@ def test_report_without_candidates(tmp_path: Path) -> None:
     summary = build_summary([], ["m1"], BRIEFS, {"m1": {"model": "vendor/m"}})
     report = render_report(summary)
     assert report.endswith("No generated candidates for these models.\n")
-    assert "| m1 | vendor/m | - | - | - |" in report
+    assert "| m1 | - | vendor/m | - | - | - |" in report
+
+
+def test_mcnemar_exact_matches_the_binomial_test() -> None:
+    assert mcnemar_exact(0, 0) == 1.0
+    assert mcnemar_exact(3, 1) == pytest.approx(0.625)  # 2 * (1 + 4) / 16
+    assert mcnemar_exact(5, 0) == pytest.approx(0.0625)  # 2 / 32
+    assert mcnemar_exact(0, 6) == pytest.approx(0.03125)
+    assert mcnemar_exact(10, 2) == pytest.approx(2 * (1 + 12 + 66) / 4096)
+    assert mcnemar_exact(4, 4) == 1.0  # capped at 1
+
+
+def test_hint_effect_pairs_clean_plain_and_hinted_of_the_same_brief(tmp_path: Path) -> None:
+    broke = {"text-long": {"newErrors": {"content-spill": 1}}}
+    extreme_only = {"text-unbroken@320": {"newErrors": {"content-spill": 1}}}
+    runs = {
+        # m1: two briefs where only plain broke, one where neither did.
+        "m1/brief-a/plain-s1": broke, "m1/brief-a/hinted-s1": {},
+        "m1/brief-b/plain-s1": broke, "m1/brief-b/hinted-s1": extreme_only,
+        "m1/brief-c/plain-s1": {}, "m1/brief-c/hinted-s1": {},
+        # m2: both broke on brief-a; brief-b has no clean plain, so it is no pair.
+        "m2/brief-a/plain-s1": broke, "m2/brief-a/hinted-s1": broke,
+        "m2/brief-b/hinted-s1": {},
+    }
+    for cid, failed in runs.items():
+        add_candidate(tmp_path, cid)
+        add_run(tmp_path, cid, suite="v1", failed=failed)
+    add_candidate(tmp_path, "m2/brief-b/plain-s1")
+    add_run(tmp_path, "m2/brief-b/plain-s1", suite="v1", baseline_errors=1)
+    _, summary = summarize(tmp_path, ("m1", "m2"))
+    effect = summary["hintEffect"]
+    assert effect["perModel"]["m1"] == {"pairs": 3, "bothBroke": 0, "plainOnly": 2, "hintedOnly": 0, "neither": 1,
+                                        "p": 0.5}
+    assert effect["perModel"]["m2"] == {"pairs": 1, "bothBroke": 1, "plainOnly": 0, "hintedOnly": 0, "neither": 0,
+                                        "p": 1.0}
+    assert effect["pooled"]["pairs"] == 4 and effect["pooled"]["p"] == 0.5
+    report = render_report(summary)
+    assert "## Hint effect, paired" in report
+    assert "| m1 | 3 | 0 | 2 | 0 | 1 | 0.5000 |" in report and "| all models | 4 | 1 | 2 | 0 | 1 | 0.5000 |" in report
+    # Without the run plan the decision lines are not evaluated.
+    assert summary["decisions"] is None
+    assert "## Decision lines (D-049)" in report and "summarize was run without the run plan" in report
+
+
+def _group(model: str, variant: str, clean: int, broke: int) -> dict:
+    from first_edit.summarize import wilson
+    return {"model": model, "variant": variant, "pooled": False, "cleanBaseline": clean,
+            "brokeOnce": {"core": {"count": broke, "of": clean, "ci95": wilson(broke, clean)}}}
+
+
+def test_decision_lines_cover_finished_models_only() -> None:
+    groups = [_group("m1", "plain", 20, 20), _group("m1", "hinted", 20, 4),
+              _group("m2", "plain", 20, 0), _group("m2", "hinted", 14, 0),
+              _group("m3", "plain", 3, 0), _group("m3", "hinted", 3, 0)]
+    pairs = {"m1": [(True, False)] * 16 + [(True, True)] * 4, "m2": [(False, False)] * 14, "m3": [(True, False)] * 3}
+    both = decision_lines(groups, pairs, ["m1", "m2"])
+    assert both["models"] == ["m1", "m2"]
+    lines = both["lines"]
+    # m2 hinted has 14 clean candidates; m3 is not finished, so its 3 do not count.
+    assert lines["coverage"] == {"met": False, "detail": "below 15: m2 hinted 14"}
+    assert lines["hintEffect"]["met"] is True and "16 discordant" not in lines["hintEffect"]["detail"]
+    assert lines["hintEffect"]["detail"].startswith("34 pairs, plain only 16, hinted only 0, p = 0.0000")
+    # 20/20 against 0/20: the 95% intervals do not overlap.
+    assert lines["modelEffect"] == {"met": True, "detail": "intervals apart: m1 and m2"}
+
+    one = decision_lines(groups, pairs, ["m1"])["lines"]
+    assert one["coverage"]["met"] is True
+    assert one["modelEffect"]["met"] is False
+    assert decision_lines(groups, pairs, []) == {"models": [], "lines": None}
+
+
+def test_claude_cli_models_are_disclosed(tmp_path: Path) -> None:
+    add_candidate(tmp_path, "cc-test/brief-a/plain-s1", provider="claude-cli", actual=None, estimated=None)
+    add_run(tmp_path, "cc-test/brief-a/plain-s1", suite="v1")
+    candidates = load_candidates(["cc-test"], ["brief-a"], candidates_dir=tmp_path / "candidates", runs_dir=tmp_path / "runs")
+    summary = build_summary(candidates, ["cc-test"], ["brief-a"], {"cc-test": {"provider": "claude-cli", "model": "haiku"}},
+                            finished=["cc-test"])
+    report = render_report(summary)
+    assert "| cc-test | claude-cli | haiku |" in report
+    assert "cc-test: run through the Claude Code command line" in report and "(D-047)" in report
+    assert "Covering the models whose queued jobs are all finished: cc-test." in report
+    assert "a. Coverage: every model and variant has at least 15 clean-baseline candidates: **not met**" in report
+    gallery = render_gallery(candidates, tmp_path / "out")
+    assert "cc-test: run through the Claude Code command line" in gallery
