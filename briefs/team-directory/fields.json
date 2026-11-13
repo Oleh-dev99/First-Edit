@@ -1,0 +1,13 @@
+{
+  "heading": { "kind": "label", "required": true },
+  "memberCount": { "kind": "number" },
+  "people": { "kind": "list", "max": 40 },
+  "people[].id": { "kind": "id" },
+  "people[].name": { "kind": "label", "required": true },
+  "people[].role": { "kind": "label" },
+  "people[].department": { "kind": "label" },
+  "people[].location": { "kind": "label" },
+  "people[].email": { "kind": "label", "required": true },
+  "people[].status": { "kind": "fixed" },
+  "addMemberLabel": { "kind": "label", "required": true }
+}

@@ -1,0 +1,61 @@
+{
+  "heading": "Team directory",
+  "memberCount": 48,
+  "people": [
+    {
+      "id": "p-101",
+      "name": "Amara Okafor",
+      "role": "Engineering Manager",
+      "department": "Platform",
+      "location": "Lagos, Nigeria",
+      "email": "amara.okafor@example.com",
+      "status": "available"
+    },
+    {
+      "id": "p-102",
+      "name": "Jonas Weber",
+      "role": "Senior Product Designer",
+      "department": "Design",
+      "location": "Berlin, Germany",
+      "email": "jonas.weber@example.com",
+      "status": "busy"
+    },
+    {
+      "id": "p-103",
+      "name": "Mei-Ling Chen",
+      "role": "Data Analyst",
+      "department": "Finance",
+      "location": "Singapore",
+      "email": "meiling.chen@example.com",
+      "status": "away"
+    },
+    {
+      "id": "p-104",
+      "name": "Rafael Duarte",
+      "role": "Customer Success Lead",
+      "department": "Support",
+      "location": "Lisbon, Portugal",
+      "email": "rafael.duarte@example.com",
+      "status": "available"
+    },
+    {
+      "id": "p-105",
+      "name": "Sofia Lindqvist",
+      "role": "Recruiter",
+      "department": "People",
+      "location": "Stockholm, Sweden",
+      "email": "sofia.lindqvist@example.com",
+      "status": "offline"
+    },
+    {
+      "id": "p-106",
+      "name": "Kwame Mensah",
+      "role": "Staff Engineer",
+      "department": "Infrastructure",
+      "location": "Accra, Ghana",
+      "email": "kwame.mensah@example.com",
+      "status": "available"
+    }
+  ],
+  "addMemberLabel": "Add member"
+}
