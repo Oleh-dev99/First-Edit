@@ -7,31 +7,9 @@
 runs_dir = "results/runs-run2"
 out = "results/run2"
 
-# Claude through the owner's subscription (D-047), 120 calls: held back.
-# The isolation probe showed that `claude -p` still adds an identity line in
-# front of our system prompt and a reminder with the account's email address
-# and the date; no documented setting removes them with a subscription login.
-# Uncomment only after the owner accepts that, or after the isolation is fixed.
-# [[job]]
-# model = "cc-haiku"
-# variants = ["plain", "hinted"]
-# briefs = "all"
-# samples = 1
-# parallel = true
-
-# [[job]]
-# model = "cc-sonnet"
-# variants = ["plain", "hinted"]
-# briefs = "all"
-# samples = 1
-# parallel = true
-
-# [[job]]
-# model = "cc-opus"
-# variants = ["plain", "hinted"]
-# briefs = "all"
-# samples = 1
-# parallel = true
+# No Claude model is part of the run: the owner declined running them through
+# Claude Code's command line, which adds an identity line and a note with the
+# account's email address and the date to every request (D-047).
 
 # Free models, 160 calls within the daily ledger. The two spike models need
 # only the ten briefs added in step 11; they have the other ten from step 8.

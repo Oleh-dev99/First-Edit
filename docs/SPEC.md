@@ -765,8 +765,10 @@ region"), as inkling-2-small-free did in step 8. Only a call shows it.
 
 ### claude-cli provider (D-047)
 Claude models can run through Claude Code's command line on the owner's
-subscription instead of the API. Each sample runs `claude` (found with
-shutil.which) once, non-interactively:
+subscription instead of the API. The provider is unused: the owner
+declined this track (see below), so no Claude model is part of the run.
+Each sample runs `claude` (found with shutil.which) once,
+non-interactively:
 - from a new empty temporary directory outside the repository;
 - `--print --output-format json --max-turns 1 --no-session-persistence`;
 - `--model <alias>` from the models file and `--effort <effort>` from its
@@ -800,7 +802,9 @@ call through the same code path with our system prompt and a user message
 that asks the model to list every tool it can call and to quote every
 instruction it was given. It saves the reply to results/cli-probe/. In
 step 12 the probe showed context we cannot remove with a subscription
-login (see Known gaps), so the Claude jobs were not run.
+login (see Known gaps). The owner declined to run the Claude models with
+it, so the provider stays in the code, unused, and no job in
+runner/plan.toml names a claude-cli model (D-047).
 
 ### Run queue
 runner/plan.toml lists the jobs of a run in order (D-048):
@@ -1028,8 +1032,14 @@ Found in step 12:
   with the account's email address and today's date to the first user
   message. CLAUDE_CODE_DISABLE_ATTACHMENTS removed a reminder about
   tokens, but no documented setting removes the rest; `--bare`, which
-  drops reminders, cannot use the subscription login. The Claude jobs
-  are held back until the owner decides (D-047).
+  drops reminders, cannot use the subscription login. The owner declined
+  to run the Claude models with this context, so none is part of the
+  run (D-047).
+- A column squeezed so narrow that its words split mid-word passes
+  every check when nothing overflows, is cut off or overlaps: the layout
+  is broken to a reader, but no geometric check fires. Seen in the
+  step 12 review. A candidate for a later suite version; suite v1 stays
+  frozen (D-044).
 
 Closed in step 5: a visibly boxed element spilling out of its boxed
 parent (for example a tag pill out of a card) is now caught by

@@ -340,22 +340,25 @@ correlated with the first and mostly repeats what it showed. The Wilson
 interval treats every candidate as independent, so candidates from more
 briefs make it more honest than more samples of the same briefs.
 
-## D-047 Claude models through the Claude Code command line (2026-11-13)
-Claude models may run through the Claude Code command line (`claude -p`)
-on the owner's subscription instead of the API: provider claude-cli,
-with our system prompt replacing Claude Code's own, every built-in and
-MCP tool disabled, one turn, effort medium and --safe-mode. This is not
-the raw API, and it is disclosed wherever results are shown (report.md
-and gallery.html). Before a run, an isolation probe through the same code
-path must show no tools and nothing beyond our system prompt. In step 12
-it did not: the command line puts an identity line ("You are a Claude
-agent, built on Anthropic's Claude Agent SDK.") in front of our system
-prompt and adds a reminder with the account's email address and the date,
-and no documented setting removes them with a subscription login
-(`--bare` would, but it needs an API key). The owner chose to run the
-Claude models, but under this rule they were not run: their jobs stay in
-runner/plan.toml, commented out, until the owner accepts this context or
-it can be removed.
+## D-047 Claude models through the Claude Code command line: declined (2026-11-13)
+Claude models could run through the Claude Code command line (`claude
+-p`) on the owner's subscription instead of the API: provider
+claude-cli, with our system prompt replacing Claude Code's own, every
+built-in and MCP tool disabled, one turn, effort medium and --safe-mode.
+The isolation probe in step 12 showed two additions to every request
+that the other models do not get, and that no documented setting removes
+with a subscription login (`--bare` would, but it needs an API key):
+- an identity sentence ("You are a Claude agent, built on Anthropic's
+  Claude Agent SDK.") in front of our system prompt;
+- a note with the account's email address and today's date, added to
+  the first user message.
+Asked whether to run the Claude models with these two additions, as a
+separate track labelled wherever results are shown, the owner declined.
+The provider stays in the code, unused: the cc-haiku, cc-sonnet and
+cc-opus entries remain in runner/models.toml, no job in runner/plan.toml
+names them, and no Claude model is part of the run. Should such results
+ever be shown, report.md and gallery.html still name those models and
+say that they are not the raw API.
 
 ## D-048 The run queue; one sample per brief and variant (2026-11-13)
 Runs are driven by runner/plan.toml and `run-next`. A run that spans

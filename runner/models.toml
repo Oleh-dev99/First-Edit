@@ -139,6 +139,8 @@ price = { input = 0.0, output = 0.0 }
 # subscription (D-047): `claude -p` with our system prompt replacing Claude
 # Code's own and every tool disabled. model is the command line's alias;
 # there is no URL, no key and no price (calls are not billed per call).
+# Unused: the owner declined this track, and no job in runner/plan.toml names
+# these models.
 
 [[model]]
 id = "cc-haiku"
