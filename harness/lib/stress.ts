@@ -19,6 +19,14 @@ import { candidateQuery, collectFindings, loadPage, type LoadStatus } from './re
 /** Version of the summary.json contract; bump on any incompatible change. */
 export const SCHEMA_VERSION = 3;
 
+/**
+ * Version of the stress suite: the cases, their tiers, the checks, their
+ * tolerances and the new-finding rule. Suite v1 is frozen (D-044): only
+ * bug fixes change it, each recorded in docs/DECISIONS.md with its effect
+ * on results.
+ */
+export const SUITE_VERSION = 'v1';
+
 export type CaseStatus = LoadStatus | 'not-applicable';
 
 export type ErrorCounts = Record<CheckName, number>;
@@ -59,6 +67,8 @@ export interface CaseEntry {
 
 export interface StressSummary {
   schemaVersion: number;
+  /** The stress suite the run used (D-044). */
+  suite: string;
   brief: string;
   candidate: string;
   fixture: string;
@@ -264,6 +274,7 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
   const survived = cases.filter((entry) => entry.survived === true).length;
   const summary: StressSummary = {
     schemaVersion: SCHEMA_VERSION,
+    suite: SUITE_VERSION,
     brief,
     candidate,
     fixture: fixtureName,
@@ -311,7 +322,7 @@ export function formatStressTable(summary: StressSummary): string {
     return `${tier} ${applicable.filter((entry) => entry.survived === true).length}/${applicable.length}`;
   }).join(', ');
   return [
-    `${summary.brief}  ${summary.candidate}`,
+    `${summary.brief}  ${summary.candidate}  suite ${summary.suite}`,
     `baseline: ${baseline.status}, ${baseline.errors} born-broken error${baseline.errors === 1 ? '' : 's'}, ` +
       `${baseline.truncations ?? '-'} truncation${baseline.truncations === 1 ? '' : 's'}`,
     '',

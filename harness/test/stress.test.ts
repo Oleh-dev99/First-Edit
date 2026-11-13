@@ -106,6 +106,7 @@ describe('stress matrix', () => {
   test('robust survives every applicable case and hides no content', async (t) => {
     const summary = await stress('robust', t);
     assert.equal(summary.schemaVersion, 3);
+    assert.equal(summary.suite, 'v1');
     assert.equal(summary.baseline.status, 'ok');
     assert.equal(summary.baseline.errors, 0);
     assert.equal(summary.totals.applicable, 19);
