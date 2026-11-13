@@ -1,4 +1,4 @@
-"""Command line: python -m first_edit <doctor|generate|stress|summarize|run-next|cli-probe|label-set|label|calibrate|export-site> ..."""
+"""Command line: python -m first_edit <doctor|generate|stress|summarize|run-next|run-record|cli-probe|label-set|label|calibrate|export-site> ..."""
 
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ from .paths import ENV_FILE, LABELS_DIR, REPO_ROOT, RESULTS_DIR, RUNS_DIR
 from .prompts import VARIANTS, build_messages
 from .providers import SetupError, make_provider, parse_reply
 from .run_queue import PLAN_FILE, Deps, Plan, PlanError, QueueState, finished_models, load_plan, run_next
+from .run_record import build_record, write_record
 from .site_export import export_site
 from .stress import format_table, stress
 from .summarize import build_summary, load_candidates, write_outputs
@@ -96,6 +97,10 @@ def _parser() -> argparse.ArgumentParser:
     cal.add_argument("--runs", required=True, type=Path, help="the stress results the set was drawn from")
     cal.add_argument("--out", required=True, type=Path, help="output directory, e.g. results/calibration")
     cal.add_argument("--partial", action="store_true", help="run before every item has a label, and say so")
+
+    record = commands.add_parser("run-record", help="write the run record (docs/RUNS.md) from the generation records")
+    record.add_argument("--out", required=True, type=Path, help="the file to write, e.g. docs/RUNS.md")
+    record.add_argument("--plan", type=Path, default=PLAN_FILE, help="the plan file (default runner/plan.toml)")
 
     site = commands.add_parser("export-site", help="write the results site's data (run, cases, images, briefs, calibration)")
     site.add_argument("--run", required=True, type=Path, help="a run summary folder, e.g. results/run2")
@@ -214,6 +219,12 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "calibrate":
             for path in calibrate(args.set_path, load_label_set(args.set_path), args.runs, args.out, partial=args.partial):
                 print(f"wrote {path}")
+            return 0
+        if args.command == "run-record":
+            entries = load_models()
+            record = build_record(load_plan(args.plan, models=entries), entries, list_briefs(corpus_only=True),
+                                  plan_file=args.plan.resolve())
+            print(f"wrote {write_record(record, args.out)}")
             return 0
         if args.command == "export-site":
             counts = export_site(args.run, args.runs, args.calibration, args.out, references_dir=args.references)
