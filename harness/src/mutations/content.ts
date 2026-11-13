@@ -40,9 +40,10 @@ export function textLongTarget(length: number): number {
 }
 
 /**
- * text-long for one value. Values with spaces grow by appending their own
- * words in order; single words by appending their own letters. Cut at the
- * target length, counted in characters. Empty values stay empty.
+ * text-long for one value, lengths counted in characters. Values with spaces
+ * grow by whole words: their own words are appended in order until the value
+ * reaches at least the target length (D-037). Single words grow by appending
+ * their own letters, cut at the target. Empty values stay empty.
  */
 export function lengthen(value: string): string {
   const chars = Array.from(value);
@@ -52,11 +53,11 @@ export function lengthen(value: string): string {
   let grown = chars;
   if (/\s/.test(value)) {
     for (let i = 0; grown.length < target; i++) {
-      grown = [...grown, ' ', ...Array.from(words[i % words.length])];
+      grown = [...grown, ' ', ...Array.from(words[i % words.length]!)];
     }
-  } else {
-    while (grown.length < target) grown = [...grown, ...chars];
+    return grown.join('');
   }
+  while (grown.length < target) grown = [...grown, ...chars];
   return grown.slice(0, target).join('');
 }
 

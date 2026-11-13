@@ -61,11 +61,23 @@ describe('text-long', () => {
     for (const [length, target] of cases) assert.equal(textLongTarget(length), target, `length ${length}`);
   });
 
-  test('values with spaces append their own words; single words their own letters', () => {
-    assert.equal(lengthen('Hello world'), 'Hello world Hello wo');
-    assert.equal(lengthen('Short notes for the team.'), 'Short notes for the team. Short notes fo');
+  test('values with spaces append whole words until they reach the target; single words their own letters', () => {
+    // 11 characters, target 20: two appended words make 23.
+    assert.equal(lengthen('Hello world'), 'Hello world Hello world');
+    // 25 characters, target 40: three appended words make 41.
+    assert.equal(lengthen('Short notes for the team.'), 'Short notes for the team. Short notes for');
+    // A value that reaches the target exactly stops there.
+    assert.equal(lengthen('ab cd ef gh'), 'ab cd ef gh ab cd ef');
     assert.equal(lengthen('Draft'), 'DraftDraft');
     assert.equal(lengthen('a'), 'aa');
+  });
+
+  test('a grown value never ends in a cut word', () => {
+    for (const value of ['Hello world', 'Short notes for the team.', 'Write a reply…', 'Contact sales']) {
+      const words = new Set(value.split(' '));
+      for (const word of lengthen(value).split(' ')) assert.ok(words.has(word), `"${word}" from "${value}"`);
+      assert.ok(Array.from(lengthen(value)).length >= textLongTarget(Array.from(value).length));
+    }
   });
 
   test('empty and whitespace-only values stay as they are', () => {
@@ -77,9 +89,9 @@ describe('text-long', () => {
     const { fixture, changed } = apply('text-long');
     assert.deepStrictEqual(fixture, {
       ...FIXTURE,
-      title: 'Hello world Hello wo',
+      title: 'Hello world Hello world',
       subtitle: 'DraftDraft',
-      body: 'Short notes for the team. Short notes fo',
+      body: 'Short notes for the team. Short notes for',
       tags: ['uxux', 'researchresearch', 'a11ya11y'],
       links: [
         { id: 'home', label: 'HomeHome', url: 'https://example.org/' },
