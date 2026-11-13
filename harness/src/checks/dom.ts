@@ -11,8 +11,13 @@ export interface Box {
   bottom: number;
 }
 
-/** Horizontal geometry tolerance in px. */
+/** Horizontal geometry tolerance in px (page-overflow-x and text-clipped). */
 export const TOLERANCE_X = 1;
+/**
+ * Horizontal tolerance in px for content-spill and off-screen: overflow of
+ * up to 2px from centring or rounding cannot be seen (D-042).
+ */
+export const EDGE_TOLERANCE_X = 2;
 /** Vertical tolerance for text, as a fraction of its font size. Glyph boxes can exceed tight line heights. */
 export const TEXT_TOLERANCE_Y = 0.3;
 /** Vertical tolerance in px for everything that is not text. */

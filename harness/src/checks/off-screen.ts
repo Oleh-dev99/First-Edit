@@ -7,11 +7,11 @@
 // Boxes that lie entirely more than one viewport width beyond an edge are a
 // deliberate parking pattern (left: -9999px) and are ignored. Unlike
 // content-spill and text-overlap, this check covers out-of-flow content.
-// One finding per element.
+// One finding per element. The horizontal tolerance is 2px (D-042).
 
 import {
   type Box,
-  TOLERANCE_X,
+  EDGE_TOLERANCE_X,
   hasArea,
   round,
   scan,
@@ -53,11 +53,11 @@ export const offScreen: Check = (root) => {
     const pastLeft = -left;
     const pastRight = right - width;
     if (box.inFixed) {
-      if (pastLeft > TOLERANCE_X) [side, overflowPx] = ['left', pastLeft];
-      if (pastRight > TOLERANCE_X && pastRight > overflowPx) [side, overflowPx] = ['right', pastRight];
-    } else if (!rtl && pastLeft > TOLERANCE_X) {
+      if (pastLeft > EDGE_TOLERANCE_X) [side, overflowPx] = ['left', pastLeft];
+      if (pastRight > EDGE_TOLERANCE_X && pastRight > overflowPx) [side, overflowPx] = ['right', pastRight];
+    } else if (!rtl && pastLeft > EDGE_TOLERANCE_X) {
       [side, overflowPx] = ['left', pastLeft];
-    } else if (rtl && pastRight > TOLERANCE_X) {
+    } else if (rtl && pastRight > EDGE_TOLERANCE_X) {
       [side, overflowPx] = ['right', pastRight];
     }
     if (side === null) continue;

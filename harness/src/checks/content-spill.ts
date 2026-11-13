@@ -1,5 +1,6 @@
 // content-spill (error): an in-flow content box's visible rect extends past
-// the border box of its nearest visibly boxed ancestor inside the root.
+// the border box of its nearest visibly boxed ancestor inside the root, by
+// more than 2px horizontally (D-042).
 // Content boxes here are text line boxes, replaced elements and visibly
 // boxed elements themselves (a pill, a panel), each compared with its own
 // nearest boxed ancestor. Out-of-flow content is exempt. One finding per
@@ -7,7 +8,7 @@
 
 import {
   type Box,
-  TOLERANCE_X,
+  EDGE_TOLERANCE_X,
   TOLERANCE_Y,
   boxOf,
   clipBox,
@@ -54,7 +55,7 @@ export const contentSpill: Check = (root) => {
     const overY = overflowPast(visible, border, 'y');
     const axes: string[] = [];
     let overflowPx = 0;
-    if (overX > TOLERANCE_X) {
+    if (overX > EDGE_TOLERANCE_X) {
       axes.push('x');
       overflowPx = Math.max(overflowPx, overX);
     }

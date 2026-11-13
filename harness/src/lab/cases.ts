@@ -338,6 +338,28 @@ export const LAB_CASES: LabCase[] = [
     expected: { 'content-spill': { error: 7 } },
   },
 
+  // content-spill and off-screen: a 2px horizontal tolerance (D-042)
+  {
+    id: 'spill-subpixel',
+    check: 'content-spill',
+    description: '- an image 1.5px past the edge of its bordered box',
+    html:
+      `<div style="width:160px; border:1px solid #94a3b8">` +
+      `<img src="${image(160, 40, '#94a3b8')}" alt="" style="display:block; width:160.5px; height:40px; max-width:none">` +
+      `</div>`,
+    expected: {},
+  },
+  {
+    id: 'spill-3px',
+    check: 'content-spill',
+    description: '+ an image 3px past the edge of its bordered box',
+    html:
+      `<div style="width:160px; border:1px solid #94a3b8">` +
+      `<img src="${image(160, 40, '#94a3b8')}" alt="" style="display:block; width:162px; height:40px; max-width:none">` +
+      `</div>`,
+    expected: { 'content-spill': { error: 1 } },
+  },
+
   // readiness: images that fail or are lazy must never hang __FE_READY__
   {
     id: 'ready-broken-and-lazy-images',
@@ -494,6 +516,20 @@ export const LAB_CASES: LabCase[] = [
     description: '- a skip link parked at left -9999px',
     html: `<a href="#main" style="position:absolute; left:-9999px">Skip to content</a><p id="main">Main content.</p>`,
     expected: {},
+  },
+  {
+    id: 'offscreen-subpixel',
+    check: 'off-screen',
+    description: "- an image 1.5px past the page's left edge",
+    html: `<img src="${image(100, 20, '#94a3b8')}" alt="" style="display:block; margin-left:-17.5px; width:100px; height:20px">`,
+    expected: {},
+  },
+  {
+    id: 'offscreen-3px',
+    check: 'off-screen',
+    description: "+ an image 3px past the page's left edge",
+    html: `<img src="${image(100, 20, '#94a3b8')}" alt="" style="display:block; margin-left:-19px; width:100px; height:20px">`,
+    expected: { 'off-screen': { error: 1 } },
   },
   {
     id: 'offscreen-rtl-left-overflow',
