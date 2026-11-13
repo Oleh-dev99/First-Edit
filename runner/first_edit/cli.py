@@ -94,7 +94,7 @@ def _summarize_plan(plan: Plan, model_ids: list[str], finished: list[str]) -> li
     candidates = load_candidates(model_ids, brief_ids, runs_dir=plan.runs_dir)
     summary = build_summary(candidates, model_ids, brief_ids, {e.id: e.describe() for e in entries.values()},
                             finished=finished)
-    return write_outputs(candidates, summary, plan.out_dir)
+    return write_outputs(candidates, summary, plan.out_dir, name="Run")
 
 
 def _cli_probe(model_id: str) -> int:
@@ -136,7 +136,8 @@ def _summarize(args: argparse.Namespace) -> int:
         finished = finished_models(_deps(entries), plan, QueueState(plan.state_file))
     summary = build_summary(candidates, model_ids, brief_ids, {e.id: e.describe() for e in entries.values()},
                             finished=finished)
-    for path in write_outputs(candidates, summary, args.out):
+    # A summary driven by a run plan is a run report (results/run2); one without is a spike report.
+    for path in write_outputs(candidates, summary, args.out, name="Spike" if args.plan is None else "Run"):
         print(f"wrote {path}")
     print(f"{len(candidates)} sample(s) of {len(model_ids)} model(s); "
           f"{sum(len(c.cases) for c in candidates)} case(s) in the gallery")

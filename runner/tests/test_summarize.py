@@ -392,6 +392,18 @@ def test_write_outputs(corpus: Path) -> None:
     assert b"\r\n" not in (corpus / "spike" / "report.md").read_bytes()
 
 
+def test_a_run_report_is_titled_run_report(corpus: Path) -> None:
+    candidates, summary = summarize(corpus)
+    assert (corpus / "spike" / "report.md").exists() is False
+    write_outputs(candidates, summary, corpus / "spike")
+    assert (corpus / "spike" / "report.md").read_text(encoding="utf-8").startswith("# Spike report\n")
+    assert "<h1>Spike gallery</h1>" in (corpus / "spike" / "gallery.html").read_text(encoding="utf-8")
+    write_outputs(candidates, summary, corpus / "run", name="Run")
+    assert (corpus / "run" / "report.md").read_text(encoding="utf-8").startswith("# Run report\n")
+    gallery = (corpus / "run" / "gallery.html").read_text(encoding="utf-8")
+    assert "<title>Run gallery</title>" in gallery and "<h1>Run gallery</h1>" in gallery
+
+
 def test_report_without_candidates(tmp_path: Path) -> None:
     summary = build_summary([], ["m1"], BRIEFS, {"m1": {"model": "vendor/m"}})
     report = render_report(summary)
