@@ -8,12 +8,12 @@ from pathlib import Path
 from first_edit.stress import baseline_state, format_table, stress
 
 
-def summary(status: str = "ok", errors: int = 0, survived: int = 17, hidden: int = 0) -> dict:
+def summary(status: str = "ok", errors: int = 0, survived: int = 19, hidden: int = 0) -> dict:
     return {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "baseline": {"status": status, "errors": errors, "truncations": 1 if status == "ok" else None},
         "cases": [{"id": "viewport-320", "applicable": True, "survived": True, "truncations": 2, "contentHidden": hidden}],
-        "totals": {"applicable": 17, "survived": survived},
+        "totals": {"applicable": 19, "survived": survived},
     }
 
 
@@ -62,6 +62,6 @@ def test_stress_rows_states_and_times(tmp_path: Path) -> None:
     table = format_table(rows)
     # The crashed baseline is not counted as clean, and survival covers clean candidates only.
     assert "clean baseline: 1  born broken: 1  baseline crash: 1" in table
-    assert "clean-baseline cases survived: 15/17 (88%)  at 100%: 0" in table
+    assert "clean-baseline cases survived: 15/19 (79%)  at 100%: 0" in table
     assert "stress time: 25 s in all, 8.3 s per candidate (min 1.5, max 12.5)" in table
     assert "crash" in table.splitlines()[3]

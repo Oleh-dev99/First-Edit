@@ -3,9 +3,10 @@ and the stress results, written as summary.json, report.md and a static
 gallery.html of cases.
 
 The headline (D-033) is the share of clean-baseline candidates that broke at
-least once, with a 95% Wilson interval; the failure rate per case and the
-mean survival rate are secondary. Every scored number covers clean-baseline
-candidates only (D-015). The gallery shows every case of a clean-baseline
+least once in a core case, with a 95% Wilson interval; the same measure over
+all cases, extreme ones included, is shown beside it (D-039). The failure
+rate per case and the mean survival rate, per tier, are secondary. Every
+scored number covers clean-baseline candidates only (D-015). The gallery shows every case of a clean-baseline
 candidate (failed or survived) and the baseline of every born-broken or
 crashed candidate.
 """
@@ -23,13 +24,23 @@ from pathlib import Path
 from typing import Any
 
 from .paths import CANDIDATES_DIR, RUNS_DIR
+from .providers import SetupError
 from .stress import baseline_state, find_candidates
 
-SUMMARY_SCHEMA_VERSION = 2
+SUMMARY_SCHEMA_VERSION = 3
+#: The version of the harness's stress summary.json that this module reads.
+STRESS_SCHEMA_VERSION = 3
 CHECKS = ("page-overflow-x", "text-clipped", "content-spill", "text-overlap", "off-screen")
-CONTENT_MUTATIONS = ("text-long", "text-unbroken", "text-empty", "list-0", "list-1", "list-many", "number-large")
+CONTENT_MUTATIONS = ("text-long", "text-longword", "text-unbroken", "text-empty", "list-0", "list-1", "list-many",
+                     "number-large")
 #: Every case in run order: the mutations, then the content mutations at 320 px (D-032).
 CASES = (*CONTENT_MUTATIONS, "viewport-320", "text-200pct", "dir-rtl", *(f"{m}@320" for m in CONTENT_MUTATIONS))
+#: core cases make the headline; extreme cases are reported beside it (D-039).
+TIERS = ("core", "extreme")
+#: The tier of every case, as the harness writes it into each case entry.
+CASE_TIERS = {case: "extreme" if case.split("@")[0] == "text-unbroken" else "core" for case in CASES}
+#: Scopes of the per-tier numbers: each tier, then every case.
+SCOPES = (*TIERS, "all")
 VARIANT_ORDER = ("plain", "hinted")
 #: The model name of a pooled group: every model of one variant.
 POOLED = "all models"
@@ -84,6 +95,8 @@ class Case:
     truncations: int
     #: content-hidden values (normalized), when the case was measured
     hidden_values: list[str] = field(default_factory=list)
+    #: "core" or "extreme"; None for a baseline
+    tier: str | None = None
 
 
 @dataclass
@@ -111,12 +124,19 @@ class Candidate:
             return "not-stressed"
         return baseline_state(self.summary)
 
-    @property
-    def survival(self) -> float | None:
-        return None if self.summary is None else self.summary["totals"].get("survivalRate")
+    def applicable_cases(self, tier: str | None = None) -> list[dict[str, Any]]:
+        """Applicable cases of one tier ("core" or "extreme"), or of both (None)."""
+        return [entry for entry in (self.summary or {}).get("cases", [])
+                if entry.get("applicable") and (tier is None or entry.get("tier") == tier)]
 
-    def applicable_cases(self) -> list[dict[str, Any]]:
-        return [entry for entry in (self.summary or {}).get("cases", []) if entry.get("applicable")]
+    def broke(self, tier: str | None = None) -> bool:
+        """True if an applicable case of the tier (or any case) failed."""
+        return any(not entry.get("survived") for entry in self.applicable_cases(tier))
+
+    def survival_rate(self, tier: str | None = None) -> float | None:
+        """Survived / applicable cases of the tier (or of all cases), 4 decimals."""
+        cases = self.applicable_cases(tier)
+        return round(sum(1 for entry in cases if entry.get("survived")) / len(cases), 4) if cases else None
 
 
 def _case_from_files(candidate: Candidate, case_id: str, entry: dict[str, Any], outcome: str) -> Case:
@@ -144,12 +164,14 @@ def _case_from_files(candidate: Candidate, case_id: str, entry: dict[str, Any], 
         screenshot=image(files.get("screenshot")), annotated=image(files.get("annotated")),
         query=result.get("query"), viewport=result.get("viewport"), truncations=entry.get("truncations") or 0,
         hidden_values=list(result.get("hiddenValues") or []),
+        tier=None if case_id == "baseline" else entry.get("tier"),
     )
 
 
 def load_candidates(model_ids: list[str], brief_ids: list[str], *, candidates_dir: Path = CANDIDATES_DIR,
                     runs_dir: Path = RUNS_DIR) -> list[Candidate]:
-    """Every generated sample of the given models, with its stress results."""
+    """Every generated sample of the given models, with its stress results.
+    A stress summary of another schema version is an error: re-run stress."""
     found = []
     for model_id in model_ids:
         for brief_id, variant, sample in find_candidates(model_id, brief_ids, None, candidates_dir):
@@ -159,6 +181,9 @@ def load_candidates(model_ids: list[str], brief_ids: list[str], *, candidates_di
                 continue
             run_dir = runs_dir / brief_id / cid.replace("/", "__")
             summary = _read_json(run_dir / "summary.json") if generation.get("valid") else None
+            if summary is not None and summary.get("schemaVersion") != STRESS_SCHEMA_VERSION:
+                raise SetupError(f"{run_dir / 'summary.json'} has stress schema {summary.get('schemaVersion')}; "
+                                 f"summarize reads schema {STRESS_SCHEMA_VERSION}, so re-run stress into this runs directory")
             candidate = Candidate(model_id, brief_id, variant, sample, cid, generation, summary, run_dir)
             state = candidate.state
             if state in ("born-broken", "baseline-crash"):
@@ -176,12 +201,24 @@ def _sum(values: list[int | float | None]) -> int | float | None:
     return sum(present) if present else None
 
 
+def _failure_rate(entries: list[dict[str, Any]]) -> dict[str, Any]:
+    failed = sum(1 for entry in entries if not entry.get("survived"))
+    return {"failed": failed, "applicable": len(entries),
+            "rate": round(failed / len(entries), 4) if entries else None, "ci95": wilson(failed, len(entries))}
+
+
+def _survival(rates: list[float | None]) -> dict[str, Any]:
+    present = [rate for rate in rates if rate is not None]
+    return {"candidates": len(present), "mean": round(statistics.fmean(present), 4) if present else None,
+            "min": min(present) if present else None, "max": max(present) if present else None}
+
+
 def group_stats(candidates: list[Candidate], brief_ids: list[str]) -> dict[str, Any]:
     """The numbers for one model and variant (or one variant pooled across models)."""
     generated = [c for c in candidates if c.state != "api-error"]
     invalid = [c for c in generated if c.state == "invalid"]
     clean = [c for c in generated if c.state == "clean"]
-    rates = [c.survival for c in clean if c.survival is not None]
+    tier_of = lambda scope: None if scope == "all" else scope  # noqa: E731
 
     by_rule: Counter[str] = Counter()
     for c in invalid:
@@ -189,9 +226,9 @@ def group_stats(candidates: list[Candidate], brief_ids: list[str]) -> dict[str, 
 
     case_entries = [entry for c in clean for entry in c.applicable_cases()]
     failed_entries = [entry for entry in case_entries if not entry.get("survived")]
-    broke = [c for c in clean if any(not entry.get("survived") for entry in c.applicable_cases())]
     by_case = {
         case: {
+            "tier": CASE_TIERS[case],
             "failed": sum(1 for e in failed_entries if e["id"] == case),
             "applicable": sum(1 for e in case_entries if e["id"] == case),
         }
@@ -221,19 +258,12 @@ def group_stats(candidates: list[Candidate], brief_ids: list[str]) -> dict[str, 
         "cleanBaseline": len(clean),
         "bornBroken": sum(1 for c in generated if c.state == "born-broken"),
         "baselineCrash": sum(1 for c in generated if c.state == "baseline-crash"),
-        "brokeOnce": _share(len(broke), len(clean)),
-        "failureRate": {
-            "failed": len(failed_entries),
-            "applicable": len(case_entries),
-            "rate": round(len(failed_entries) / len(case_entries), 4) if case_entries else None,
-            "ci95": wilson(len(failed_entries), len(case_entries)),
-        },
-        "survival": {
-            "candidates": len(rates),
-            "mean": round(statistics.fmean(rates), 4) if rates else None,
-            "min": min(rates) if rates else None,
-            "max": max(rates) if rates else None,
-        },
+        # The headline uses core cases; the same measure over all cases stands beside it (D-039).
+        "brokeOnce": {scope: _share(sum(1 for c in clean if c.broke(tier_of(scope))), len(clean))
+                      for scope in ("core", "all")},
+        "failureRate": {scope: _failure_rate([e for c in clean for e in c.applicable_cases(tier_of(scope))])
+                        for scope in SCOPES},
+        "survival": {scope: _survival([c.survival_rate(tier_of(scope)) for c in clean]) for scope in SCOPES},
         "cases": {
             "applicable": len(case_entries),
             "failed": len(failed_entries),
@@ -276,11 +306,14 @@ def _cell(candidates: list[Candidate]) -> str:
     for c in sorted(candidates, key=lambda c: c.sample):
         state = c.state
         if state == "clean":
-            totals = c.summary["totals"]
-            parts.append(f"{totals['survived']}/{totals['applicable']}")
+            counts = []
+            for tier in TIERS:
+                cases = c.applicable_cases(tier)
+                counts.append(f"{sum(1 for e in cases if e.get('survived'))}/{len(cases)} {tier}")
+            parts.append(", ".join(counts))
         else:
             parts.append(state.replace("-", " "))
-    return ", ".join(parts)
+    return "; ".join(parts)
 
 
 def build_summary(candidates: list[Candidate], model_ids: list[str], brief_ids: list[str],
@@ -328,7 +361,7 @@ def build_summary(candidates: list[Candidate], model_ids: list[str], brief_ids: 
     }
     return {
         "schemaVersion": SUMMARY_SCHEMA_VERSION,
-        "cases": list(CASES),
+        "cases": [{"id": case, "tier": CASE_TIERS[case]} for case in CASES],
         "checks": list(CHECKS),
         "models": model_info,
         "briefs": brief_ids,
@@ -369,12 +402,15 @@ def render_report(summary: dict[str, Any]) -> str:
     out += [
         "Generated by `python -m first_edit summarize`. Every scored number covers",
         "clean-baseline candidates only (D-015); born-broken and crashed",
-        "candidates are counted, not scored. The headline is the share of",
-        "clean-baseline candidates that broke at least once, with a 95% Wilson",
-        "interval (D-033). A candidate runs 17 cases at most: the ten mutations",
-        "and the seven content mutations again at 320 px (D-032). Content hidden",
-        "(D-036) and truncations (D-021) are info only. Costs are the cost the",
-        "provider reported, or configured prices times usage where it reported none.",
+        "candidates are counted, not scored. A candidate runs 19 cases at most:",
+        "the eleven mutations and the eight content mutations again at 320 px",
+        "(D-032). Every case is core or extreme: text-unbroken and",
+        "text-unbroken@320 (a 60-letter word) are extreme, the rest core (D-039).",
+        "The headline is the share of clean-baseline candidates that broke at",
+        "least once in a core case, with a 95% Wilson interval (D-033); the same",
+        "measure over all cases stands beside it. Content hidden (D-036) and",
+        "truncations (D-021) are info only. Costs are the cost the provider",
+        "reported, or configured prices times usage where it reported none.",
         "",
         "## Models",
         "",
@@ -388,23 +424,34 @@ def render_report(summary: dict[str, Any]) -> str:
         return "\n".join([*out, "", "No generated candidates for these models."]) + "\n"
 
     out += ["", "## Broke at least once (headline)", "",
-            "Clean-baseline candidates with at least one failed case, and the failure rate per case, "
-            "each with a 95% Wilson interval. Mean survival is secondary.", ""]
+            "Clean-baseline candidates with at least one failed core case, with a 95% Wilson interval. "
+            "Beside it, the same measure over all cases, the extreme ones included.", ""]
     out += _table(
-        ["model", "variant", "clean baseline", "broke at least once", "share", "95% interval",
-         "failed cases", "failure rate", "95% interval", "mean survival"],
-        [[g["model"], g["variant"], str(g["cleanBaseline"]), str(g["brokeOnce"]["count"]), _pct(g["brokeOnce"]["share"]),
-          _ci(g["brokeOnce"]["ci95"]), f"{g['failureRate']['failed']}/{g['failureRate']['applicable']}",
-          _pct(g["failureRate"]["rate"]), _ci(g["failureRate"]["ci95"]), _pct(g["survival"]["mean"])] for g in groups],
+        ["model", "variant", "clean baseline", "broke, core cases", "share", "95% interval",
+         "broke, all cases", "share", "95% interval"],
+        [[g["model"], g["variant"], str(g["cleanBaseline"]),
+          *(cell for scope in ("core", "all") for cell in (
+              str(g["brokeOnce"][scope]["count"]), _pct(g["brokeOnce"][scope]["share"]), _ci(g["brokeOnce"][scope]["ci95"])))]
+         for g in groups],
+    )
+    out += ["", "## Failure rate and mean survival per tier", "",
+            "Failed / applicable cases of clean-baseline candidates, with a 95% Wilson interval, and the mean, "
+            "minimum and maximum of each candidate's survival rate over the tier's cases.", ""]
+    out += _table(
+        ["model", "variant", "tier", "failed cases", "failure rate", "95% interval", "mean survival", "min", "max"],
+        [[g["model"], g["variant"], "all cases" if scope == "all" else scope,
+          f"{g['failureRate'][scope]['failed']}/{g['failureRate'][scope]['applicable']}",
+          _pct(g["failureRate"][scope]["rate"]), _ci(g["failureRate"][scope]["ci95"]),
+          _pct(g["survival"][scope]["mean"]), _pct(g["survival"][scope]["min"]), _pct(g["survival"][scope]["max"])]
+         for g in groups for scope in SCOPES],
     )
 
     out += ["", "## Candidates", ""]
     out += _table(
         ["model", "variant", "candidates", "valid", "invalid", "api errors", "clean baseline", "born broken",
-         "baseline crash", "mean survival", "min", "max"],
+         "baseline crash"],
         [[g["model"], g["variant"], str(g["candidates"]), str(g["valid"]), str(g["invalid"]), str(g["apiErrors"]),
-          str(g["cleanBaseline"]), str(g["bornBroken"]), str(g["baselineCrash"]), _pct(g["survival"]["mean"]),
-          _pct(g["survival"]["min"]), _pct(g["survival"]["max"])] for g in groups],
+          str(g["cleanBaseline"]), str(g["bornBroken"]), str(g["baselineCrash"])] for g in groups],
     )
     own = [g for g in groups if not g["pooled"]]
     missing = [f"{label(g)}: {', '.join(g['missingBriefs'])}" for g in own if g["missingBriefs"]]
@@ -423,10 +470,13 @@ def render_report(summary: dict[str, Any]) -> str:
 
     out += ["", "## Failed cases per case", "", "Failed / applicable cases of clean-baseline candidates.", ""]
     out += _table(
-        ["case", *map(label, groups)],
-        [[case, *(f"{g['failedByCase'][case]['failed']}/{g['failedByCase'][case]['applicable']}" for g in groups)]
+        ["case", "tier", *map(label, groups)],
+        [[case, CASE_TIERS[case],
+          *(f"{g['failedByCase'][case]['failed']}/{g['failedByCase'][case]['applicable']}" for g in groups)]
          for case in CASES]
-        + [["all", *(f"{g['cases']['failed']}/{g['cases']['applicable']}" for g in groups)]],
+        + [[f"all {scope}" if scope != "all" else "all cases", "",
+            *(f"{g['failureRate'][scope]['failed']}/{g['failureRate'][scope]['applicable']}" for g in groups)]
+           for scope in SCOPES],
     )
     out += ["", "## Failed cases per check", "",
             "Cases with at least one new error from the check; a case can count under several checks.", ""]
@@ -465,7 +515,8 @@ def render_report(summary: dict[str, Any]) -> str:
     for variant, table in summary["survivalByBrief"].items():
         model_ids = [m["id"] for m in summary["models"]]
         out += ["", f"## Survival by brief, {variant}", "",
-                "Survived / applicable cases per candidate; other states are named.", ""]
+                "Survived / applicable cases per candidate, core and extreme (samples separated by semicolons); "
+                "other states are named.", ""]
         out += _table(["brief", *model_ids], [[brief, *(row[m] for m in model_ids)] for brief, row in table.items()])
     return "\n".join(out) + "\n"
 
@@ -495,6 +546,7 @@ select { font: inherit; padding: 2px 4px; }
 .tag.failed, .tag.born-broken, .tag.baseline-crash { color: var(--bad); background: var(--bad-bg); }
 .tag.survived { color: var(--ok); background: var(--ok-bg); }
 .tag.hidden-content { color: var(--warn); background: var(--warn-bg); }
+.tag.tier { color: var(--muted); background: var(--line); }
 .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 figure { margin: 0; min-width: 0; }
 figure img { display: block; width: 100%; height: auto; max-height: 420px; object-fit: contain; object-position: top left;
@@ -560,12 +612,15 @@ def _finding(finding: dict[str, Any]) -> str:
 def _card(case: Case, out_dir: Path) -> str:
     attrs = {
         "model": case.model, "variant": case.variant, "brief": case.brief, "mutation": case.case,
-        "checks": " ".join(case.checks), "outcome": case.outcome,
+        "tier": case.tier or "", "checks": " ".join(case.checks), "outcome": case.outcome,
         "hidden": "yes" if case.hidden_values else "no",
     }
     data = " ".join(f'data-{name}="{html.escape(value, quote=True)}"' for name, value in attrs.items())
     viewport = case.viewport or {}
-    meta = [f'<span class="tag {case.outcome}">{case.outcome.replace("-", " ")}</span>', f"status {html.escape(case.status)}"]
+    meta = [f'<span class="tag {case.outcome}">{case.outcome.replace("-", " ")}</span>']
+    if case.tier:
+        meta.append(f'<span class="tag tier">{html.escape(case.tier)}</span>')
+    meta.append(f"status {html.escape(case.status)}")
     if case.hidden_values:
         meta.append(f'<span class="tag hidden-content">content hidden {len(case.hidden_values)}</span>')
     if viewport:
@@ -619,6 +674,7 @@ def render_gallery(candidates: list[Candidate], out_dir: Path) -> str:
         _options("variant", "variant", values("variant")),
         _options("brief", "brief", values("brief")),
         _options("mutation", "case", values("case")),
+        _options("tier", "tier", [tier for tier in TIERS if any(case.tier == tier for case in cases)]),
         _options("check", "check", checks),
         _options("hidden", "content hidden", ["yes", "no"]),
     ])
