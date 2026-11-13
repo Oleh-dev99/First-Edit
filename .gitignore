@@ -17,8 +17,11 @@ candidates/*
 !candidates/_samples/
 !candidates/_reference/
 
-# Run output
-results/
+# Run output (at the root only: site/results/ is the site's Results page)
+/results/
+
+# export-site writes here first and renames it; never left behind
+site/public/data.export-tmp/
 
 # Secrets (.env.example is committed)
 .env

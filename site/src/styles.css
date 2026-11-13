@@ -1,0 +1,104 @@
+/* Only the site's own code: public/data holds model-written sources full of class names. */
+@import "tailwindcss" source("./");
+
+/* One accent and a warm neutral scale. Every text colour reaches 4.5:1 on the
+   paper; marks reach 3:1. System fonts only: nothing is loaded from elsewhere. */
+@theme {
+  --color-paper: #fbfaf8;
+  --color-card: #ffffff;
+  --color-wash: #f3f1ed;
+  --color-ink: #1c1917;
+  --color-ink-2: #44403c;
+  --color-muted: #57534e;
+  --color-rule: #e7e5e4;
+  --color-rule-strong: #c9c5c1;
+  --color-accent: #c2410c;
+  --color-accent-deep: #9a3412;
+  --color-accent-wash: #fdf1ea;
+
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+}
+
+@layer base {
+  html {
+    font-size: 17px;
+    background: var(--color-paper);
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    overflow-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-serif);
+    color: var(--color-ink);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+  a {
+    color: var(--color-accent-deep);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  a:hover {
+    text-decoration-thickness: 2px;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  code, pre, kbd {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+  }
+  ::selection {
+    background: var(--color-accent-wash);
+  }
+}
+
+@layer components {
+  /* Long identifiers (candidates, selectors) may break anywhere rather than overflow. */
+  .ids {
+    overflow-wrap: anywhere;
+  }
+  .prose-block p + p {
+    margin-top: 0.9em;
+  }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 0.45rem 0.75rem 0.45rem 0;
+    border-bottom: 1px solid var(--color-rule);
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .data-table thead th {
+    font-weight: 600;
+    color: var(--color-ink-2);
+    border-bottom-color: var(--color-rule-strong);
+    vertical-align: bottom;
+    white-space: normal;
+  }
+  .data-table td.num,
+  .data-table th.num {
+    text-align: right;
+  }
+  .data-table tr.pooled td,
+  .data-table tr.pooled th {
+    font-weight: 600;
+    border-top: 1px solid var(--color-rule-strong);
+  }
+}
