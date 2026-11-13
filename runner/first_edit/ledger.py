@@ -35,7 +35,13 @@ def is_free(entry: ModelEntry) -> bool:
     return entry.provider == "openai-compatible" and (entry.model or "").endswith(FREE_SUFFIX)
 
 
-class DailyLimitReached(Exception):
+class QuotaExhausted(Exception):
+    """A quota allows no more calls: the free daily ledger, or a
+    subscription's usage limit. The sample has no candidate and gets no
+    files, so a later run calls it again."""
+
+
+class DailyLimitReached(QuotaExhausted):
     """The day's free-request allowance is used up. Nothing was sent."""
 
 

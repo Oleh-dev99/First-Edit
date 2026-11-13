@@ -10,11 +10,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .briefs import load_brief
+from .briefs import Brief, load_brief
 from .budget import Budget, call_cost, estimate_call_cost
 from .cache import Cache, cache_key
 from .extract import extract_code
-from .ledger import DailyLimitReached, FreeRequestLedger
+from .ledger import DailyLimitReached, FreeRequestLedger, QuotaExhausted
 from .models import ModelEntry
 from .paths import CANDIDATES_DIR, REPO_ROOT
 from .prompts import build_messages, prompt_hash
@@ -80,6 +80,126 @@ def _write_json(path: Path, value: dict[str, Any]) -> None:
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
 
 
+def generate_sample(
+    entry: ModelEntry,
+    brief: Brief,
+    variant: str,
+    sample: int,
+    budget: Budget,
+    *,
+    provider: Callable[[], Provider],
+    gate: Gate,
+    cache: Cache,
+    candidates_dir: Path = CANDIDATES_DIR,
+    ledger: FreeRequestLedger | None = None,
+    refusal: str | None = None,
+    out: Callable[[str], None] = print,
+) -> SampleResult:
+    """Generates one candidate. The reply comes from the cache when it can;
+    otherwise the provider is called, unless the budget or `refusal` stops
+    it (the sample is skipped and gets no files). Raises QuotaExhausted when
+    a quota (the free daily ledger, a subscription's usage limit) allows no
+    call; the sample then gets no files either, so a later run calls it.
+    Invalid output is recorded, never re-rolled."""
+    messages = build_messages(brief, variant)
+    cid = candidate_id(entry.id, brief.id, variant, sample)
+    directory = candidates_dir / cid
+    key = cache_key(entry, messages, sample)
+    base: dict[str, Any] = {
+        "schemaVersion": GENERATION_SCHEMA_VERSION,
+        "brief": brief.id,
+        "candidate": cid,
+        "model": entry.describe(),
+        "variant": variant,
+        "sample": sample,
+        "cacheKey": key,
+        "promptHash": prompt_hash(messages),
+    }
+
+    record = cache.get(key)
+    cached = record is not None
+    if record is None:
+        stop = budget.refusal(estimate_call_cost(entry, messages)) or refusal
+        if stop:
+            out(f"  {brief.id} {variant}-s{sample}: skipped, {stop}")
+            return SampleResult(brief.id, variant, sample, cid, "skipped")
+        if ledger is not None and (limit := ledger.refusal()):
+            raise DailyLimitReached(limit)
+        try:
+            completion = provider().complete(messages, brief)
+        except ProviderError as error:
+            budget.record(None)
+            _reset(directory)
+            reasons = [{"rule": "api-error", "message": str(error)}]
+            _write_json(
+                directory / "generation.json",
+                {**base, "cached": False, "generatedAt": _now(), "status": "api-error", "attempts": error.attempts,
+                 "error": str(error), "valid": False, "reasons": reasons},
+            )
+            out(f"  {brief.id} {variant}-s{sample}: API error after {error.attempts} attempt(s): {error}")
+            return SampleResult(brief.id, variant, sample, cid, "api-error", False, reasons)
+        reply = parse_reply(completion.raw)
+        budget.record(spend(entry, reply))
+        record = {
+            "key": key,
+            "request": {"model": entry.identity(), "params": entry.params, "sample": sample, "messages": messages},
+            "response": completion.raw,
+            "latencyMs": completion.latency_ms,
+            "attempts": completion.attempts,
+            "receivedAt": _now(),
+        }
+        cache.put(key, record)
+
+    reply = parse_reply(record["response"])
+    extraction = extract_code(reply.content)
+    _reset(directory)
+    (directory / "Component.tsx").write_text(extraction.code, encoding="utf-8", newline="\n")
+
+    reasons = empty_reply_reasons(reply)
+    gate_valid = not reasons
+    if not reasons:
+        # An empty file would only fail the gate for having no default export.
+        verdict = gate(brief.id, cid)
+        reasons = list(verdict.get("reasons", []))
+        gate_valid = bool(verdict.get("valid"))
+    if reply.finish_reason == "length":
+        reasons.append({"rule": "truncated", "message": "the reply was cut off by the token limit"})
+    valid = gate_valid and not reasons
+
+    _write_json(
+        directory / "generation.json",
+        {
+            **base,
+            "cached": cached,
+            "generatedAt": _now(),
+            "receivedAt": record.get("receivedAt"),
+            "status": "generated",
+            "reportedModel": reply.reported_model,
+            "reportedProvider": reply.reported_provider,
+            "usage": {
+                "inputTokens": reply.input_tokens,
+                "cachedInputTokens": reply.cached_input_tokens,
+                "outputTokens": reply.output_tokens,
+                "reasoningTokens": reply.reasoning_tokens,
+            },
+            "estimatedCostUsd": call_cost(entry.price, reply.input_tokens, reply.output_tokens),
+            "actualCostUsd": reply.reported_cost,
+            **({"cli": reply.cli} if reply.cli is not None else {}),
+            "latencyMs": record.get("latencyMs"),
+            "attempts": record.get("attempts"),
+            "finishReason": reply.finish_reason,
+            "extraction": {"blocks": extraction.blocks, "method": extraction.method},
+            "warnings": extraction.warnings,
+            "valid": valid,
+            "reasons": reasons,
+        },
+    )
+    where = directory.relative_to(REPO_ROOT).as_posix() if directory.is_relative_to(REPO_ROOT) else directory
+    verdict_text = "valid" if valid else "invalid: " + "; ".join(f"[{r['rule']}] {r['message']}" for r in reasons)
+    out(f"  {brief.id} {variant}-s{sample}: {verdict_text} ({'cache hit' if cached else 'called'}) -> {where}")
+    return SampleResult(brief.id, variant, sample, cid, "cached" if cached else "called", valid, reasons)
+
+
 def generate(
     entry: ModelEntry,
     brief_ids: list[str],
@@ -94,130 +214,33 @@ def generate(
     ledger: FreeRequestLedger | None = None,
     out: Callable[[str], None] = print,
 ) -> list[SampleResult]:
-    """Generates `samples` candidates per brief. Replies come from the cache
-    when they can; otherwise the provider is called within the budget and,
-    for a free model, within the daily ledger. Every sample that is not
-    skipped gets a generation.json; invalid output is recorded, never
-    re-rolled."""
+    """Generates `samples` candidates per brief (see generate_sample). Once a
+    quota stops a call, every later call is skipped too; cache hits are still
+    served."""
     cache = cache or Cache()
-    provider: Provider | None = None
-    results: list[SampleResult] = []
-    #: Set once the daily free-request limit stops a call; later calls are skipped.
-    exhausted: str | None = None
+    providers: list[Provider] = []
 
+    def provider() -> Provider:
+        if not providers:
+            providers.append(provider_factory(entry))
+        return providers[0]
+
+    results: list[SampleResult] = []
+    #: Set once a quota stops a call; later calls are skipped.
+    exhausted: str | None = None
     for brief_id in brief_ids:
         brief = load_brief(brief_id)
-        messages = build_messages(brief, variant)
-        hash_of_prompt = prompt_hash(messages)
         for sample in range(1, samples + 1):
-            cid = candidate_id(entry.id, brief_id, variant, sample)
-            directory = candidates_dir / cid
-            key = cache_key(entry, messages, sample)
-            base: dict[str, Any] = {
-                "schemaVersion": GENERATION_SCHEMA_VERSION,
-                "brief": brief_id,
-                "candidate": cid,
-                "model": entry.describe(),
-                "variant": variant,
-                "sample": sample,
-                "cacheKey": key,
-                "promptHash": hash_of_prompt,
-            }
-
-            record = cache.get(key)
-            cached = record is not None
-            if record is None:
-                refusal = (
-                    budget.refusal(estimate_call_cost(entry, messages))
-                    or exhausted
-                    or (ledger.refusal() if ledger is not None else None)
-                )
-                if refusal:
-                    results.append(SampleResult(brief_id, variant, sample, cid, "skipped"))
-                    out(f"  {brief_id} {variant}-s{sample}: skipped, {refusal}")
-                    continue
-                provider = provider or provider_factory(entry)
-                try:
-                    completion = provider.complete(messages, brief)
-                except DailyLimitReached as error:
-                    # Stopped before a request (a retry, perhaps) was sent. The
-                    # sample is left without files, so a later run calls it again.
-                    exhausted = str(error)
-                    results.append(SampleResult(brief_id, variant, sample, cid, "skipped"))
-                    out(f"  {brief_id} {variant}-s{sample}: skipped, {exhausted}")
-                    continue
-                except ProviderError as error:
-                    budget.record(None)
-                    _reset(directory)
-                    reasons = [{"rule": "api-error", "message": str(error)}]
-                    _write_json(
-                        directory / "generation.json",
-                        {**base, "cached": False, "generatedAt": _now(), "status": "api-error", "attempts": error.attempts,
-                         "error": str(error), "valid": False, "reasons": reasons},
-                    )
-                    results.append(SampleResult(brief_id, variant, sample, cid, "api-error", False, reasons))
-                    out(f"  {brief_id} {variant}-s{sample}: API error after {error.attempts} attempt(s): {error}")
-                    continue
-                reply = parse_reply(completion.raw)
-                budget.record(spend(entry, reply))
-                record = {
-                    "key": key,
-                    "request": {"model": entry.identity(), "params": entry.params, "sample": sample, "messages": messages},
-                    "response": completion.raw,
-                    "latencyMs": completion.latency_ms,
-                    "attempts": completion.attempts,
-                    "receivedAt": _now(),
-                }
-                cache.put(key, record)
-
-            reply = parse_reply(record["response"])
-            extraction = extract_code(reply.content)
-            _reset(directory)
-            (directory / "Component.tsx").write_text(extraction.code, encoding="utf-8", newline="\n")
-
-            reasons = empty_reply_reasons(reply)
-            gate_valid = not reasons
-            if not reasons:
-                # An empty file would only fail the gate for having no default export.
-                verdict = gate(brief_id, cid)
-                reasons = list(verdict.get("reasons", []))
-                gate_valid = bool(verdict.get("valid"))
-            if reply.finish_reason == "length":
-                reasons.append({"rule": "truncated", "message": "the reply was cut off by the token limit"})
-            valid = gate_valid and not reasons
-
-            _write_json(
-                directory / "generation.json",
-                {
-                    **base,
-                    "cached": cached,
-                    "generatedAt": _now(),
-                    "receivedAt": record.get("receivedAt"),
-                    "status": "generated",
-                    "reportedModel": reply.reported_model,
-                    "reportedProvider": reply.reported_provider,
-                    "usage": {
-                        "inputTokens": reply.input_tokens,
-                        "cachedInputTokens": reply.cached_input_tokens,
-                        "outputTokens": reply.output_tokens,
-                        "reasoningTokens": reply.reasoning_tokens,
-                    },
-                    "estimatedCostUsd": call_cost(entry.price, reply.input_tokens, reply.output_tokens),
-                    "actualCostUsd": reply.reported_cost,
-                    "latencyMs": record.get("latencyMs"),
-                    "attempts": record.get("attempts"),
-                    "finishReason": reply.finish_reason,
-                    "extraction": {"blocks": extraction.blocks, "method": extraction.method},
-                    "warnings": extraction.warnings,
-                    "valid": valid,
-                    "reasons": reasons,
-                },
-            )
-            results.append(SampleResult(brief_id, variant, sample, cid, "cached" if cached else "called", valid, reasons))
-            where = directory.relative_to(REPO_ROOT).as_posix() if directory.is_relative_to(REPO_ROOT) else directory
-            verdict_text = "valid" if valid else "invalid: " + "; ".join(f"[{r['rule']}] {r['message']}" for r in reasons)
-            out(f"  {brief_id} {variant}-s{sample}: {verdict_text} ({'cache hit' if cached else 'called'}) -> {where}")
-
+            try:
+                results.append(generate_sample(
+                    entry, brief, variant, sample, budget, provider=provider, gate=gate, cache=cache,
+                    candidates_dir=candidates_dir, ledger=ledger, refusal=exhausted, out=out,
+                ))
+            except QuotaExhausted as error:
+                exhausted = str(error)
+                cid = candidate_id(entry.id, brief_id, variant, sample)
+                results.append(SampleResult(brief_id, variant, sample, cid, "skipped"))
+                out(f"  {brief_id} {variant}-s{sample}: skipped, {exhausted}")
     return results
 
 

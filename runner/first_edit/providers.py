@@ -1,4 +1,5 @@
-"""Model providers: "mock" (no network) and "openai-compatible" chat completions."""
+"""Model providers: "mock" (no network), "openai-compatible" chat completions
+and "claude-cli" (Claude Code's command line, in claude_cli.py)."""
 
 from __future__ import annotations
 
@@ -58,6 +59,8 @@ class Reply:
     reported_provider: str | None = None
     #: The cost the response reports (OpenRouter: usage.cost, in USD credits).
     reported_cost: float | None = None
+    #: claude-cli only: the command line's version, effort and cost estimate.
+    cli: dict[str, Any] | None = None
 
 
 class Provider(Protocol):
@@ -70,7 +73,12 @@ def estimate_tokens(characters: int) -> int:
 
 
 def parse_reply(raw: dict[str, Any]) -> Reply:
-    """The reply text, finish reason and token usage of a chat completion."""
+    """The reply text, finish reason and token usage of a chat completion, or
+    of a claude-cli response."""
+    if raw.get("provider") == "claude-cli":
+        from .claude_cli import parse_cli_reply
+
+        return parse_cli_reply(raw)
     try:
         choice = raw["choices"][0]
         content = choice["message"]["content"]
@@ -199,6 +207,10 @@ def make_provider(
     daily ledger, which spaces requests and refuses the one past the limit."""
     if entry.provider == "mock":
         return MockProvider(entry)
+    if entry.provider == "claude-cli":
+        from .claude_cli import ClaudeCliProvider
+
+        return ClaudeCliProvider(entry)
     key_name = entry.api_key_env or ""
     api_key = environ.get(key_name, "")
     if not api_key:

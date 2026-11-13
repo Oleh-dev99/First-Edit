@@ -67,40 +67,46 @@ def find_candidates(model_id: str, brief_ids: list[str], variant: str | None,
     return sorted(found)
 
 
+def stress_candidate(model_id: str, brief_id: str, variant: str, sample: int, *, run: Runner,
+                     candidates_dir: Path = CANDIDATES_DIR, runs_dir: Path = RUNS_DIR,
+                     out: Callable[[str], None] = print, clock: Callable[[], float] = time.monotonic) -> StressRow:
+    """Stresses one candidate, if it is valid, into runs_dir."""
+    cid = f"{model_id}/{brief_id}/{variant}-s{sample}"
+    generation_file = candidates_dir / cid / "generation.json"
+    generation = json.loads(generation_file.read_text(encoding="utf-8")) if generation_file.is_file() else {}
+    if not generation.get("valid"):
+        return StressRow(brief_id, variant, sample, cid, False, "invalid")
+    out(f"  stressing {cid} ...")
+    started = clock()
+    result = run(brief_id, cid, runs_dir)
+    seconds = round(clock() - started, 1)
+    summary_file = runs_dir / brief_id / cid.replace("/", "__") / "summary.json"
+    if result.returncode != 0 or not summary_file.is_file():
+        message = (result.stderr or result.stdout).strip()
+        return StressRow(brief_id, variant, sample, cid, True, "harness-error", seconds=seconds, error=message)
+    summary = json.loads(summary_file.read_text(encoding="utf-8"))
+    cases = summary["cases"]
+    truncations = (summary["baseline"].get("truncations") or 0) + sum(entry.get("truncations") or 0 for entry in cases)
+    return StressRow(
+        brief_id, variant, sample, cid, True, "stressed",
+        state=baseline_state(summary),
+        baseline_errors=summary["baseline"]["errors"],
+        survived=summary["totals"]["survived"],
+        applicable=summary["totals"]["applicable"],
+        truncations=truncations,
+        content_hidden=sum(entry.get("contentHidden") or 0 for entry in cases),
+        seconds=seconds,
+    )
+
+
 def stress(model_id: str, brief_ids: list[str], variant: str | None, *, run: Runner,
            candidates_dir: Path = CANDIDATES_DIR, runs_dir: Path = RUNS_DIR,
            out: Callable[[str], None] = print, clock: Callable[[], float] = time.monotonic) -> list[StressRow]:
-    rows = []
-    for brief_id, variant_name, sample in find_candidates(model_id, brief_ids, variant, candidates_dir):
-        cid = f"{model_id}/{brief_id}/{variant_name}-s{sample}"
-        generation_file = candidates_dir / cid / "generation.json"
-        generation = json.loads(generation_file.read_text(encoding="utf-8")) if generation_file.is_file() else {}
-        if not generation.get("valid"):
-            rows.append(StressRow(brief_id, variant_name, sample, cid, False, "invalid"))
-            continue
-        out(f"  stressing {cid} ...")
-        started = clock()
-        result = run(brief_id, cid, runs_dir)
-        seconds = round(clock() - started, 1)
-        summary_file = runs_dir / brief_id / cid.replace("/", "__") / "summary.json"
-        if result.returncode != 0 or not summary_file.is_file():
-            message = (result.stderr or result.stdout).strip()
-            rows.append(StressRow(brief_id, variant_name, sample, cid, True, "harness-error", seconds=seconds, error=message))
-            continue
-        summary = json.loads(summary_file.read_text(encoding="utf-8"))
-        cases = summary["cases"]
-        truncations = (summary["baseline"].get("truncations") or 0) + sum(entry.get("truncations") or 0 for entry in cases)
-        rows.append(StressRow(
-            brief_id, variant_name, sample, cid, True, "stressed",
-            state=baseline_state(summary),
-            baseline_errors=summary["baseline"]["errors"],
-            survived=summary["totals"]["survived"],
-            applicable=summary["totals"]["applicable"],
-            truncations=truncations,
-            content_hidden=sum(entry.get("contentHidden") or 0 for entry in cases),
-            seconds=seconds,
-        ))
-    return rows
+    return [
+        stress_candidate(model_id, brief_id, variant_name, sample, run=run, candidates_dir=candidates_dir,
+                         runs_dir=runs_dir, out=out, clock=clock)
+        for brief_id, variant_name, sample in find_candidates(model_id, brief_ids, variant, candidates_dir)
+    ]
 
 
 def format_table(rows: list[StressRow]) -> str:
