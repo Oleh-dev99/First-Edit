@@ -3,6 +3,7 @@
 // checks, decides which cases survive and measures content-hidden. Every case
 // carries its tier, core or extreme (D-039).
 
+import { execFileSync } from 'node:child_process';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -14,6 +15,7 @@ import { applyContentMutation } from '../src/mutations/content.ts';
 import { isContentMutation, mutationKind, viewportFor, type MutationId, type Viewport } from '../src/mutations/index.ts';
 import { annotate } from './annotate.ts';
 import { loadBrief } from './briefs.ts';
+import { repoRoot } from './paths.ts';
 import { candidateQuery, collectFindings, loadPage, type LoadStatus } from './render.ts';
 
 /** Version of the summary.json contract; bump on any incompatible change. */
@@ -22,10 +24,33 @@ export const SCHEMA_VERSION = 3;
 /**
  * Version of the stress suite: the cases, their tiers, the checks, their
  * tolerances and the new-finding rule. Suite v1 is frozen (D-044): only
- * bug fixes change it, each recorded in docs/DECISIONS.md with its effect
- * on results.
+ * bug fixes change it, each bumping the patch number (v1.1, v1.2) and
+ * recorded in docs/DECISIONS.md with its effect on results.
  */
 export const SUITE_VERSION = 'v1';
+
+/** The repository commit a stress run used. */
+export interface HarnessCommit {
+  /** Short hash of HEAD; null when git is not available. */
+  commit: string | null;
+  /** True when the working tree has changes (tracked or untracked, not ignored); null without git. */
+  dirty: boolean | null;
+}
+
+let harnessCommitCache: HarnessCommit | undefined;
+
+/** The commit of the repository the harness runs from, read once per process. */
+export function harnessCommit(): HarnessCommit {
+  if (harnessCommitCache) return harnessCommitCache;
+  const git = (...args: string[]): string =>
+    execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  try {
+    harnessCommitCache = { commit: git('rev-parse', '--short', 'HEAD'), dirty: git('status', '--porcelain') !== '' };
+  } catch {
+    harnessCommitCache = { commit: null, dirty: null };
+  }
+  return harnessCommitCache;
+}
 
 export type CaseStatus = LoadStatus | 'not-applicable';
 
@@ -69,6 +94,8 @@ export interface StressSummary {
   schemaVersion: number;
   /** The stress suite the run used (D-044). */
   suite: string;
+  /** The repository commit the run used. */
+  harness: HarnessCommit;
   brief: string;
   candidate: string;
   fixture: string;
@@ -275,6 +302,7 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
   const summary: StressSummary = {
     schemaVersion: SCHEMA_VERSION,
     suite: SUITE_VERSION,
+    harness: harnessCommit(),
     brief,
     candidate,
     fixture: fixtureName,
@@ -322,7 +350,7 @@ export function formatStressTable(summary: StressSummary): string {
     return `${tier} ${applicable.filter((entry) => entry.survived === true).length}/${applicable.length}`;
   }).join(', ');
   return [
-    `${summary.brief}  ${summary.candidate}  suite ${summary.suite}`,
+    `${summary.brief}  ${summary.candidate}  suite ${summary.suite}, commit ${summary.harness.commit ?? 'unknown'}${summary.harness.dirty ? ' (dirty)' : ''}`,
     `baseline: ${baseline.status}, ${baseline.errors} born-broken error${baseline.errors === 1 ? '' : 's'}, ` +
       `${baseline.truncations ?? '-'} truncation${baseline.truncations === 1 ? '' : 's'}`,
     '',

@@ -107,6 +107,9 @@ describe('stress matrix', () => {
     const summary = await stress('robust', t);
     assert.equal(summary.schemaVersion, 3);
     assert.equal(summary.suite, 'v1');
+    // The commit the run used: a short hash and whether the tree had changes.
+    assert.match(summary.harness.commit ?? '', /^[0-9a-f]{7,}$/);
+    assert.equal(typeof summary.harness.dirty, 'boolean');
     assert.equal(summary.baseline.status, 'ok');
     assert.equal(summary.baseline.errors, 0);
     assert.equal(summary.totals.applicable, 19);
