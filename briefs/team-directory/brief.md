@@ -1,6 +1,6 @@
 # Team directory
 
-Build the team directory of Ashgrove, an intranet for growing companies.
+Build the team directory of Hollinmere, an intranet for growing companies.
 It is a full-width section of the directory page.
 
 Show the heading with the number of members next to it, and the button

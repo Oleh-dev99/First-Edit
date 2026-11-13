@@ -14,7 +14,7 @@
       "title": "Projects",
       "links": [
         { "label": "Website relaunch", "href": "/projects/website-relaunch", "count": 8, "active": false },
-        { "label": "Harbour Hotel signage", "href": "/projects/harbour-signage", "count": null, "active": false },
+        { "label": "Quillby Inn signage", "href": "/projects/quillby-signage", "count": null, "active": false },
         { "label": "Brand refresh", "href": "/projects/brand-refresh", "count": 3, "active": false },
         { "label": "Spring catalogue", "href": "/projects/spring-catalogue", "count": null, "active": false }
       ]
