@@ -95,3 +95,65 @@ api_key_env = "OPENROUTER_API_KEY"
 model = "nvidia/nemotron-3.5-super-vl:free"
 params = { max_tokens = 32000 }
 price = { input = 0.0, output = 0.0 }
+
+# Step 12, the second run (2026-11-13): three more free models, and a
+# fallback that runner/plan.toml uses only if one of the three is blocked.
+
+[[model]]
+id = "gemma-4-31b-free"
+provider = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "google/gemma-4-31b-it:free"
+params = { max_tokens = 32000 }
+price = { input = 0.0, output = 0.0 }
+
+[[model]]
+id = "nemotron-3-ultra-free"
+provider = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "nvidia/nemotron-3-ultra-550b-a55b:free"
+params = { max_tokens = 32000 }
+price = { input = 0.0, output = 0.0 }
+
+[[model]]
+id = "north-mini-code-free"
+provider = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "cohere/north-mini-code:free"
+params = { max_tokens = 32000 }
+price = { input = 0.0, output = 0.0 }
+
+[[model]]
+id = "particle-1-free"
+provider = "openai-compatible"
+base_url = "https://openrouter.ai/api/v1"
+api_key_env = "OPENROUTER_API_KEY"
+model = "particle-ai/particle-1:free"
+params = { max_tokens = 32000 }
+price = { input = 0.0, output = 0.0 }
+
+# Claude models through Claude Code's command line on the owner's
+# subscription (D-047): `claude -p` with our system prompt replacing Claude
+# Code's own and every tool disabled. model is the command line's alias;
+# there is no URL, no key and no price (calls are not billed per call).
+
+[[model]]
+id = "cc-haiku"
+provider = "claude-cli"
+model = "haiku"
+params = { effort = "medium" }
+
+[[model]]
+id = "cc-sonnet"
+provider = "claude-cli"
+model = "sonnet"
+params = { effort = "medium" }
+
+[[model]]
+id = "cc-opus"
+provider = "claude-cli"
+model = "opus"
+params = { effort = "medium" }

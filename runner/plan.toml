@@ -1,0 +1,76 @@
+# The run queue for the second run (docs/SPEC.md, Run queue; D-048).
+# `python -m first_edit run-next` works through the jobs in order. A job is a
+# model, its variants, its briefs ("all" or a list) and its samples per brief
+# and variant. Jobs marked parallel may run two at a time. A job with
+# only_if_blocked runs only if one of the models it names is blocked.
+
+runs_dir = "results/runs-run2"
+out = "results/run2"
+
+# Claude through the owner's subscription (D-047), 120 calls: held back.
+# The isolation probe showed that `claude -p` still adds an identity line in
+# front of our system prompt and a reminder with the account's email address
+# and the date; no documented setting removes them with a subscription login.
+# Uncomment only after the owner accepts that, or after the isolation is fixed.
+# [[job]]
+# model = "cc-haiku"
+# variants = ["plain", "hinted"]
+# briefs = "all"
+# samples = 1
+# parallel = true
+
+# [[job]]
+# model = "cc-sonnet"
+# variants = ["plain", "hinted"]
+# briefs = "all"
+# samples = 1
+# parallel = true
+
+# [[job]]
+# model = "cc-opus"
+# variants = ["plain", "hinted"]
+# briefs = "all"
+# samples = 1
+# parallel = true
+
+# Free models, 160 calls within the daily ledger. The two spike models need
+# only the ten briefs added in step 11; they have the other ten from step 8.
+[[job]]
+model = "ernie-5.5-flash-free"
+variants = ["plain", "hinted"]
+briefs = ["activity-feed", "checkout-summary", "confirm-dialog", "day-agenda", "invoice-summary",
+          "sidebar-nav", "site-footer", "tabs-panel", "team-directory", "testimonial-grid"]
+samples = 1
+
+[[job]]
+model = "nemotron-3.5-free"
+variants = ["plain", "hinted"]
+briefs = ["activity-feed", "checkout-summary", "confirm-dialog", "day-agenda", "invoice-summary",
+          "sidebar-nav", "site-footer", "tabs-panel", "team-directory", "testimonial-grid"]
+samples = 1
+
+[[job]]
+model = "gemma-4-31b-free"
+variants = ["plain", "hinted"]
+briefs = "all"
+samples = 1
+
+[[job]]
+model = "nemotron-3-ultra-free"
+variants = ["plain", "hinted"]
+briefs = "all"
+samples = 1
+
+[[job]]
+model = "north-mini-code-free"
+variants = ["plain", "hinted"]
+briefs = "all"
+samples = 1
+
+# Fallback: runs only if one of the three step 12 free models is blocked.
+[[job]]
+model = "particle-1-free"
+variants = ["plain", "hinted"]
+briefs = "all"
+samples = 1
+only_if_blocked = ["gemma-4-31b-free", "nemotron-3-ultra-free", "north-mini-code-free"]
