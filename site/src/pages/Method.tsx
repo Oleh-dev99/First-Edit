@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
-import { DECISIONS, PageHead, Prose, REPOSITORY, Section, TableFrame, pageUrl, repoFile } from '../components/Layout.tsx';
+import {
+  DECISIONS, FREE_TIER, NAMES_NOTICE, PageHead, Prose, REPOSITORY, Section, TableFrame, pageUrl, repoFile,
+} from '../components/Layout.tsx';
 import { RateCells, RateHeads } from '../components/Rates.tsx';
 import { exact, pct, range, type Briefs, type Calibration, type RateSet, type Run, type Share } from '../data.ts';
 
@@ -175,6 +177,19 @@ export function Method({ run, briefs, calibration }: { run: Run; briefs: Briefs;
         </Prose>
       </Section>
 
+      <Section id="run-record" title="The run record">
+        <Prose>
+          <p>
+            {FREE_TIER} Which models ran, through which provider and under which model id, the model the provider
+            reported, when the first and last calls were made, the prompt variants and samples, the request parameters,
+            how many calls gave a valid, an invalid or no component, and the suite version and harness commit of the
+            stress runs are in the run record,{' '}
+            <a href={repoFile('docs/RUNS.md')}>docs/RUNS.md</a>. It is written from the generation records and
+            regenerated whenever the run advances.
+          </p>
+        </Prose>
+      </Section>
+
       <Section id="prompt" title="The briefs and the prompt, word for word">
         <Prose>
           <p>
@@ -183,6 +198,7 @@ export function Method({ run, briefs, calibration }: { run: Run; briefs: Briefs;
             <a href={pageUrl('briefs')}>briefs</a> page shows all {briefs.briefs.length}. With the hinted prompt, the hint
             is appended to the user message after a blank line.
           </p>
+          <p>{NAMES_NOTICE}</p>
         </Prose>
         <Pre label="System message">{briefs.prompt.system}</Pre>
         <Pre label="User message (template)">{briefs.prompt.user}</Pre>
@@ -292,7 +308,8 @@ export function Method({ run, briefs, calibration }: { run: Run; briefs: Briefs;
         <ul className="max-w-[46rem] list-disc space-y-2 pl-5 text-ink-2">
           <li>
             The results are preliminary: {run.status.finished.length} of {run.status.models} models have finished
-            their queued jobs. The models are free variants, not the providers&rsquo; paid endpoints.
+            their queued jobs. {FREE_TIER} Free variants can be previews, are rate limited and are served apart from
+            the providers&rsquo; paid endpoints.
           </li>
           <li>
             One sample per brief and prompt, and few components per model so far. The intervals assume independent

@@ -14,6 +14,14 @@ export const PAGES: { id: PageId; title: string; path: string }[] = [
 export const REPOSITORY = 'https://github.com/Oleh-dev99/First-Edit';
 export const DECISIONS = `${REPOSITORY}/blob/main/docs/DECISIONS.md`;
 
+/** What was run (D-057): said on every page, in the banner. */
+export const FREE_TIER = 'Every model in the run is a free-tier variant, and no frontier model was tested.';
+
+/** The names in the briefs and fixtures (D-058): on every page, in the footer, and on the Method page. */
+export const NAMES_NOTICE =
+  'All product, company and person names in the briefs and fixtures were invented for this benchmark. Any match ' +
+  'with a real name is coincidental, and no real organisation or person is described.';
+
 export function pageUrl(id: PageId, hash = ''): string {
   const page = PAGES.find((entry) => entry.id === id);
   return url(page ? page.path : '') + hash;
@@ -34,13 +42,11 @@ export function StatusBanner({ run }: { run: Run }) {
             <strong className="font-semibold text-accent-deep">
               Preliminary: {finished.length} of {models} models have finished.
             </strong>{' '}
-            The run is not finished, so every number here can still change. The models are free variants of each
-            provider&rsquo;s model.
+            The run is not finished, so every number here can still change. {FREE_TIER}
           </>
         ) : (
           <>
-            <strong className="font-semibold">Complete: all {models} models have finished.</strong> The models are free
-            variants of each provider&rsquo;s model.
+            <strong className="font-semibold">Complete: all {models} models have finished.</strong> {FREE_TIER}
           </>
         )}
       </p>
@@ -94,6 +100,7 @@ export function Layout({ page, run, children }: { page: PageId; run: Run | null;
             <a href={DECISIONS}>docs/DECISIONS.md</a>). Built with AI assistance: Claude for planning and
             Claude Code for implementation. This site loads nothing from other servers and tracks no one.
           </p>
+          <p className="mt-2">{NAMES_NOTICE}</p>
         </div>
       </footer>
     </>
