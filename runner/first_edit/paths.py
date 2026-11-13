@@ -12,6 +12,8 @@ HARNESS_DIR = REPO_ROOT / "harness"
 RESULTS_DIR = REPO_ROOT / "results"
 CACHE_DIR = RESULTS_DIR / "cache"
 RUNS_DIR = RESULTS_DIR / "runs"
+#: Label sets and labels; committed to git (docs/LABELLING.md).
+LABELS_DIR = REPO_ROOT / "labels"
 
 MODELS_FILE = RUNNER_DIR / "models.toml"
 PROMPTS_DIR = PACKAGE_DIR / "prompts"

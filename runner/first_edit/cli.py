@@ -1,10 +1,11 @@
-"""Command line: python -m first_edit <doctor|generate|stress|summarize|run-next|cli-probe> ..."""
+"""Command line: python -m first_edit <doctor|generate|stress|summarize|run-next|cli-probe|label-set> ..."""
 
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -16,10 +17,11 @@ from .briefs import BriefError, list_briefs, load_brief
 from .budget import Budget
 from .doctor import run_doctor
 from .generate import generate, summarize
+from .labelset import build_label_set, format_composition, write_label_set
 from .ledger import FreeRequestLedger, is_free
 from .models import ModelEntry, ModelsError, get_model, load_models
 from .node import check_candidate, run_stress
-from .paths import ENV_FILE, REPO_ROOT, RESULTS_DIR, RUNS_DIR
+from .paths import ENV_FILE, LABELS_DIR, REPO_ROOT, RESULTS_DIR, RUNS_DIR
 from .prompts import VARIANTS, build_messages
 from .providers import SetupError, make_provider, parse_reply
 from .run_queue import PLAN_FILE, Deps, Plan, PlanError, QueueState, finished_models, load_plan, run_next
@@ -74,6 +76,11 @@ def _parser() -> argparse.ArgumentParser:
 
     probe = commands.add_parser("cli-probe", help="one claude-cli call that asks for the model's tools and instructions")
     probe.add_argument("--model", required=True, help="a claude-cli model id from runner/models.toml")
+
+    label_set = commands.add_parser("label-set", help="write a blind, stratified label set (docs/LABELLING.md)")
+    label_set.add_argument("--runs", required=True, type=Path, help="the stress results to sample, e.g. results/runs-run2")
+    label_set.add_argument("--name", required=True, help="the set's name; it is written to labels/<name>.json")
+    label_set.add_argument("--seed", required=True, type=int, help="the sampling and shuffling seed")
     return parser
 
 
@@ -144,6 +151,19 @@ def _summarize(args: argparse.Namespace) -> int:
     return 0
 
 
+def _label_set(args: argparse.Namespace) -> int:
+    if not re.fullmatch(r"[a-z0-9][a-z0-9._-]*", args.name):
+        raise SetupError(f'set name "{args.name}" must match [a-z0-9][a-z0-9._-]*')
+    if not args.runs.is_dir():
+        raise SetupError(f"{args.runs} is not a directory")
+    label_set = build_label_set(args.runs, args.name, args.seed)
+    path = LABELS_DIR / f"{args.name}.json"
+    write_label_set(label_set, path)
+    print(format_composition(label_set))
+    print(f"wrote {path.relative_to(REPO_ROOT).as_posix()}")
+    return 0
+
+
 def _brief_ids(args: argparse.Namespace) -> list[str]:
     if args.all:
         return list_briefs(corpus_only=True)
@@ -166,6 +186,8 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "cli-probe":
             return _cli_probe(args.model)
+        if args.command == "label-set":
+            return _label_set(args)
         entry = get_model(args.model)
         brief_ids = _brief_ids(args)
         if args.command == "generate":
