@@ -12,6 +12,7 @@ import {
   importedModules,
   importProblems,
   listSizeProblems,
+  MIN_APPLICABLE,
   metaProblems,
   propsProblems,
 } from '../lib/brief-rules.ts';
@@ -44,12 +45,22 @@ describe('metaProblems', () => {
     assert.deepStrictEqual(metaProblems({ id: 'x', title: 'X', category: 'table', sample: false }, 'x'), []);
   });
 
+  test('dialog and feed are categories (step 11)', () => {
+    for (const category of ['dialog', 'feed']) {
+      assert.deepStrictEqual(metaProblems({ id: 'x', title: 'X', category, sample: false }, 'x'), []);
+    }
+  });
+
+  test('rule 7: corpus briefs need at least 9 applicable mutations', () => {
+    assert.equal(MIN_APPLICABLE, 9);
+  });
+
   test('wrong id, empty title, unknown category, non-boolean sample and extra keys are problems', () => {
     assert.deepStrictEqual(metaProblems({ id: 'y', title: ' ', category: 'chart', sample: 'no', tags: [] }, 'x'), [
       'meta.json: unknown property "tags"',
       'meta.json: id must be "x"',
       'meta.json: title must be a non-empty string',
-      'meta.json: category must be one of card, list, table, form, navigation, dashboard, page-section, messaging, board',
+      'meta.json: category must be one of card, list, table, form, navigation, dashboard, page-section, messaging, board, dialog, feed',
       'meta.json: sample must be true or false',
     ]);
   });

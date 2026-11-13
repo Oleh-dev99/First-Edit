@@ -5,7 +5,8 @@ import { parseSync } from 'vite';
 import { forEachValue, isPlainObject, type FieldsMap } from '../src/mutations/fields.ts';
 
 export const CATEGORIES = [
-  'card', 'list', 'table', 'form', 'navigation', 'dashboard', 'page-section', 'messaging', 'board',
+  'card', 'list', 'table', 'form', 'navigation', 'dashboard', 'page-section', 'messaging', 'board', 'dialog',
+  'feed',
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];
@@ -26,7 +27,8 @@ const EXTRA_FIXTURE = /^fixture\.[\w-]+\.json$/;
 
 export const BRIEF_WORDS = { min: 80, max: 150 };
 export const LIST_ITEMS = { min: 3, max: 8 };
-export const MIN_APPLICABLE = 8;
+/** Brief rule 7: at least 9 of the 11 mutations are applicable. */
+export const MIN_APPLICABLE = 9;
 
 export function fileProblems(files: string[], sample: boolean): string[] {
   const problems = BRIEF_FILES.filter((file) => !files.includes(file)).map((file) => `missing ${file}`);
