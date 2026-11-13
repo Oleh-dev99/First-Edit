@@ -7,6 +7,7 @@ import { childPath, isPlainObject, itemPath, type FieldSpec, type FieldsMap } fr
 
 export const CONTENT_MUTATION_IDS = [
   'text-long',
+  'text-longword',
   'text-unbroken',
   'text-empty',
   'list-0',
@@ -22,6 +23,9 @@ export interface MutationResult {
   /** Concrete paths of every value that changed, e.g. "name", "skills[2]". Empty means not applicable. */
   changed: string[];
 }
+
+/** text-longword: one fixed 30-letter token, letters only. */
+export const LONGWORD_TOKEN = 'Floccinaucinihilipilifications';
 
 /** text-unbroken: one fixed 60-letter token, letters only. */
 export const UNBROKEN_TOKEN = 'Supercalifragilisticexpialidocious' + 'Floccinaucinihilipilification'.slice(0, 26);
@@ -61,15 +65,25 @@ export function lengthen(value: string): string {
   return grown.slice(0, target).join('');
 }
 
-/** text-unbroken for one value: the longest word (the first, on a tie) becomes the token. */
-export function unbreak(value: string): string {
+/** The longest word of `value` (the first, on a tie) becomes `token`. Empty values stay empty. */
+export function replaceLongestWord(value: string, token: string): string {
   let longest: { index: number; word: string; length: number } | null = null;
   for (const match of value.matchAll(/\S+/g)) {
     const length = Array.from(match[0]).length;
     if (!longest || length > longest.length) longest = { index: match.index, word: match[0], length };
   }
   if (!longest) return value;
-  return value.slice(0, longest.index) + UNBROKEN_TOKEN + value.slice(longest.index + longest.word.length);
+  return value.slice(0, longest.index) + token + value.slice(longest.index + longest.word.length);
+}
+
+/** text-longword for one value: the longest word becomes the 30-letter token. */
+export function longword(value: string): string {
+  return replaceLongestWord(value, LONGWORD_TOKEN);
+}
+
+/** text-unbroken for one value: the longest word becomes the 60-letter token. */
+export function unbreak(value: string): string {
+  return replaceLongestWord(value, UNBROKEN_TOKEN);
 }
 
 interface ListItem {
@@ -104,6 +118,7 @@ function mutateLeaf(value: unknown, spec: FieldSpec, id: ContentMutationId, copi
   if (spec.kind === 'id') return copies.length > 0 ? suffixId(value, copies) : value;
   if (typeof value === 'string' && (spec.kind === 'label' || spec.kind === 'prose')) {
     if (id === 'text-long') return lengthen(value);
+    if (id === 'text-longword') return longword(value);
     if (id === 'text-unbroken') return unbreak(value);
     if (id === 'text-empty') return spec.required ? value : '';
   }

@@ -1,6 +1,7 @@
 // The stress runner: renders the baseline and every applicable case of one
 // candidate (every mutation, then every content mutation at 320 px), runs the
-// checks, decides which cases survive and measures content-hidden.
+// checks, decides which cases survive and measures content-hidden. Every case
+// carries its tier, core or extreme (D-039).
 
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -8,7 +9,7 @@ import path from 'node:path';
 import type { Browser } from 'playwright';
 import { CHECK_NAMES, type CheckName, type Finding } from '../src/checks/finding.ts';
 import { hiddenValues, type VisibleValue } from '../src/measures/visible-values.ts';
-import { CASES, type CaseId, type CaseKind, type FindingsReference } from '../src/mutations/cases.ts';
+import { CASES, CASE_TIERS, type CaseId, type CaseKind, type CaseTier, type FindingsReference } from '../src/mutations/cases.ts';
 import { applyContentMutation } from '../src/mutations/content.ts';
 import { isContentMutation, mutationKind, viewportFor, type MutationId, type Viewport } from '../src/mutations/index.ts';
 import { annotate } from './annotate.ts';
@@ -16,7 +17,7 @@ import { loadBrief } from './briefs.ts';
 import { candidateQuery, collectFindings, loadPage, type LoadStatus } from './render.ts';
 
 /** Version of the summary.json contract; bump on any incompatible change. */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export type CaseStatus = LoadStatus | 'not-applicable';
 
@@ -34,6 +35,8 @@ export interface CaseEntry {
   /** The mutation the page applies. */
   mutation: MutationId;
   kind: CaseKind;
+  /** core cases make the headline, extreme ones are reported beside it (D-039). */
+  tier: CaseTier;
   viewport: Viewport;
   /** The render whose findings decide what is new. */
   reference: FindingsReference;
@@ -201,9 +204,9 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
   const renders = new Map<string, Rendered>([['baseline', baseline]]);
   const cases: CaseEntry[] = [];
   for (const spec of CASES) {
-    const { id, mutation, kind, viewport, reference, hiddenReference } = spec;
+    const { id, mutation, kind, tier, viewport, reference, hiddenReference } = spec;
     const changed = isContentMutation(mutation) ? applyContentMutation(fixture, fields, mutation).changed : null;
-    const common = { id, mutation, kind, viewport, reference };
+    const common = { id, mutation, kind, tier, viewport, reference };
     if (changed !== null && changed.length === 0) {
       cases.push({
         ...common,
@@ -234,6 +237,7 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
     const files = await save(id, rendered, {
       case: id,
       kind,
+      tier,
       brief,
       candidate,
       fixture: fixtureName,
@@ -287,9 +291,10 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
 
 /** The stress table: one row per case, then the survival rate and content hidden. */
 export function formatStressTable(summary: StressSummary): string {
-  const header = ['case', 'status', ...CHECK_NAMES, 'survived', 'truncations', 'hidden'];
+  const header = ['case', 'tier', 'status', ...CHECK_NAMES, 'survived', 'truncations', 'hidden'];
   const rows = summary.cases.map((entry) => [
     entry.id,
+    entry.tier,
     entry.status,
     ...CHECK_NAMES.map((name) => (entry.newErrors ? String(entry.newErrors[name]) : '-')),
     entry.survived === null ? '-' : entry.survived ? 'yes' : 'no',
@@ -298,9 +303,13 @@ export function formatStressTable(summary: StressSummary): string {
   ]);
   const widths = header.map((title, column) => Math.max(title.length, ...rows.map((row) => row[column]!.length)));
   const line = (cells: string[]): string =>
-    cells.map((cell, column) => (column < 2 ? cell.padEnd(widths[column]!) : cell.padStart(widths[column]!))).join('  ');
+    cells.map((cell, column) => (column < 3 ? cell.padEnd(widths[column]!) : cell.padStart(widths[column]!))).join('  ');
   const { totals, baseline } = summary;
   const rate = totals.survivalRate === null ? 'n/a' : `${Math.round(totals.survivalRate * 100)}%`;
+  const byTier = CASE_TIERS.map((tier) => {
+    const applicable = summary.cases.filter((entry) => entry.tier === tier && entry.applicable);
+    return `${tier} ${applicable.filter((entry) => entry.survived === true).length}/${applicable.length}`;
+  }).join(', ');
   return [
     `${summary.brief}  ${summary.candidate}`,
     `baseline: ${baseline.status}, ${baseline.errors} born-broken error${baseline.errors === 1 ? '' : 's'}, ` +
@@ -309,6 +318,6 @@ export function formatStressTable(summary: StressSummary): string {
     line(header),
     ...rows.map(line),
     '',
-    `survival rate: ${totals.survived}/${totals.applicable} = ${rate}; content hidden: ${totals.contentHidden}`,
+    `survival rate: ${totals.survived}/${totals.applicable} = ${rate} (${byTier}); content hidden: ${totals.contentHidden}`,
   ].join('\n');
 }

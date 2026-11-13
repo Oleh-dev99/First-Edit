@@ -86,10 +86,14 @@ describe('stress matrix', () => {
 
   test('robust survives every applicable case and hides no content', async (t) => {
     const summary = await stress('robust', t);
-    assert.equal(summary.schemaVersion, 2);
+    assert.equal(summary.schemaVersion, 3);
     assert.equal(summary.baseline.status, 'ok');
     assert.equal(summary.baseline.errors, 0);
-    assert.equal(summary.totals.applicable, 17);
+    assert.equal(summary.totals.applicable, 19);
+    assert.deepStrictEqual(
+      summary.cases.filter((entry) => entry.tier === 'extreme').map((entry) => entry.id),
+      ['text-unbroken', 'text-unbroken@320'],
+    );
     const failed = summary.cases.filter((entry) => entry.applicable && entry.survived !== true);
     assert.deepStrictEqual(failed.map((entry) => entry.id), []);
     assert.equal(summary.totals.contentHidden, 0);
@@ -97,7 +101,7 @@ describe('stress matrix', () => {
     const measured = summary.cases.filter((entry) => entry.contentHidden !== null).map((entry) => entry.id);
     assert.deepStrictEqual(measured, [
       'viewport-320', 'text-200pct', 'dir-rtl',
-      'text-long@320', 'text-unbroken@320', 'text-empty@320', 'list-0@320', 'list-1@320', 'list-many@320', 'number-large@320',
+      'text-long@320', 'text-longword@320', 'text-unbroken@320', 'text-empty@320', 'list-0@320', 'list-1@320', 'list-many@320', 'number-large@320',
     ]);
   });
 

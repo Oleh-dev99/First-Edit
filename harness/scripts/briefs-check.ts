@@ -7,9 +7,10 @@
  * baseline fixture, the fixture against Props (type-level), the corpus
  * rules and the number of applicable mutations. Per reference candidate
  * (candidates/_reference/<id>/v1): its default export accepts Props, it
- * imports only react, its baseline is clean and every applicable mutation
- * survives (stress results go to results/runs/<id>/). Prints one row per
- * brief and exits non-zero if any brief fails.
+ * imports only react, its baseline is clean, every applicable case of both
+ * tiers survives and no case hides content (stress results go to
+ * results/runs/<id>/). Prints one row per brief and exits non-zero if any
+ * brief fails.
  */
 import { parseArgs } from 'node:util';
 import { chromium, type Browser } from 'playwright';

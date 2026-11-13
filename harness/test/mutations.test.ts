@@ -10,9 +10,11 @@ import {
   CONTENT_MUTATION_IDS,
   LARGE_DECIMAL,
   LARGE_INTEGER,
+  LONGWORD_TOKEN,
   UNBROKEN_TOKEN,
   applyContentMutation,
   lengthen,
+  longword,
   textLongTarget,
   unbreak,
   type ContentMutationId,
@@ -101,6 +103,42 @@ describe('text-long', () => {
     assert.deepStrictEqual(changed, [
       'title', 'subtitle', 'body', 'tags[0]', 'tags[1]', 'tags[2]', 'links[0].label', 'links[1].label',
     ]);
+  });
+});
+
+describe('text-longword', () => {
+  test('the token is 30 letters', () => {
+    assert.match(LONGWORD_TOKEN, /^[A-Za-z]{30}$/);
+  });
+
+  test('the longest word (the first on a tie) becomes the token', () => {
+    assert.equal(longword('Short notes for the team.'), `${LONGWORD_TOKEN} notes for the team.`);
+    assert.equal(longword('a bigger word'), `a ${LONGWORD_TOKEN} word`);
+    assert.equal(longword('Draft'), LONGWORD_TOKEN);
+    assert.equal(longword('  '), '  ');
+    assert.equal(longword(''), '');
+  });
+
+  test('applies to every label and prose value, including required ones', () => {
+    const { fixture, changed } = apply('text-longword');
+    assert.deepStrictEqual(fixture, {
+      ...FIXTURE,
+      title: `${LONGWORD_TOKEN} world`,
+      subtitle: LONGWORD_TOKEN,
+      body: `${LONGWORD_TOKEN} notes for the team.`,
+      tags: [LONGWORD_TOKEN, LONGWORD_TOKEN, LONGWORD_TOKEN],
+      links: [
+        { id: 'home', label: LONGWORD_TOKEN, url: 'https://example.org/' },
+        { id: 7, label: LONGWORD_TOKEN, url: 'https://example.org/docs' },
+      ],
+    });
+    assert.equal(changed.length, 8);
+  });
+
+  test('is not applicable without label or prose values', () => {
+    const fields = { ...FIELDS, title: { kind: 'fixed' }, subtitle: { kind: 'fixed' }, body: { kind: 'fixed' },
+      'tags[]': { kind: 'fixed' }, 'links[].label': { kind: 'fixed' } } as FieldsMap;
+    assert.deepStrictEqual(apply('text-longword', FIXTURE, fields).changed, []);
   });
 });
 
@@ -220,9 +258,9 @@ describe('every content mutation', () => {
 });
 
 describe('registry', () => {
-  test('ten mutations in run order', () => {
+  test('eleven mutations in run order', () => {
     assert.deepStrictEqual(MUTATION_IDS, [
-      'text-long', 'text-unbroken', 'text-empty', 'list-0', 'list-1', 'list-many', 'number-large',
+      'text-long', 'text-longword', 'text-unbroken', 'text-empty', 'list-0', 'list-1', 'list-many', 'number-large',
       'viewport-320', 'text-200pct', 'dir-rtl',
     ]);
   });

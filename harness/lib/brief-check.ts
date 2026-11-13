@@ -110,8 +110,8 @@ export function checkBriefStatic(id: string): BriefCheck {
 
 /**
  * Stress-runs the reference: its baseline must be clean, every applicable
- * case (the @320 cases included) must survive, and no case may hide content
- * (content-hidden 0, D-019).
+ * case of both tiers (the @320 cases included) must survive, and no case may
+ * hide content (content-hidden 0, D-019).
  */
 export async function checkReference(check: BriefCheck, browser: Browser, origin: string): Promise<void> {
   if (!check.reference) return;
