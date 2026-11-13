@@ -87,6 +87,8 @@ def _parser() -> argparse.ArgumentParser:
     label = commands.add_parser("label", help="start the blind labelling tool on 127.0.0.1 (docs/LABELLING.md)")
     label.add_argument("--set", required=True, type=Path, dest="set_path", help="a label set, e.g. labels/set-01.json")
     label.add_argument("--port", type=int, default=DEFAULT_PORT, help=f"the local port (default {DEFAULT_PORT})")
+    label.add_argument("--adjudicate", action="store_true",
+                       help="once every item is labelled: answer each disagreement with the suite (not blind, D-055)")
 
     cal = commands.add_parser("calibrate", help="compare the suite's verdicts with a set's labels (docs/LABELLING.md)")
     cal.add_argument("--set", required=True, type=Path, dest="set_path", help="a label set, e.g. labels/set-01.json")
@@ -205,7 +207,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"wrote {path}")
             return 0
         if args.command == "label":
-            serve(open_tool(args.set_path, load_label_set(args.set_path), port=args.port))
+            serve(open_tool(args.set_path, load_label_set(args.set_path), port=args.port, adjudicate=args.adjudicate))
             return 0
         entry = get_model(args.model)
         brief_ids = _brief_ids(args)

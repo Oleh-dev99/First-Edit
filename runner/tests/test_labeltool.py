@@ -250,3 +250,81 @@ def test_browser_state_lists_the_answers(label_set, tmp_path: Path) -> None:
     state = browser_state(data, store, load_examples())
     assert state["answers"] == {data["items"][0]["id"]: {"label": "other", "note": "collapsed"}}
     assert state["labels"] == ["broken", "fine", "other", "unsure"]
+
+
+# --- adjudication (D-055) ------------------------------------------------------------
+
+
+def _label_everything(path: Path, data: dict) -> tuple[dict, dict]:
+    """Labels every item as the suite found it, except two primaries: the first
+    failed one is labelled fine and the first passed one broken."""
+    store = LabelStore(labels_path(path), [item["id"] for item in data["items"]])
+    for item in data["items"]:
+        store.answer(item["id"], "broken" if item["stratum"].startswith("failed") else "fine")
+    primaries = [item for item in data["items"] if item["repeatOf"] is None]
+    first_failed = next(item for item in primaries if item["stratum"].startswith("failed"))
+    first_passed = next(item for item in primaries if item["stratum"].startswith("survived"))
+    store.answer(first_failed["id"], "fine", "looks fine to me")
+    store.answer(first_passed["id"], "broken")
+    return first_failed, first_passed
+
+
+def test_adjudication_waits_until_every_item_is_labelled(label_set) -> None:
+    path, data = label_set
+    LabelStore(labels_path(path), [item["id"] for item in data["items"]]).answer(data["items"][0]["id"], "fine")
+    with pytest.raises(SetupError, match=f"{len(data['items']) - 1} of {len(data['items'])} items have no label yet"):
+        open_tool(path, data, port=0, root=path.parent.parent, adjudicate=True)
+
+
+def test_adjudication_shows_each_disagreement_with_the_suites_result(label_set) -> None:
+    path, data = label_set
+    failed, passed = _label_everything(path, data)
+    server = open_tool(path, data, port=0, root=path.parent.parent, adjudicate=True)
+    with running(server) as origin:
+        status, page = get(f"{origin}/")
+        assert status == 200 and b"Adjudication of the disagreements" in page
+        state = json.loads(get(f"{origin}/api/state")[1])
+        assert state["mode"] == "adjudicate" and [item["id"] for item in state["items"]] == [failed["id"], passed["id"]]
+        assert [choice["value"] for choice in state["choices"]] == ["suite-right", "label-right", "defined-differently"]
+        shown_failed, shown_passed = state["items"]
+        assert shown_failed["suite"] == {"verdict": "failed", "tier": failed["suite"]["tier"],
+                                         "checks": failed["suite"]["checks"], "status": "ok"}
+        assert shown_failed["label"] == {"label": "fine", "note": "looks fine to me"}
+        assert sorted(finding["check"] for finding in shown_failed["findings"]) == sorted(failed["suite"]["checks"])
+        assert shown_passed["suite"]["verdict"] == "passed" and shown_passed["findings"] == []
+        assert shown_passed["label"]["label"] == "broken"
+        status, body = get(f"{origin}/pictures/{failed['id']}/annotated")
+        assert status == 200 and body.startswith(b"PNG annotated ")
+        agreed = next(item for item in data["items"] if item["id"] not in (failed["id"], passed["id"]))
+        assert get(f"{origin}/pictures/{agreed['id']}/annotated")[0] == 404
+        assert get(f"{origin}/examples/0/left")[0] == 404
+
+
+def test_the_blind_tool_never_serves_an_annotated_screenshot(label_set) -> None:
+    path, data = label_set
+    server = open_tool(path, data, port=0, root=path.parent.parent)
+    with running(server) as origin:
+        assert get(f"{origin}/pictures/{data['items'][0]['id']}/annotated")[0] == 404
+
+
+def test_adjudication_answers_save_resume_and_undo(label_set) -> None:
+    path, data = label_set
+    failed, passed = _label_everything(path, data)
+    server = open_tool(path, data, port=0, root=path.parent.parent, adjudicate=True)
+    with running(server) as origin:
+        assert post(f"{origin}/api/answer", {"item": failed["id"], "answer": "suite-right", "ms": 900})[0] == 200
+        assert post(f"{origin}/api/answer", {"item": passed["id"], "answer": "defined-differently"})[0] == 200
+        assert post(f"{origin}/api/note", {"item": passed["id"], "note": "a scrolling table"})[0] == 200
+        assert post(f"{origin}/api/answer", {"item": passed["id"], "answer": "broken"})[0] == 400
+        agreed = next(item for item in data["items"] if item["id"] not in (failed["id"], passed["id"]))
+        assert post(f"{origin}/api/answer", {"item": agreed["id"], "answer": "suite-right"})[0] == 400
+    lines = [json.loads(line) for line in (path.parent / "set-t.adjudication.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert lines == [{"item": failed["id"], "answer": "suite-right", "note": "", "ms": 900},
+                     {"item": passed["id"], "answer": "defined-differently", "note": "a scrolling table", "ms": None}]
+    # the blind labels are untouched
+    assert LabelStore(labels_path(path), [item["id"] for item in data["items"]]).labels()[failed["id"]]["label"] == "fine"
+    server = open_tool(path, data, port=0, root=path.parent.parent, adjudicate=True)
+    with running(server) as origin:
+        assert set(json.loads(get(f"{origin}/api/state")[1])["answers"]) == {failed["id"], passed["id"]}
+        status, body = post(f"{origin}/api/undo", {})
+        assert status == 200 and body["undone"] == passed["id"] and set(body["answers"]) == {failed["id"]}
