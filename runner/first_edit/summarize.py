@@ -5,10 +5,12 @@ gallery.html of cases.
 The headline (D-033) is the share of clean-baseline candidates that broke at
 least once in a core case, with a 95% Wilson interval; the same measure over
 all cases, extreme ones included, is shown beside it (D-039). The failure
-rate per case and the mean survival rate, per tier, are secondary. Every
-scored number covers clean-baseline candidates only (D-015). The gallery shows every case of a clean-baseline
-candidate (failed or survived) and the baseline of every born-broken or
-crashed candidate.
+rate per case and the mean survival rate, per tier, are secondary. The
+report also shows the core headline with each case family removed in turn
+(D-045). Every scored number covers clean-baseline candidates only (D-015).
+Numbers are computed exact and rounded once, when summary.json is written.
+The gallery shows every case of a clean-baseline candidate (failed or
+survived) and the baseline of every born-broken or crashed candidate.
 """
 
 from __future__ import annotations
@@ -30,6 +32,11 @@ from .stress import baseline_state, find_candidates
 SUMMARY_SCHEMA_VERSION = 3
 #: The version of the harness's stress summary.json that this module reads.
 STRESS_SCHEMA_VERSION = 3
+#: The stress suite these numbers come from: cases, tiers, checks, tolerances
+#: and the new-finding rule, frozen as suite v1 (D-044). Stress summaries
+#: record it; a schema 3 summary without the field was written by the step 10
+#: harness before the field existed, and that harness is suite v1.
+SUITE_VERSION = "v1"
 CHECKS = ("page-overflow-x", "text-clipped", "content-spill", "text-overlap", "off-screen")
 CONTENT_MUTATIONS = ("text-long", "text-longword", "text-unbroken", "text-empty", "list-0", "list-1", "list-many",
                      "number-large")
@@ -41,11 +48,30 @@ TIERS = ("core", "extreme")
 CASE_TIERS = {case: "extreme" if case.split("@")[0] == "text-unbroken" else "core" for case in CASES}
 #: Scopes of the per-tier numbers: each tier, then every case.
 SCOPES = (*TIERS, "all")
+
+
+def family_of(case_id: str) -> str:
+    """A case's family is its mutation: a content mutation and its @320 case
+    form one family, an environment mutation is a family of one case."""
+    return case_id.split("@")[0]
+
+
+#: Families with core cases, in run order. text-unbroken is extreme only, so
+#: removing it never changes the headline.
+CORE_FAMILIES = tuple(dict.fromkeys(family_of(case) for case in CASES if CASE_TIERS[case] == "core"))
 VARIANT_ORDER = ("plain", "hinted")
 #: The model name of a pooled group: every model of one variant.
 POOLED = "all models"
 #: z for a two-sided 95% interval.
 Z_95 = 1.959964
+#: Decimals of the floats written to summary.json. Numbers are computed exact
+#: and rounded once, when written, and the report formats the exact values: a
+#: rate rounded to 4 decimals and then to a 1-decimal percentage can round up
+#: twice (30/38 printed as 79.0% instead of 78.9%).
+FLOAT_DECIMALS = 4
+#: Keys whose values keep the precision they are computed with: costs, and
+#: per-case counts (2 decimals, as the report shows them).
+KEEP_PRECISION = ("perCase", "usd", "costUsd", "actualUsd", "estimatedUsd")
 
 
 def _read_json(path: Path) -> dict[str, Any] | None:
@@ -55,19 +81,33 @@ def _read_json(path: Path) -> dict[str, Any] | None:
         return None
 
 
+def rounded(value: Any, key: str | None = None) -> Any:
+    """`value` with every float rounded to FLOAT_DECIMALS, except under the
+    keys in KEEP_PRECISION; used once, when summary.json is written."""
+    if key in KEEP_PRECISION:
+        return value
+    if isinstance(value, float):
+        return round(value, FLOAT_DECIMALS)
+    if isinstance(value, dict):
+        return {k: rounded(v, k) for k, v in value.items()}
+    if isinstance(value, list):
+        return [rounded(item, key) for item in value]
+    return value
+
+
 def wilson(successes: int, trials: int, z: float = Z_95) -> list[float] | None:
-    """The Wilson score interval for a proportion, [low, high], 4 decimals; None without trials."""
+    """The Wilson score interval for a proportion, [low, high], exact; None without trials."""
     if trials <= 0:
         return None
     p = successes / trials
     denominator = 1 + z * z / trials
     centre = (p + z * z / (2 * trials)) / denominator
     half = z * math.sqrt(p * (1 - p) / trials + z * z / (4 * trials * trials)) / denominator
-    return [round(max(0.0, centre - half), 4), round(min(1.0, centre + half), 4)]
+    return [max(0.0, centre - half), min(1.0, centre + half)]
 
 
 def _share(count: int, of: int) -> dict[str, Any]:
-    return {"count": count, "of": of, "share": round(count / of, 4) if of else None, "ci95": wilson(count, of)}
+    return {"count": count, "of": of, "share": count / of if of else None, "ci95": wilson(count, of)}
 
 
 @dataclass
@@ -129,14 +169,16 @@ class Candidate:
         return [entry for entry in (self.summary or {}).get("cases", [])
                 if entry.get("applicable") and (tier is None or entry.get("tier") == tier)]
 
-    def broke(self, tier: str | None = None) -> bool:
-        """True if an applicable case of the tier (or any case) failed."""
-        return any(not entry.get("survived") for entry in self.applicable_cases(tier))
+    def broke(self, tier: str | None = None, without: str | None = None) -> bool:
+        """True if an applicable case of the tier (or any case) failed, leaving
+        out the cases of the family `without` when it is given."""
+        return any(not entry.get("survived") for entry in self.applicable_cases(tier)
+                   if without is None or family_of(entry["id"]) != without)
 
     def survival_rate(self, tier: str | None = None) -> float | None:
-        """Survived / applicable cases of the tier (or of all cases), 4 decimals."""
+        """Survived / applicable cases of the tier (or of all cases), exact."""
         cases = self.applicable_cases(tier)
-        return round(sum(1 for entry in cases if entry.get("survived")) / len(cases), 4) if cases else None
+        return sum(1 for entry in cases if entry.get("survived")) / len(cases) if cases else None
 
 
 def _case_from_files(candidate: Candidate, case_id: str, entry: dict[str, Any], outcome: str) -> Case:
@@ -184,6 +226,9 @@ def load_candidates(model_ids: list[str], brief_ids: list[str], *, candidates_di
             if summary is not None and summary.get("schemaVersion") != STRESS_SCHEMA_VERSION:
                 raise SetupError(f"{run_dir / 'summary.json'} has stress schema {summary.get('schemaVersion')}; "
                                  f"summarize reads schema {STRESS_SCHEMA_VERSION}, so re-run stress into this runs directory")
+            if summary is not None and summary.get("suite", SUITE_VERSION) != SUITE_VERSION:
+                raise SetupError(f"{run_dir / 'summary.json'} was run with suite {summary.get('suite')}; "
+                                 f"summarize reads suite {SUITE_VERSION}")
             candidate = Candidate(model_id, brief_id, variant, sample, cid, generation, summary, run_dir)
             state = candidate.state
             if state in ("born-broken", "baseline-crash"):
@@ -204,12 +249,12 @@ def _sum(values: list[int | float | None]) -> int | float | None:
 def _failure_rate(entries: list[dict[str, Any]]) -> dict[str, Any]:
     failed = sum(1 for entry in entries if not entry.get("survived"))
     return {"failed": failed, "applicable": len(entries),
-            "rate": round(failed / len(entries), 4) if entries else None, "ci95": wilson(failed, len(entries))}
+            "rate": failed / len(entries) if entries else None, "ci95": wilson(failed, len(entries))}
 
 
 def _survival(rates: list[float | None]) -> dict[str, Any]:
     present = [rate for rate in rates if rate is not None]
-    return {"candidates": len(present), "mean": round(statistics.fmean(present), 4) if present else None,
+    return {"candidates": len(present), "mean": statistics.fmean(present) if present else None,
             "min": min(present) if present else None, "max": max(present) if present else None}
 
 
@@ -316,6 +361,23 @@ def _cell(candidates: list[Candidate]) -> str:
     return "; ".join(parts)
 
 
+def sensitivity(candidates: list[Candidate]) -> dict[str, list[dict[str, Any]]]:
+    """Per variant, pooled over models: the core headline, then the same with
+    each core case family removed in turn (D-045). One row per family, the
+    first with "removed": None."""
+    rows: dict[str, list[dict[str, Any]]] = {}
+    for variant in VARIANT_ORDER:
+        members = [c for c in candidates if c.variant == variant]
+        if not members:
+            continue
+        clean = [c for c in members if c.state == "clean"]
+        rows[variant] = [
+            {"removed": family, **_share(sum(1 for c in clean if c.broke("core", without=family)), len(clean))}
+            for family in (None, *CORE_FAMILIES)
+        ]
+    return rows
+
+
 def build_summary(candidates: list[Candidate], model_ids: list[str], brief_ids: list[str],
                   models: dict[str, dict[str, Any]]) -> dict[str, Any]:
     groups = []
@@ -359,13 +421,18 @@ def build_summary(candidates: list[Candidate], model_ids: list[str], brief_ids: 
         "tokens": {key: _sum([g["tokens"][key] for g in own]) for key in ("input", "cachedInput", "output", "reasoning")},
         "costUsd": round(sum(g["cost"]["usd"] for g in own), 6),
     }
+    stressed = [c.summary for c in candidates if c.summary is not None]
     return {
         "schemaVersion": SUMMARY_SCHEMA_VERSION,
+        # Stress summaries without the field come from the step 10 harness (suite v1).
+        "suite": {"version": SUITE_VERSION, "stressSummaries": len(stressed),
+                  "recorded": sum(1 for summary in stressed if "suite" in summary)},
         "cases": [{"id": case, "tier": CASE_TIERS[case]} for case in CASES],
         "checks": list(CHECKS),
         "models": model_info,
         "briefs": brief_ids,
         "groups": groups,
+        "sensitivity": sensitivity(candidates),
         "survivalByBrief": survival_by_brief,
         "totals": totals,
     }
@@ -381,6 +448,11 @@ def _ci(interval: list[float] | None) -> str:
     return "-" if interval is None else f"{interval[0] * 100:.1f}% to {interval[1] * 100:.1f}%"
 
 
+def _points(value: float | None, reference: float | None) -> str:
+    """The change from `reference` to `value` in percentage points."""
+    return "-" if value is None or reference is None else f"{(value - reference) * 100:+.1f}"
+
+
 def _num(value: int | float | None) -> str:
     return "-" if value is None else f"{value:,}"
 
@@ -393,6 +465,39 @@ def _table(header: list[str], rows: list[list[str]]) -> list[str]:
     lines = ["| " + " | ".join(header) + " |", "|" + "|".join("---" for _ in header) + "|"]
     lines += ["| " + " | ".join(row) + " |" for row in rows]
     return lines
+
+
+def _suite_line(suite: dict[str, Any]) -> str:
+    line = (f"Suite {suite['version']} (D-044): the cases, tiers, checks, tolerances and new-finding rule are "
+            f"frozen; only bug fixes change them, each recorded in DECISIONS.")
+    unrecorded = suite["stressSummaries"] - suite["recorded"]
+    if unrecorded:
+        line += (f" {unrecorded} of {suite['stressSummaries']} stress summaries predate the suite field; they were "
+                 f"written by the step 10 harness, which is suite {suite['version']}.")
+    return line
+
+
+def _sensitivity_section(rows: dict[str, list[dict[str, Any]]]) -> list[str]:
+    """The core headline per variant, pooled over models, with each case family removed (D-045)."""
+    if not rows:
+        return []
+    variants = list(rows)
+    out = ["", "## Headline sensitivity", "",
+           "The core headline per variant, pooled over every model in this report, recomputed with one case family "
+           "removed: a mutation together with its @320 case. The change is in percentage points against the "
+           "headline (first row). text-unbroken is extreme and never part of the headline (D-045).", ""]
+    header = ["removed"]
+    for variant in variants:
+        header += [f"{variant}: broke, core cases", "share", "95% interval", "change"]
+    body = []
+    for index, family in enumerate((None, *CORE_FAMILIES)):
+        row = ["none" if family is None else family]
+        for variant in variants:
+            cell, base = rows[variant][index], rows[variant][0]
+            row += [f"{cell['count']}/{cell['of']}", _pct(cell["share"]), _ci(cell["ci95"]),
+                    "-" if family is None else _points(cell["share"], base["share"])]
+        body.append(row)
+    return out + _table(header, body)
 
 
 def render_report(summary: dict[str, Any]) -> str:
@@ -411,6 +516,8 @@ def render_report(summary: dict[str, Any]) -> str:
         "measure over all cases stands beside it. Content hidden (D-036) and",
         "truncations (D-021) are info only. Costs are the cost the provider",
         "reported, or configured prices times usage where it reported none.",
+        "",
+        _suite_line(summary["suite"]),
         "",
         "## Models",
         "",
@@ -434,6 +541,7 @@ def render_report(summary: dict[str, Any]) -> str:
               str(g["brokeOnce"][scope]["count"]), _pct(g["brokeOnce"][scope]["share"]), _ci(g["brokeOnce"][scope]["ci95"])))]
          for g in groups],
     )
+    out += _sensitivity_section(summary["sensitivity"])
     out += ["", "## Failure rate and mean survival per tier", "",
             "Failed / applicable cases of clean-baseline candidates, with a 95% Wilson interval, and the mean, "
             "minimum and maximum of each candidate's survival rate over the tier's cases.", ""]
@@ -705,7 +813,7 @@ def write_outputs(candidates: list[Candidate], summary: dict[str, Any], out_dir:
     out_dir.mkdir(parents=True, exist_ok=True)
     written = []
     for name, text in (
-        ("summary.json", json.dumps(summary, indent=2, ensure_ascii=False) + "\n"),
+        ("summary.json", json.dumps(rounded(summary), indent=2, ensure_ascii=False) + "\n"),
         ("report.md", render_report(summary)),
         ("gallery.html", render_gallery(candidates, out_dir)),
     ):

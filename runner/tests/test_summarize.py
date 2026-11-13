@@ -10,10 +10,12 @@ from first_edit.providers import SetupError
 from first_edit.summarize import (
     CASE_TIERS,
     CASES,
+    CORE_FAMILIES,
     build_summary,
     load_candidates,
     render_gallery,
     render_report,
+    rounded,
     wilson,
     write_outputs,
 )
@@ -41,10 +43,11 @@ def add_candidate(root: Path, cid: str, *, valid: bool = True, status: str = "ge
 
 def add_run(root: Path, cid: str, *, baseline_errors: int = 0, baseline_status: str = "ok",
             failed: dict[str, dict] | None = None, hidden: dict[str, list[str]] | None = None,
-            truncations: int = 0, screenshots: bool = True, schema: int = 3) -> None:
+            truncations: int = 0, screenshots: bool = True, schema: int = 3, suite: str | None = None) -> None:
     """A stress run where every case applies; `failed` maps a case id to
     {"status": ..., "newErrors": {...}, "findings": [...]}, and `hidden` maps a
-    measured case id to its content-hidden values."""
+    measured case id to its content-hidden values. `suite` None leaves the
+    suite field out, as the step 10 harness did."""
     brief = cid.split("/")[1]
     run_dir = root / "runs" / brief / cid.replace("/", "__")
     failed = failed or {}
@@ -87,6 +90,7 @@ def add_run(root: Path, cid: str, *, baseline_errors: int = 0, baseline_status: 
     survived = sum(1 for c in cases if c["survived"])
     write_json(run_dir / "summary.json", {
         "schemaVersion": schema,
+        **({"suite": suite} if suite is not None else {}),
         "baseline": {"status": baseline_status, "errors": baseline_errors,
                      "truncations": truncations if baseline_status == "ok" else None, "files": files("baseline")},
         "cases": cases,
@@ -135,10 +139,15 @@ def group(summary: dict, variant: str, model: str = "m1") -> dict:
 
 
 def test_wilson_matches_known_intervals() -> None:
-    assert wilson(0, 10) == [0.0, 0.2775]
-    assert wilson(5, 10) == [0.2366, 0.7634]
-    assert wilson(10, 10) == [0.7225, 1.0]
+    assert rounded(wilson(0, 10)) == [0.0, 0.2775]
+    assert rounded(wilson(5, 10)) == [0.2366, 0.7634]
+    assert rounded(wilson(10, 10)) == [0.7225, 1.0]
     assert wilson(0, 0) is None
+
+
+def test_rounded_keeps_costs_and_per_case_counts() -> None:
+    value = {"share": 30 / 38, "ci95": [1 / 3, 2 / 3], "usd": 0.0000123, "perCase": 0.47, "count": 30}
+    assert rounded(value) == {"share": 0.7895, "ci95": [0.3333, 0.6667], "usd": 0.0000123, "perCase": 0.47, "count": 30}
 
 
 def test_case_tiers() -> None:
@@ -166,15 +175,17 @@ def test_plain_group_numbers(corpus: Path) -> None:
     # cases, brief-b's extreme failure counts too: 2 of 2 (D-033, D-039).
     assert plain["brokeOnce"] == {"core": {"count": 1, "of": 2, "share": 0.5, "ci95": wilson(1, 2)},
                                   "all": {"count": 2, "of": 2, "share": 1.0, "ci95": wilson(2, 2)}}
-    assert plain["failureRate"] == {
-        "core": {"failed": 3, "applicable": 34, "rate": 0.0882, "ci95": wilson(3, 34)},
-        "extreme": {"failed": 1, "applicable": 4, "rate": 0.25, "ci95": wilson(1, 4)},
-        "all": {"failed": 4, "applicable": 38, "rate": 0.1053, "ci95": wilson(4, 38)},
+    # Exact in memory; rounded to 4 decimals only in summary.json.
+    assert plain["failureRate"]["core"]["rate"] == 3 / 34
+    assert rounded(plain["failureRate"]) == {
+        "core": {"failed": 3, "applicable": 34, "rate": 0.0882, "ci95": rounded(wilson(3, 34))},
+        "extreme": {"failed": 1, "applicable": 4, "rate": 0.25, "ci95": rounded(wilson(1, 4))},
+        "all": {"failed": 4, "applicable": 38, "rate": 0.1053, "ci95": rounded(wilson(4, 38))},
     }
     # Per candidate: brief-a 14/17 core, 2/2 extreme, 16/19 all; brief-b 17/17, 1/2, 18/19.
-    assert plain["survival"]["core"] == {"candidates": 2, "mean": pytest.approx(0.9118, abs=1e-4), "min": 0.8235, "max": 1.0}
+    assert rounded(plain["survival"]["core"]) == {"candidates": 2, "mean": 0.9118, "min": 0.8235, "max": 1.0}
     assert plain["survival"]["extreme"] == {"candidates": 2, "mean": 0.75, "min": 0.5, "max": 1.0}
-    assert plain["survival"]["all"]["mean"] == pytest.approx(0.8947, abs=1e-4)
+    assert rounded(plain["survival"]["all"]["mean"]) == 0.8947
     assert plain["cases"] == {"applicable": 38, "failed": 4, "renderErrors": 1, "timeouts": 1}
     assert plain["failedByCase"]["text-long"] == {"tier": "core", "failed": 1, "applicable": 2}
     assert plain["failedByCase"]["list-0"] == {"tier": "core", "failed": 1, "applicable": 2}
@@ -207,7 +218,7 @@ def test_a_pooled_group_per_variant_with_two_models(corpus: Path) -> None:
     _, summary = summarize(corpus, ("m1", "m2"))
     pooled = group(summary, "plain", "all models")
     assert pooled["pooled"] is True
-    assert pooled["brokeOnce"]["core"] == {"count": 1, "of": 3, "share": 0.3333, "ci95": wilson(1, 3)}
+    assert rounded(pooled["brokeOnce"]["core"]) == {"count": 1, "of": 3, "share": 0.3333, "ci95": rounded(wilson(1, 3))}
     assert pooled["brokeOnce"]["all"]["count"] == 2
     assert pooled["failureRate"]["all"]["applicable"] == 57
     # m2 has no hinted candidates, so hinted is not pooled; totals count each model once.
@@ -240,6 +251,71 @@ def test_a_stress_run_of_another_schema_is_an_error(tmp_path: Path) -> None:
     add_run(tmp_path, "m1/brief-a/plain-s1", schema=2)
     with pytest.raises(SetupError, match="stress schema 2"):
         load_candidates(["m1"], ["brief-a"], candidates_dir=tmp_path / "candidates", runs_dir=tmp_path / "runs")
+
+
+def test_suite_version(corpus: Path) -> None:
+    # The corpus runs leave the suite field out, as the step 10 harness did.
+    assert summarize(corpus)[1]["suite"] == {"version": "v1", "stressSummaries": 4, "recorded": 0}
+    add_candidate(corpus, "m2/brief-a/plain-s1")
+    add_run(corpus, "m2/brief-a/plain-s1", suite="v1")
+    _, summary = summarize(corpus, ("m1", "m2"))
+    assert summary["suite"] == {"version": "v1", "stressSummaries": 5, "recorded": 1}
+    report = render_report(summary)
+    assert "Suite v1 (D-044): the cases, tiers, checks, tolerances and new-finding rule are frozen" in report
+    assert "4 of 5 stress summaries predate the suite field" in report
+
+
+def test_a_stress_run_of_another_suite_is_an_error(tmp_path: Path) -> None:
+    add_candidate(tmp_path, "m1/brief-a/plain-s1")
+    add_run(tmp_path, "m1/brief-a/plain-s1", suite="v2")
+    with pytest.raises(SetupError, match="suite v2"):
+        load_candidates(["m1"], ["brief-a"], candidates_dir=tmp_path / "candidates", runs_dir=tmp_path / "runs")
+
+
+def test_percentages_are_rounded_once(tmp_path: Path) -> None:
+    # 30 of 38 cases fail: 78.947...%, which rounded to 4 decimals first (0.7895)
+    # would print as 79.0%.
+    failing = {case: {"newErrors": {"content-spill": 1}} for case in CASES[:15]}
+    for brief in ("brief-a", "brief-b"):
+        add_candidate(tmp_path, f"m1/{brief}/plain-s1")
+        add_run(tmp_path, f"m1/{brief}/plain-s1", suite="v1", failed=failing)
+    candidates, summary = summarize(tmp_path)
+    report = render_report(summary)
+    assert "| m1 | plain | all cases | 30/38 | 78.9% |" in report
+    write_outputs(candidates, summary, tmp_path / "spike")
+    written = json.loads((tmp_path / "spike" / "summary.json").read_text(encoding="utf-8"))
+    assert written["groups"][0]["failureRate"]["all"]["rate"] == 0.7895
+
+
+def test_sensitivity_removes_one_case_family_at_a_time(tmp_path: Path) -> None:
+    # plain, pooled over m1 and m2: one candidate breaks only on text-longword@320,
+    # one on text-long and text-longword, one never; hinted: one breaks only on
+    # viewport-320 and another only on an extreme case.
+    runs = {
+        "m1/brief-a/plain-s1": {"text-longword@320": {"newErrors": {"content-spill": 1}}},
+        "m1/brief-b/plain-s1": {"text-long": {"newErrors": {"text-clipped": 1}},
+                                "text-longword": {"newErrors": {"text-clipped": 1}}},
+        "m2/brief-a/plain-s1": {},
+        "m1/brief-a/hinted-s1": {"viewport-320": {"newErrors": {"off-screen": 1}}},
+        "m2/brief-a/hinted-s1": {"text-unbroken@320": {"newErrors": {"content-spill": 1}}},
+    }
+    for cid, failed in runs.items():
+        add_candidate(tmp_path, cid)
+        add_run(tmp_path, cid, suite="v1", failed=failed)
+    _, summary = summarize(tmp_path, ("m1", "m2"))
+    plain = {row["removed"]: (row["count"], row["of"]) for row in summary["sensitivity"]["plain"]}
+    hinted = {row["removed"]: (row["count"], row["of"]) for row in summary["sensitivity"]["hinted"]}
+    assert list(plain) == [None, *CORE_FAMILIES] and "text-unbroken" not in plain
+    assert plain[None] == (2, 3) and plain["text-longword"] == (1, 3) and plain["text-long"] == (2, 3)
+    assert hinted[None] == (1, 2) and hinted["viewport-320"] == (0, 2) and hinted["text-long"] == (1, 2)
+    # The first row is the pooled core headline.
+    assert plain[None][0] == group(summary, "plain", "all models")["brokeOnce"]["core"]["count"]
+    report = render_report(summary)
+    assert "## Headline sensitivity" in report
+    assert "| removed | plain: broke, core cases | share | 95% interval | change | hinted: broke, core cases |" in report
+    assert "| none | 2/3 | 66.7% | 20.8% to 93.9% | - | 1/2 | 50.0% |" in report
+    assert "| text-longword | 1/3 | 33.3% | 6.1% to 79.2% | -33.3 | 1/2 | 50.0% | 9.5% to 90.5% | +0.0 |" in report
+    assert "| viewport-320 | 2/3 | 66.7% | 20.8% to 93.9% | +0.0 | 0/2 | 0.0% | 0.0% to 65.8% | -50.0 |" in report
 
 
 def test_report_has_the_main_tables(corpus: Path) -> None:

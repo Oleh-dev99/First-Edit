@@ -47,5 +47,8 @@ def test_mock_reference_end_to_end(capsys: pytest.CaptureFixture[str], tmp_path)
     assert "| 0 | 0.0% | 0.0% to 27.8% |" in headline and headline.count("0.0% to 27.8%") == 2
     assert "| mock-reference | plain | 10 | 10 | 0 | 0 | 10 | 0 | 0 |" in report
     assert "| mock-reference | plain | core | 0/" in report and "| 100.0% | 100.0% | 100.0% |" in report
+    # Every stress summary records suite v1 (D-044); the sensitivity table pools the one model (D-045).
+    assert "Suite v1 (D-044)" in report and "predate the suite field" not in report
+    assert "| none | 0/10 | 0.0% | 0.0% to 27.8% | - |" in report
     gallery = (tmp_path / "spike" / "gallery.html").read_text(encoding="utf-8")
     assert 'data-section="failing"' in gallery and 'class="card survived"' in gallery
