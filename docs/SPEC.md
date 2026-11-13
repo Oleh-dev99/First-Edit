@@ -100,6 +100,10 @@ survives when the content changes.
   calibration
 - labels/ : label sets and their labels, committed (docs/LABELLING.md)
 - results/ : run output, git-ignored
+- site/ : the results site; site/public/data is its exported data,
+  committed (see Results site)
+- .github/workflows/pages.yml : builds the site and deploys it to GitHub
+  Pages when main is pushed
 - docs/ : spec, methodology, decisions
 
 ## Brief format
@@ -560,15 +564,17 @@ python -m first_edit summarize --out <dir> [--model <id> ...] [--runs-dir <dir>]
 python -m first_edit run-next [--dry-run] [--plan <file>]
 python -m first_edit cli-probe --model <claude-cli model id>
 python -m first_edit label-set --runs <dir> --name <name> --seed N
-python -m first_edit label --set <file> [--port N]
+python -m first_edit label --set <file> [--port N] [--adjudicate]
 python -m first_edit calibrate --set <file> --runs <dir> --out <dir> [--partial]
+python -m first_edit export-site --run <dir> --runs <dir> --calibration <dir> --out <dir> [--references <dir>]
 ```
 
 --all means every corpus brief (sample: false). The default variant is
 plain for generate and every variant found for stress. Setup: a virtual
 environment at .venv in the repo root, then
 `python -m pip install -r runner/requirements.lock -e runner`.
-Dependencies are httpx and python-dotenv, plus pytest for tests.
+Dependencies are httpx and python-dotenv, Pillow for export-site's WebP
+images, plus pytest for tests.
 
 ### Models file
 runner/models.toml lists the models the runner may call:
@@ -989,7 +995,83 @@ docs/LABELLING.md is the full procedure. In short:
   recall estimated by weighting each stratum by its size, the "other"
   and "unsure" counts, self-consistency on the repeats, and a gallery of
   every disagreement. It refuses to run until every item has a label,
-  unless --partial is given.
+  unless --partial is given. Every rate is given twice: over all items,
+  and over the unguided items, leaving out the cases listed in
+  labels/<name>.guided.json as discussed before labelling (D-056).
+- `label --adjudicate`, once every item has a label, shows each
+  disagreement between the labels and the suite on its own screen, not
+  blind: both clean pictures, the annotated screenshot, the findings and
+  the blind label. The owner answers: the suite is right, my label is
+  right, or we define it differently, with an optional note, saved to
+  labels/<name>.adjudication.jsonl. The page shows no one's analysis of
+  the item. calibrate then adds "after adjudication" below the blind
+  rates, which stay first and unchanged: precision and the miss rate with
+  every "the suite is right" answer in place of the blind label, and the
+  number of "we define it differently" items (D-055). Without the file,
+  the report says so and leaves the section out.
+
+## Results site
+A static site in site/ (Vite, React, TypeScript and Tailwind, at the
+versions the harness pins) publishes a run (D-054). It is built only
+from the committed files in site/public/data; nothing is fetched from
+another server, and there are no external fonts, scripts or tracking.
+
+`export-site --run results/run2 --runs results/runs-run2 --calibration
+results/calibration --out site/public/data` writes those files:
+- run.json: the tables behind the run's report.md (summary.json schema 3,
+  written by run-next or summarize --plan), which models have finished
+  their queued jobs, and a rate with a 95% Wilson interval for every
+  failed / applicable pair;
+- cases.json: every failed case and every born-broken or crashed baseline
+  of the run's models, with model, brief, variant, case, tier, checks and
+  findings, and a sample of 40 survived cases drawn with seed 1;
+- images/: the before (reference render), after and annotated screenshot
+  of each case as WebP (quality 80), at most 1280 px wide and, the
+  format's limit, 16383 px tall; file names use "-320" for "@320";
+- source/: the Component.tsx of each candidate shown, as plain text;
+- briefs.json: the system message, user template and hint word for word,
+  and each brief's text, props, baseline fixture and its reference's
+  baseline screenshot, read from the reference runs (--references,
+  default results/runs, written by briefs:check);
+- calibration.json: the calibration summary.
+
+The export is deterministic: the same inputs give the same bytes. It is
+written to a sibling folder first and checked there; it replaces the
+output only if it holds no API key (the values in .env and common key
+patterns), no email address outside the reserved example domains of the
+fixtures (RFC 2606, and the values the mutations grow from them), no
+absolute local path and no image metadata, and only a folder that holds a
+previous export is ever replaced. Error messages are scrubbed of local
+paths first.
+
+The pages: Overview (the question, the core headline per prompt variant
+with the all-cases figure beside it, one before and after pair chosen by
+hand), Results (the headline per model and variant, the paired hint test,
+the failure rate per case with its tier, the sensitivity table, the
+decision lines and their status, the candidates), Gallery (the cases as
+before and after pairs at one scale, with the annotated screenshot and
+findings on demand, filters for outcome, model, variant, brief, case, tier
+and check, and a link to each source), Method (the prompt word for word,
+cases and tiers, checks, the new-finding rule, references, calibration,
+the site's own test, limitations and known gaps, how the project was
+built) and Briefs. Every page carries a banner from run.json
+("Preliminary: N of M models have finished" until all have); every rate
+is shown with its count and 95% interval, recomputed from the counts as
+the run report does, so the figures match report.md; the core headline
+never appears without the all-cases figure; calibration shows the blind
+result first and the adjudicated one second, each labelled, with the
+number of labellers. The base path comes from SITE_BASE ("/" by default;
+the workflow sets "/<repository>/").
+
+The site passes its own suite: harness/test/site.test.ts builds it,
+serves it under /First-Edit/ and runs the five checks on every page (the
+gallery also with every case shown) at 1280 and 320 px, as the page
+opens and with every disclosure opened, and fails on any error finding,
+failed request, request to another server or page error.
+`npm run site:check` in harness/ prints the same and can save
+screenshots. Disclosures render their content only when open, because a
+closed <details> still lays its content out where the checks measure it
+(Known gaps).
 
 ## Known gaps
 Accepted in step 3:
@@ -1075,6 +1157,19 @@ Found in step 12:
   step 12 review. A candidate for a later suite version; suite v1 stays
   frozen (D-044).
 
+Found in step 14:
+- The content of a closed <details> is measured as if it were shown:
+  Chromium still lays it out, at no height, so it overlaps what follows
+  and text-overlap fires, although a reader sees nothing. The checks skip
+  only display none and visibility hidden. Seen when the results site was
+  checked with the suite; not yet observed in a candidate. A candidate for
+  a suite bug fix (D-044).
+- From set-01's calibration, three definitional disagreements
+  (docs/CALIBRATION-set-01.md): a scroll container shrunk below one item
+  or with a hidden scrollbar, a box edge that is barely visible against
+  what lies behind it, and a pill that runs under neighbouring text pass
+  every check. Candidates for a later suite version, not bug fixes.
+
 Closed in step 5: a visibly boxed element spilling out of its boxed
 parent (for example a tag pill out of a card) is now caught by
 content-spill (D-014). Empty states are out of scope rather than a gap
@@ -1103,7 +1198,8 @@ and replaced elements.
 11. Suite v1 frozen; ten more briefs (20 in total) (done)
 12. Second run on free models (in progress; one model a day)
 13. Labelling tool and blind calibration, set 1 (done)
-14. Results site
+14. Calibration follow-ups and results site (in progress until the owner
+    has adjudicated set 1)
 15. CLI packaging
 16. Decision on the comparison when the queue finishes; label set 2
 17. Write-up and README

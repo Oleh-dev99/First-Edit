@@ -428,6 +428,23 @@ picture's width and the case's screen width, so it shows nothing the
 picture does not, and it is drawn by the same rule on every item, whatever
 the suite found.
 
+## D-054 Preliminary results are published, and the site export is the record (2026-11-13)
+The results site publishes a run while it is still going: every page
+carries a banner, generated from the data, that says how many of the run's
+models have finished their queued jobs ("Preliminary: N of M models have
+finished") until all have. The published record of a run is the site
+export, site/public/data, written by export-site and committed: the run's
+tables, every failed case with its screenshots and findings, a seeded
+sample of passed cases, the source of each component shown, the briefs and
+the calibration. The site is built from that folder alone, and GitHub Pages
+deploys it when main is pushed. Raw candidates (candidates/<model>/) and
+results (results/) stay out of git. This narrows D-029: model outputs are
+not committed wholesale at the publishing step; the export, which holds the
+sources of the components it shows, is what is published. Before it is
+written, the export is checked for API keys, email addresses outside the
+reserved example domains and absolute local paths, and refused if it holds
+any.
+
 ## D-055 Calibration reports blind rates first and adjudicated rates second (2026-11-13)
 calibrate reports the blind rates first, and nothing that comes later
 changes them. Once the owner has adjudicated the disagreements

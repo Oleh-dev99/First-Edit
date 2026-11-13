@@ -6,6 +6,51 @@ survives when the content changes.
 
 Status: early development
 
+## Results site
+
+The results are published at **https://oleh-dev99.github.io/First-Edit/**.
+They are preliminary: every page says how many of the run's models have
+finished, until all have (D-054). The site in `site/` is built only from
+the committed data in `site/public/data`. The workflow
+`.github/workflows/pages.yml` builds it and deploys it to GitHub Pages
+whenever `main` is pushed, so pushing `main` publishes.
+
+Once, in the repository on GitHub, open Settings, then Pages, and under
+"Build and deployment" choose **GitHub Actions** as the source. Until
+then the workflow cannot deploy.
+
+To refresh the data once `run-next` has moved the run on (it rewrites
+`results/run2`), from the repo root (on Windows; use `.venv/bin/python`
+elsewhere). None of these steps calls a model:
+
+```sh
+cd harness && npm run briefs:check && cd ..
+.venv\Scripts\python -m first_edit calibrate --set labels/set-01.json --runs results/runs-run2 --out results/calibration
+.venv\Scripts\python -m first_edit export-site --run results/run2 --runs results/runs-run2 --calibration results/calibration --out site/public/data
+cd harness && npm run site:check && cd ..
+```
+
+`briefs:check` stresses the references, whose baseline screenshots the
+Briefs page shows. `export-site` refuses to write anything that holds an
+API key, an email address outside the fixtures' example domains or an
+absolute local path. `npm run site:check` builds the site and runs the
+suite's checks on every page at 1280 and 320 px. Then commit
+`site/public/data` and push `main`. Before the first push, work through
+[docs/PUBLISH-CHECKLIST.md](docs/PUBLISH-CHECKLIST.md).
+
+To look at the site locally:
+
+```sh
+cd site
+npm ci
+npm run dev
+```
+
+`npm run build` writes `site/dist`. Set `SITE_BASE=First-Edit` to build
+it under the GitHub Pages path `/First-Edit/`, as the workflow does
+(leave out the slashes in Git Bash, which would otherwise turn
+`/First-Edit/` into a Windows path).
+
 ## Smoke test
 
 The render harness lives in `harness/` and needs Node 26. From the repo
