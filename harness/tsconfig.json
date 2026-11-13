@@ -27,5 +27,11 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "lib", "scripts", "test", "vite.config.ts", "../briefs", "../candidates"]
+  // Only the hand-written candidates. Model outputs are checked by the
+  // candidate gate (npm run candidate:check), and many would fail the strict
+  // settings here, which the gate deliberately does not apply.
+  "include": [
+    "src", "lib", "scripts", "test", "vite.config.ts", "../briefs",
+    "../candidates/_samples", "../candidates/_reference"
+  ]
 }
