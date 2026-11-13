@@ -414,6 +414,10 @@ something essential is a real problem but not one the checks look for, so
 it is labelled "other" (D-051), with a note saying what it hides. set-01
 was labelled under this rule before the labelling tool's first screen
 stated it; the first screen states it for later sets.
+Clarified after set-01 was labelled: text cut off without an ellipsis is
+broken. Only an ellipsis marks truncation as deliberate; text that simply
+stops at a box's edge is "content is cut off". set-01 was labelled before
+this clarification, and its labels stand as given.
 
 ## D-053 The screen-edge marker is part of blind labelling (2026-11-13)
 When a picture is wider than its screen, the labelling tool draws a dashed
@@ -423,3 +427,26 @@ sideways. The marker is accepted for blind labels: it comes only from the
 picture's width and the case's screen width, so it shows nothing the
 picture does not, and it is drawn by the same rule on every item, whatever
 the suite found.
+
+## D-055 Calibration reports blind rates first and adjudicated rates second (2026-11-13)
+calibrate reports the blind rates first, and nothing that comes later
+changes them. Once the owner has adjudicated the disagreements
+(`label --adjudicate`: the suite is right, my label is right, or we define
+it differently), precision and the miss rate are reported again below
+them, with every "the suite is right" answer in place of the blind label,
+together with the number of "we define it differently" items. Adjudication
+is not blind: the owner sees the suite's evidence, which can pull an answer
+towards it. So the adjudicated rates are always labelled as such and always
+come second, on the site too. They show how much of the disagreement was
+labelling error, and the "we define it differently" items show where the
+labels and the suite need a shared definition.
+
+## D-056 Guided items are reported separately (2026-11-13)
+Items that the labeller discussed with someone before labelling are listed
+in labels/<set>.guided.json, and calibrate reports every rate twice: over
+all items, and over the unguided items only. A guided label is not one
+labeller's blind judgement, and the second figure shows how much the
+discussion moves the numbers. An item and its repeat show one case, so both
+count as guided when either is. For set-01 the owner discussed nine items
+with an adviser before labelling; all nine are cases the suite failed,
+labelled broken.

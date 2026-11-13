@@ -21,7 +21,7 @@ already shows does not.
 ## The labels
 | key | label | meaning | example |
 |---|---|---|---|
-| 1 | broken | content is cut off, spills out of its box, overlaps other content, is pushed off the screen, or the page scrolls sideways | a 30-letter word runs out of its card and over the price next to it |
+| 1 | broken | content is cut off (text cut off without an ellipsis included), spills out of its box, overlaps other content, is pushed off the screen, or the page scrolls sideways | a 30-letter word runs out of its card and over the price next to it |
 | 2 | fine | none of that; awkward wrapping, words broken across lines and text shortened with an ellipsis are fine | a long name now wraps onto three lines, and its card grows to hold it |
 | 3 | other | something else looks wrong (a squeezed column, missing content, a collapsed element), but not the kinds above; also an ellipsis that hides something essential, with a note saying what it hides | a table column squeezed so narrow that every word is split across several lines, with nothing overflowing |
 | 4 | unsure | cannot tell | a list ten times longer makes the picture 19,000 px tall, and the change cannot be found even when zoomed in |
@@ -31,20 +31,34 @@ Each item can also carry a free-text note. "other" is a label of its own
 instead of being forced into broken or fine.
 
 ## Rules the labels follow
-Two rules settle what the question and the labels leave open. set-01 was
-labelled under both.
+These rules settle what the question and the labels leave open. set-01
+was labelled under the first two; the two notes after them were added
+once it was labelled, and the tool's first screen states them all for
+later sets.
 
 - **Ellipsis (D-052).** Text shortened with an ellipsis ("…") counts as
   fine: truncation is a deliberate way to handle long content, and the
   suite records it as info, not as an error (D-005). If the ellipsis hides
   something essential, the label is "other", with a note saying what it
-  hides. The tool's first screen states this rule from set-02 on; set-01
-  was labelled under it before it was on that screen.
+  hides. Text cut off without an ellipsis is broken: only an ellipsis
+  marks truncation as deliberate. The tool's first screen states this rule
+  from set-02 on; set-01 was labelled under it before it was on that
+  screen, and before the sentence on text without an ellipsis was added.
 - **Screen-edge marker (D-053).** When a picture is wider than its
   screen, the tool marks the screen's edge (see What the labeller sees).
   The marker is accepted for a blind label: it comes only from the
   picture's width and the case's screen width, and it is drawn by the same
   rule on every item, whatever the suite found.
+- **Grown text can end mid-word.** A value made longer by the "longer
+  text, as after translation" case can end mid-word on purpose: a single
+  word grows by repeating its own letters, cut at the target length, so an
+  email address can end in "…@ex" (SPEC, text-long). That is the content,
+  not a cut; whether the layout holds it is what counts.
+- **"other" is not for removed content.** Content that the case itself
+  removed, such as text left empty, an emptied list or a list cut to one
+  item, is the change being tested, not something that looks wrong. Judge
+  how the layout copes with it: broken, fine, or "other" for a problem
+  such as a collapsed element.
 
 ## What the labeller sees
 - The two clean screenshots, never the annotated ones, at one shared
@@ -185,6 +199,58 @@ counts as not broken.
 Calibration changes nothing by itself: a fix to the suite is a bug fix with
 its own lab case and patch number (D-044).
 
+## Guided items
+Items that the labeller discussed with someone before or while labelling
+are guided (D-056): their labels are not the labeller's own blind
+judgement. They are listed in labels/<set>.guided.json:
+```
+{"set": "set-01", "reason": "discussed with an adviser before labelling", "items": ["i001", ...]}
+```
+An item and its repeat show one case, so when either is guided, the case
+is. calibrate gives every rate twice: over all items, and over the
+unguided items only. Without the file, the two are the same and the report
+says so. For set-01, the owner discussed nine items with an adviser before
+labelling: i001, i013, i018, i068, i069, i076, i083, i084 and i109. All
+nine are cases the suite failed, labelled broken; i076 repeats i022, so
+the nine guided cases include i022.
+
+## Adjudication
+Once every item has a label, the owner answers each disagreement with the
+suite's result in view (D-055):
+```
+.venv\Scripts\python -m first_edit label --set labels/set-01.json --adjudicate [--port N]
+```
+serves, on 127.0.0.1 like the labelling tool, one disagreement per screen:
+both clean pictures, the annotated screenshot, the suite's verdict and
+findings, and the blind label with its note. Nothing else about the item
+is shown, in particular no one's analysis of it. The answer is one of:
+
+| key | answer | meaning |
+|---|---|---|
+| 1 | the suite is right | under the labels' own definitions the suite's verdict is right, and the label was a mistake |
+| 2 | my label is right | the label stands, and the suite's verdict is wrong |
+| 3 | we define it differently | both are right by their own definitions: the labels and the suite count this differently |
+
+with an optional note (N), undo (Z) and the arrow keys, as when labelling.
+Answers are saved after every change to labels/<set>.adjudication.jsonl,
+one line per answered disagreement: `{"item", "answer", "note", "ms"}`,
+with answer `suite-right`, `label-right` or `defined-differently`. The
+blind labels are never changed.
+
+calibrate then adds a section below the blind rates, which stay first and
+unchanged: "After adjudication", with precision and the miss rate where
+every "the suite is right" answer replaces the blind label (a failed item
+becomes broken, a passed one fine) and every other answer keeps it, over
+all items and over the unguided ones, and the number of "we define it
+differently" items. Those are where the labels and the suite need a shared
+definition, which is a decision for a later suite version, not a bug fix.
+Without the adjudication file, the report says so and leaves the section
+out. Adjudication is not blind: it measures how often the labeller, shown
+the suite's evidence, agrees with it, and it is always reported second.
+
+docs/CALIBRATION-set-01.md is the suite author's own, non-blind reading of
+set-01's disagreements. The adjudication tool does not show it.
+
 ## Limitations
 - **One labeller.** Each set has one labeller, so the labels carry that
   person's judgement. Self-consistency on the repeats measures how stable
@@ -197,3 +263,12 @@ its own lab case and patch number (D-044).
   the change in plain words above every pair. It says what to look for,
   and through the set's composition a labeller may learn that some changes
   (a 60-letter word) mostly come with failures.
+- **Fast answers.** In set-01 the median answer took 2.4 seconds (the
+  mean 3.8 s; 24 of the 215 answers took under a second). At that pace a
+  small defect in a large picture can be missed: every label that the
+  author's non-blind reading (docs/CALIBRATION-set-01.md) takes to be
+  wrong was given in 4 seconds or less.
+- **No marker at the left edge.** The tool marks only a picture wider
+  than its screen. Content pushed past the left edge of the screen, which
+  cannot be scrolled to, has no marker: it shows only as text that starts
+  mid-word at the picture's edge.
