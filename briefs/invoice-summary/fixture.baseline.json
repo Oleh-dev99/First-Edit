@@ -1,0 +1,36 @@
+{
+  "invoiceNumber": "INV-2026-0418",
+  "issueDate": "3 Nov 2026",
+  "dueDate": "3 Dec 2026",
+  "currency": "GBP",
+  "seller": {
+    "name": "Saltgrove Studio",
+    "address": {
+      "street": "14 Tanner's Yard",
+      "city": "Bristol",
+      "postalCode": "BS1 6QA",
+      "country": "United Kingdom"
+    }
+  },
+  "buyer": {
+    "name": "Kettleby Outdoor Ltd",
+    "address": {
+      "street": "2 Mill Race Lane",
+      "city": "Kendal",
+      "postalCode": "LA9 4TT",
+      "country": "United Kingdom"
+    }
+  },
+  "lineItems": [
+    { "id": "li-1", "description": "Brand identity workshop", "quantity": 2, "unitPrice": 1800, "amount": 3600 },
+    { "id": "li-2", "description": "Logo design, three concepts and final artwork", "quantity": 1, "unitPrice": 2400, "amount": 2400 },
+    { "id": "li-3", "description": "Packaging artwork per product line", "quantity": 4, "unitPrice": 650, "amount": 2600 },
+    { "id": "li-4", "description": "Print-ready file preparation, per hour", "quantity": 6, "unitPrice": 85, "amount": 510 }
+  ],
+  "subtotal": 9110,
+  "taxLabel": "VAT (20%)",
+  "tax": 1822,
+  "total": 10932,
+  "note": "Payment is due within 30 days. Please use the invoice number as the payment reference.",
+  "payLabel": "Pay invoice"
+}
