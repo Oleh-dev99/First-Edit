@@ -48,7 +48,7 @@ npm run check -- --brief hello-card --candidate _samples/hello-card/brittle --fi
 `npm test` runs the unit tests for the fields map and the mutations, every
 check-lab case, the sample matrix (robust and brittle hello-card,
 baseline and stress fixtures, 1280 and 320 wide) and the stress matrix
-(both samples through every mutation), and asserts the results. Lab cases
+(both samples through every case), and asserts the results. Lab cases
 can be viewed at `/?lab=<case-id>`.
 
 `npm run check` renders one case and writes the findings JSON, a clean
@@ -71,8 +71,9 @@ npm run briefs:check -- --brief pricing-table
 
 validates the brief files, the fields map, the fixture against `Props`,
 image references, the corpus rules and the reference candidate (types,
-imports, a clean baseline and survival of every applicable mutation). It
-prints one row per brief and exits non-zero if any brief fails.
+imports, a clean baseline, survival of every applicable case in both
+tiers, core and extreme, and no hidden content). It prints one row per
+brief and exits non-zero if any brief fails.
 
 Fixtures reference images only as `/fe-assets/<name>.svg`; the six
 placeholder images live in `harness/public/fe-assets/`.
@@ -109,8 +110,10 @@ published. Before publishing anything, work through
 npm run stress -- --brief hello-card --candidate _samples/hello-card/brittle
 ```
 
-Renders the baseline and every applicable mutation (see
-[docs/SPEC.md](docs/SPEC.md)), prints a table of new errors per check and
-the survival rate, and writes per-case results, screenshots and
+Renders the baseline and every applicable case: the eleven mutations,
+then the eight content mutations again at 320 px, 19 cases at most, each
+in the core or the extreme tier (see [docs/SPEC.md](docs/SPEC.md), Cases).
+It prints a table of new errors per check and the survival rate, overall
+and per tier, and writes per-case results, screenshots and
 `summary.json` to `results/runs/<brief>/<candidate>/`. Any case can be
 reproduced by opening its `query` (in the case JSON) with `npm run dev`.

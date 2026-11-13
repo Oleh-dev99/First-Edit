@@ -266,3 +266,47 @@ born broken (the baseline has error findings) or clean. Each is reported
 separately everywhere, and only clean candidates are scored. In the
 spike a crashing baseline was counted as clean by the stress command and
 as born broken by summarize.
+
+## D-039 Two tiers of cases; the headline uses core cases (2026-11-13)
+Every case is core or extreme. text-unbroken and text-unbroken@320, the
+60-letter word with no break opportunity, are extreme; every other case
+is core. The headline, "broke at least once", is computed on core cases
+only, and the same measure over all cases is always reported beside it,
+with the failure rate and mean survival per tier. The core long word is
+a new mutation, text-longword: the longest word of every label and prose
+value becomes one 30-letter token, at 1280 and at 320, so a candidate
+runs up to 19 cases. References must survive both tiers. This changed
+after step 9, where text-unbroken@320 alone made three of the four
+groups reach 100% (15 of 32 broken candidates broke only there), and is
+recorded as a post-hoc design change: headline numbers from before and
+after it are not comparable.
+
+## D-040 New findings are matched by an index-free key (2026-11-13)
+Every finding carries a matchKey: its path from #fe-root as the tag and
+sorted classes of each level, with no positions. The new-finding rule
+compares check and matchKey; the nth-child selector stays for display.
+A list that grows or shrinks no longer turns a flaw the reference
+render already has into a new finding, which in step 9 failed a clean
+candidate through the viewport-320 reference. The cost is that a key
+covers every element with the same structure, so a flaw in one list item
+of the reference also covers the same check on its siblings.
+
+## D-041 Only errors in the reference cancel errors in a case (2026-11-13)
+A case's error is not new only if the reference render has an error with
+the same check and key. An info finding there (a deliberate ellipsis,
+for example) cancels nothing, so text that was truncated on purpose and
+is now cut off without an ellipsis counts.
+
+## D-042 Horizontal tolerance is 2px for content-spill and off-screen (2026-11-13)
+Overflow of up to 2px from centring or rounding cannot be seen; with a
+1px tolerance a 1.5px spill failed a case in the step 9 review.
+page-overflow-x and text-clipped keep 1px, and vertical tolerances are
+unchanged.
+
+## D-043 content-spill clips a box only inside its boxed ancestor (2026-11-13)
+Before a content box is compared with its nearest visibly boxed
+ancestor, it is clipped only by the overflow ancestors between the two,
+the boxed ancestor included. Before, every overflow ancestor clipped it,
+so pills running out of a card that itself ran past a sideways-scrolling
+board's window were cut at the window and the spill went unmeasured
+(the step 9 missed failure).
