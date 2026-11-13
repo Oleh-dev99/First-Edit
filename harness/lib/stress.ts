@@ -88,15 +88,15 @@ const playwrightVersion = (createRequire(import.meta.url)('playwright/package.js
   .version;
 
 /**
- * A finding is new if it is an error and no finding of the reference render
+ * A finding is new if it is an error and no error of the reference render
  * (the baseline, or viewport-320 for content@320 cases) has the same check
- * and selector.
+ * and match key (D-040). Info findings in the reference cancel nothing
+ * (D-041).
  */
 export function newFindings(findings: Finding[], reference: Finding[]): Finding[] {
-  const known = new Set(reference.map((finding) => `${finding.check} ${finding.selector}`));
-  return findings.filter(
-    (finding) => finding.severity === 'error' && !known.has(`${finding.check} ${finding.selector}`),
-  );
+  const key = (finding: Finding): string => `${finding.check} ${finding.matchKey}`;
+  const known = new Set(reference.filter((finding) => finding.severity === 'error').map(key));
+  return findings.filter((finding) => finding.severity === 'error' && !known.has(key(finding)));
 }
 
 /** Deliberate truncations: text-clipped info findings (ellipsis or line clamp). */

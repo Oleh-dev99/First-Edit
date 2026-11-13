@@ -15,6 +15,7 @@ import {
   overflowPast,
   round,
   scan,
+  matchKeyFor,
   selectorFor,
   textOf,
   toPageRect,
@@ -95,6 +96,7 @@ export const contentSpill: Check = (root) => {
         check: 'content-spill',
         severity: 'error',
         selector: selectorFor(element, root),
+        matchKey: matchKeyFor(element, root),
         rect: toPageRect(spill.rect, view),
         text: textOf(spill.texts),
         detail: {

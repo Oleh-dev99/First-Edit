@@ -11,6 +11,7 @@ import {
   intersect,
   round,
   scan,
+  matchKeyFor,
   selectorFor,
   textOf,
   toPageRect,
@@ -87,6 +88,7 @@ export const textOverlap: Check = (root) => {
         check: 'text-overlap',
         severity: 'error',
         selector: selectorFor(pair.primary, root),
+        matchKey: matchKeyFor(pair.primary, root),
         rect: toPageRect(pair.rect, view),
         text: textOf(pair.primaryTexts),
         detail: {

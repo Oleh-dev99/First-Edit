@@ -19,8 +19,14 @@ export interface Rect {
 export interface Finding {
   check: CheckName;
   severity: Severity;
-  /** Structural path from #fe-root (tag and nth-child). "html" for page-level findings. */
+  /** Structural path from #fe-root (tag and nth-child), for display. "html" for page-level findings. */
   selector: string;
+  /**
+   * Index-free path from #fe-root: tag and classes at each level, no
+   * positions. The new-finding rule matches on it (D-040). "html" for
+   * page-level findings.
+   */
+  matchKey: string;
   rect: Rect;
   /** First 80 characters of the affected text, or null. */
   text: string | null;

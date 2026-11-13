@@ -15,18 +15,25 @@ import {
 } from '../lib/stress.ts';
 import type { Finding } from '../src/checks/finding.ts';
 
-const finding = (check: Finding['check'], selector: string, severity: Finding['severity'] = 'error'): Finding => ({
+/** A finding whose selector and match key are both `key`, unless a selector is given. */
+const finding = (
+  check: Finding['check'],
+  key: string,
+  severity: Finding['severity'] = 'error',
+  selector = key,
+): Finding => ({
   check,
   severity,
   selector,
+  matchKey: key,
   rect: { x: 0, y: 0, width: 1, height: 1 },
   text: null,
   detail: {},
 });
 
 describe('newFindings', () => {
-  test('an error is new unless a baseline finding has the same check and selector', () => {
-    const baseline = [finding('text-clipped', 'p'), finding('content-spill', 'h2', 'info')];
+  test('an error is new unless a reference error has the same check and match key', () => {
+    const reference = [finding('text-clipped', 'p'), finding('content-spill', 'h2')];
     const current = [
       finding('text-clipped', 'p'),
       finding('content-spill', 'h2'),
@@ -34,7 +41,19 @@ describe('newFindings', () => {
       finding('text-overlap', 'p'),
       finding('text-clipped', 'li', 'info'),
     ];
-    assert.deepStrictEqual(newFindings(current, baseline), [finding('content-spill', 'p'), finding('text-overlap', 'p')]);
+    assert.deepStrictEqual(newFindings(current, reference), [finding('content-spill', 'p'), finding('text-overlap', 'p')]);
+  });
+
+  test('the match key decides, not the selector', () => {
+    const reference = [finding('content-spill', 'ul > li.card > span', 'error', 'ul > li:nth-child(1) > span')];
+    const grown = finding('content-spill', 'ul > li.card > span', 'error', 'ul > li:nth-child(7) > span');
+    const elsewhere = finding('content-spill', 'div.summary > span', 'error', 'ul > li:nth-child(1) > span');
+    assert.deepStrictEqual(newFindings([grown, elsewhere], reference), [elsewhere]);
+  });
+
+  test('an info finding in the reference cancels nothing', () => {
+    const reference = [finding('text-clipped', 'p', 'info')];
+    assert.deepStrictEqual(newFindings([finding('text-clipped', 'p')], reference), [finding('text-clipped', 'p')]);
   });
 
   test('truncationCount counts text-clipped info findings only', () => {

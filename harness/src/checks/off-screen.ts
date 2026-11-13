@@ -15,6 +15,7 @@ import {
   hasArea,
   round,
   scan,
+  matchKeyFor,
   selectorFor,
   textOf,
   union,
@@ -85,6 +86,7 @@ export const offScreen: Check = (root) => {
         check: 'off-screen',
         severity: 'error',
         selector: selectorFor(element, root),
+        matchKey: matchKeyFor(element, root),
         rect: onScreenRect(entry, width, view),
         text: textOf(entry.texts),
         detail: {

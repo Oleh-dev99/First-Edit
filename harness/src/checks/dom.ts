@@ -311,6 +311,21 @@ export function selectorFor(el: Element, root: Element): string {
   return [rootSelector, ...parts].join(' > ');
 }
 
+/**
+ * Index-free path from the root, e.g. "#fe-root > ul.grid > li.card > span.tag":
+ * each level is the tag plus its classes, sorted, with no position. The same
+ * element of a list that grows or shrinks keeps its key (D-040).
+ */
+export function matchKeyFor(el: Element, root: Element): string {
+  const rootKey = root.id ? `#${root.id}` : root.localName;
+  const parts: string[] = [];
+  for (let node: Element | null = el; node && node !== root; node = node.parentElement) {
+    const classes = [...new Set(Array.from(node.classList))].sort();
+    parts.unshift([node.localName, ...classes].join('.'));
+  }
+  return [rootKey, ...parts].join(' > ');
+}
+
 export function depthOf(el: Element, root: Element): number {
   let depth = 0;
   for (let node: Element | null = el; node && node !== root; node = node.parentElement) depth++;

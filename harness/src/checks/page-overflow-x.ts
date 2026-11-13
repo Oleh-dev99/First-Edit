@@ -37,6 +37,7 @@ export const pageOverflowX: Check = (root) => {
       check: 'page-overflow-x',
       severity: 'error',
       selector: 'html',
+      matchKey: 'html',
       rect: { x: html.clientWidth, y: 0, width: overflowPx, height: html.scrollHeight },
       text: null,
       detail: {

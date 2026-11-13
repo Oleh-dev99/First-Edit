@@ -17,6 +17,7 @@ import {
   paddingBox,
   round,
   scan,
+  matchKeyFor,
   selectorFor,
   textOf,
   toPageRect,
@@ -101,6 +102,7 @@ export const textClipped: Check = (root) => {
       check: 'text-clipped',
       severity: error ? 'error' : 'info',
       selector: selectorFor(element, root),
+      matchKey: matchKeyFor(element, root),
       rect: toPageRect(rect, view),
       text: textOf(texts),
       detail: {

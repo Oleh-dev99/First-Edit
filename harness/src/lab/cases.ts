@@ -52,6 +52,21 @@ const PILL =
   'flex:none; padding:2px 10px; border-radius:9999px; background:#e0e7ff; color:#3730a3; ' +
   'font-size:14px; white-space:nowrap';
 
+/** A card whose nowrap name is too long for it: one content-spill flaw per card. */
+const NAME_CARD = (name: string): string =>
+  `<li class="card" style="width:140px; padding:8px; background:#fff; border:1px solid #cbd5e1; white-space:nowrap">` +
+  `<span class="name">${name}</span></li>`;
+
+const NAMES = [
+  'Annika Lindqvist-Haraldsen', 'Bartholomew Okonkwo-Reyes', 'Constance Vandermeulen',
+  'Dmitri Abernathy-Sato', 'Evangeline Moreau-Castillo', 'Florentino Nakamura-Byrne',
+];
+
+const NAME_LIST = (count: number): string =>
+  `<ul class="cards" style="display:grid; gap:8px; margin:0; padding:0; list-style:none">` +
+  NAMES.slice(0, count).map(NAME_CARD).join('') +
+  `</ul>`;
+
 const FIXED_HEADER =
   'position:fixed; top:0; left:0; right:0; display:flex; gap:16px; padding:8px 16px; ' +
   'background:#fff; border-bottom:1px solid #e2e8f0';
@@ -295,6 +310,32 @@ export const LAB_CASES: LabCase[] = [
     description: '- nowrap text running past a block with top and bottom borders only',
     html: `<div style="width:160px; padding:8px 0; border-top:1px solid #94a3b8; border-bottom:1px solid #94a3b8; white-space:nowrap">This label runs past both rules</div>`,
     expected: {},
+  },
+
+  // new findings are matched by an index-free key (D-040); test/match-key.test.ts compares these three
+  {
+    id: 'match-list-3',
+    check: 'content-spill',
+    description: '+ three cards whose nowrap names run out of them',
+    html: NAME_LIST(3),
+    expected: { 'content-spill': { error: 3 } },
+  },
+  {
+    id: 'match-list-6',
+    check: 'content-spill',
+    description: '+ the same list grown to six cards',
+    html: NAME_LIST(6),
+    expected: { 'content-spill': { error: 6 } },
+  },
+  {
+    id: 'match-list-moved',
+    check: 'content-spill',
+    description: '+ the six cards plus a summary box whose name runs out of it',
+    html:
+      NAME_LIST(6) +
+      `<div class="summary" style="width:140px; margin-top:8px; padding:8px; background:#fff; border:1px solid #cbd5e1; white-space:nowrap">` +
+      `<span class="name">Guinevere Thistlewaite-Obi</span></div>`,
+    expected: { 'content-spill': { error: 7 } },
   },
 
   // readiness: images that fail or are lazy must never hang __FE_READY__
