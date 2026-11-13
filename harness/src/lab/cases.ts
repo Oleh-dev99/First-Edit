@@ -67,6 +67,22 @@ const NAME_LIST = (count: number): string =>
   NAMES.slice(0, count).map(NAME_CARD).join('') +
   `</ul>`;
 
+/**
+ * A sideways-scrolling board at 320px: two columns, each wider than the
+ * board's window, with one card of tag pills. `wrap` lets the pills wrap.
+ */
+const BOARD = (wrap: boolean): string => {
+  const pills =
+    `<div style="display:flex; gap:6px; margin-top:6px${wrap ? '; flex-wrap:wrap' : ''}">` +
+    PILLS.map((label) => `<span style="${PILL}">${label}</span>`).join('') +
+    `</div>`;
+  const column = (title: string): string =>
+    `<section style="flex:none; width:300px; padding:8px; border-radius:8px; background:#e2e8f0">` +
+    `<div style="padding:8px; border:1px solid #cbd5e1; border-radius:6px; background:#fff">${title}${pills}</div>` +
+    `</section>`;
+  return `<div style="display:flex; gap:12px; overflow-x:auto">${column('Audit the forms')}${column('Ship the tokens')}</div>`;
+};
+
 const FIXED_HEADER =
   'position:fixed; top:0; left:0; right:0; display:flex; gap:16px; padding:8px 16px; ' +
   'background:#fff; border-bottom:1px solid #e2e8f0';
@@ -358,6 +374,24 @@ export const LAB_CASES: LabCase[] = [
       `<img src="${image(160, 40, '#94a3b8')}" alt="" style="display:block; width:162px; height:40px; max-width:none">` +
       `</div>`,
     expected: { 'content-spill': { error: 1 } },
+  },
+
+  // content-spill inside a scroll container: only overflow ancestors between a box and its boxed ancestor clip it (D-043)
+  {
+    id: 'spill-scroller-board-pills',
+    check: 'content-spill',
+    description: '+ tag pills running out of their card inside a sideways-scrolling board',
+    viewport: NARROW,
+    html: BOARD(false),
+    expected: { 'content-spill': { error: 2 } },
+  },
+  {
+    id: 'spill-scroller-board-fits',
+    check: 'content-spill',
+    description: '- the same pills when they fit (wrapping allowed)',
+    viewport: NARROW,
+    html: BOARD(true),
+    expected: {},
   },
 
   // readiness: images that fail or are lazy must never hang __FE_READY__

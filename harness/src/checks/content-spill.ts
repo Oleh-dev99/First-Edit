@@ -1,6 +1,8 @@
-// content-spill (error): an in-flow content box's visible rect extends past
-// the border box of its nearest visibly boxed ancestor inside the root, by
-// more than 2px horizontally (D-042).
+// content-spill (error): an in-flow content box extends past the border box
+// of its nearest visibly boxed ancestor inside the root, by more than 2px
+// horizontally (D-042). The box is clipped only by overflow ancestors
+// between it and that boxed ancestor, the boxed ancestor included (D-043):
+// a scroll container further out does not hide a spill from its card.
 // Content boxes here are text line boxes, replaced elements and visibly
 // boxed elements themselves (a pill, a panel), each compared with its own
 // nearest boxed ancestor. Out-of-flow content is exempt. One finding per
@@ -46,10 +48,23 @@ export const contentSpill: Check = (root) => {
   const { boxes, elements } = scan(root);
   const spills = new Map<Element, Spill>();
 
-  /** Compares one visible box of `element` with the nearest boxed element from `start` up. */
-  const compare = (element: Element, visible: Box, start: Element | null, toleranceY: number, text: Text | null) => {
+  /**
+   * Compares one box of `element` with the nearest boxed element from `start`
+   * up, after clipping it by the overflow ancestors in its clip chain that lie
+   * inside that boxed element (the boxed element included).
+   */
+  const compare = (
+    element: Element,
+    raw: Box,
+    clipChain: Element[],
+    start: Element | null,
+    toleranceY: number,
+    text: Text | null,
+  ) => {
     const boxed = nearestBoxed(start, root);
     if (!boxed) return;
+    const visible = clipBox(raw, clipChain.filter((ancestor) => boxed.contains(ancestor)));
+    if (!visible) return;
     const border = boxOf(boxed.getBoundingClientRect());
     const overX = overflowPast(visible, border, 'x');
     const overY = overflowPast(visible, border, 'y');
@@ -78,16 +93,15 @@ export const contentSpill: Check = (root) => {
 
   // Text line boxes sit inside their own element; a replaced element's box is the element.
   for (const box of boxes) {
-    if (!box.inFlow || !box.visible) continue;
+    if (!box.inFlow) continue;
     const start = box.kind === 'text' ? box.element : box.element.parentElement;
-    compare(box.element, box.visible, start, verticalTolerance(box), box.textNode);
+    compare(box.element, box.raw, box.clipChain, start, verticalTolerance(box), box.textNode);
   }
 
   // A visibly boxed element is a content box too, compared with its own nearest boxed ancestor.
   for (const { element, inFlow, clipChain } of elements) {
     if (!inFlow || !isVisiblyBoxed(getComputedStyle(element))) continue;
-    const visible = clipBox(boxOf(element.getBoundingClientRect()), clipChain);
-    if (visible) compare(element, visible, element.parentElement, TOLERANCE_Y, null);
+    compare(element, boxOf(element.getBoundingClientRect()), clipChain, element.parentElement, TOLERANCE_Y, null);
   }
 
   return [...spills]
