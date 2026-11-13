@@ -95,6 +95,37 @@ def _price_line(label: str, configured: float | None, listed: float | None) -> t
     return head + "DIFFERENT: listed is lower", False
 
 
+def check_cli_model(entry: ModelEntry, cli_check: Callable[[], dict[str, Any]]) -> tuple[list[str], bool]:
+    """A claude-cli model: the command line is installed and signed in. Its
+    auth method decides who pays: claude.ai is the owner's subscription."""
+    lines = [f"{entry.id}: claude-cli  alias {entry.model}  effort {entry.params.get('effort')}"]
+    info = cli_check()
+    if info.get("error"):
+        lines += [f"  command    {info['error']}", "  result     UNUSABLE"]
+        return lines, False
+    lines.append(f"  command    claude {info.get('version')}, --safe-mode "
+                 f"{'available' if info.get('safeMode') else 'NOT available'}")
+    auth = info.get("auth") or {}
+    signed_in = bool(auth.get("loggedIn"))
+    lines.append(f"  auth       {'signed in' if signed_in else 'NOT signed in'}, method {auth.get('authMethod')}, "
+                 f"plan {auth.get('subscriptionType') or '-'}")
+    if signed_in and auth.get("authMethod") != "claude.ai":
+        lines.append("  note       not a claude.ai login: calls would be billed to an API account")
+    lines.append(f"  result     {'usable' if signed_in else 'UNUSABLE'}")
+    return lines, signed_in
+
+
+def _cli_check() -> dict[str, Any]:
+    from .claude_cli import auth_status, cli_version, executable, supports_safe_mode
+    from .providers import SetupError
+
+    try:
+        exe = executable()
+        return {"version": cli_version(exe), "safeMode": supports_safe_mode(exe), "auth": auth_status(exe)}
+    except SetupError as error:
+        return {"error": str(error)}
+
+
 def check_model(entry: ModelEntry, environ: Mapping[str, str], listing: Listing | None) -> tuple[list[str], bool]:
     """Report lines for one model and whether it is usable."""
     if entry.provider == "mock":
@@ -150,6 +181,7 @@ def run_doctor(
     client: httpx.Client,
     models_file: Path = MODELS_FILE,
     out: Callable[[str], None] = print,
+    cli_check: Callable[[], dict[str, Any]] = _cli_check,
 ) -> int:
     """0 when every configured model is usable, 1 when one is not, 2 when the
     models file is invalid."""
@@ -163,7 +195,17 @@ def run_doctor(
 
     listings: dict[str, Listing] = {}
     unusable = []
+    cli_info: dict[str, Any] | None = None
     for entry in entries.values():
+        if entry.provider == "claude-cli":
+            cli_info = cli_info or cli_check()
+            lines, usable = check_cli_model(entry, lambda: cli_info)
+            out("")
+            for line in lines:
+                out(line)
+            if not usable:
+                unusable.append(entry.id)
+            continue
         listing = None
         if entry.provider != "mock":
             base_url = entry.base_url or ""

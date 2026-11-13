@@ -10,7 +10,9 @@ from typing import Any
 
 from .paths import MODELS_FILE
 
-PROVIDERS = ("mock", "openai-compatible")
+PROVIDERS = ("mock", "openai-compatible", "claude-cli")
+#: Effort levels a claude-cli entry may set (params = { effort = "medium" }).
+CLI_EFFORTS = ("low", "medium", "high", "xhigh", "max")
 MODEL_ID = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 ENTRY_KEYS = {"id", "provider", "base_url", "api_key_env", "model", "params", "price"}
 
@@ -74,6 +76,16 @@ def _entry(raw: Any, index: int) -> ModelEntry:
         for key in ("base_url", "api_key_env", "model"):
             if not isinstance(raw.get(key), str) or not raw[key]:
                 raise ModelsError(f"{where}: {key} is required for openai-compatible")
+    if provider == "claude-cli":
+        # model is the command line's alias (haiku, sonnet, opus); there is no URL and no key.
+        if not isinstance(raw.get("model"), str) or not raw["model"]:
+            raise ModelsError(f"{where}: model (a claude alias such as haiku) is required for claude-cli")
+        for key in ("base_url", "api_key_env"):
+            if key in raw:
+                raise ModelsError(f"{where}: {key} does not apply to claude-cli")
+        cli_params = raw.get("params", {})
+        if not isinstance(cli_params, dict) or set(cli_params) != {"effort"} or cli_params["effort"] not in CLI_EFFORTS:
+            raise ModelsError(f"{where}: claude-cli needs params = {{ effort = <{' | '.join(CLI_EFFORTS)}> }} and nothing else")
 
     params = raw.get("params", {})
     if not isinstance(params, dict):
