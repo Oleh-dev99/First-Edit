@@ -23,6 +23,9 @@ survives when the content changes.
   plus findings. Every case is in the core or the extreme tier (D-039).
 - Baseline: the candidate rendered with the unmodified fixture at
   1280x800.
+- Suite: the cases with their tiers, the checks with their tolerances,
+  and the new-finding rule. The current suite is v1, and it is frozen
+  (D-044; see Suite v1).
 
 ## Candidate contract
 - One self-contained .tsx file with a default export. It declares its own
@@ -99,8 +102,8 @@ survives when the content changes.
 briefs/<id>/ contains exactly:
 - meta.json: { id, title, category, sample }. id equals the directory
   name. category is one of: card, list, table, form, navigation,
-  dashboard, page-section, messaging, board. sample is true for
-  hello-card and false for corpus briefs.
+  dashboard, page-section, messaging, board, dialog, feed. sample is
+  true for hello-card and false for corpus briefs.
 - brief.md: the request a model will receive
 - props.ts: `export interface Props`, plus helper types if needed
 - fixture.baseline.json
@@ -126,7 +129,7 @@ Rules for writing a corpus brief:
    /fe-assets/ path in a field declared fixed (see Images).
 6. The fixture is realistic mock data, as a designer would put in a
    mockup: plausible names and amounts, 3 to 8 items per list, English.
-7. At least 8 of the 11 mutations must be applicable.
+7. At least 9 of the 11 mutations must be applicable.
 8. No file names and no mention of imports.
 9. No size words about content: one-line, short, long, brief, small,
    few. They are hints in the wrong direction.
@@ -287,6 +290,17 @@ opening that URL with `npm run dev` at the case's viewport.
 
 Deferred until a check can see its effect: image-missing.
 
+### Suite v1
+The cases and their tiers (above), the checks and their tolerances
+(Checks (v0)) and the new-finding rule (Case results) together are the
+stress suite. Suite v1 is the suite as of step 10, plus the step 11
+change to page-overflow-x culprits, which changes detail only. It is
+frozen (D-044): from step 11 on, only bug fixes change it, and each fix
+is recorded in docs/DECISIONS.md with its lab case and its effect on
+results. A fix keeps the version; a change of design would start suite
+v2. Every stress summary records the suite it ran (`"suite": "v1"`),
+and so does report.md.
+
 ## Checks (v0)
 A check is a plain DOM function `(root: Element) => Finding[]` with no
 imports from the app. The page exposes `window.__FE_RUN_CHECKS__()`, which
@@ -329,9 +343,15 @@ that belong to the same element are merged.
 ### The checks
 1. page-overflow-x (error)
    documentElement.scrollWidth exceeds clientWidth by more than 1px.
-   One finding for the page. detail lists up to three deepest elements
-   whose right edge passes the viewport, elements in fixed or absolute
-   subtrees included.
+   One finding for the page. detail names up to three culprits: elements
+   whose border box, text line boxes or replaced elements pass the
+   viewport's right edge (visible rects, elements in fixed or absolute
+   subtrees included), leaving out an element when one of its
+   descendants is a culprit too, the ones that reach furthest first and
+   the deepest on a tie. A word that runs out of its element passes the
+   viewport while the element's box does not, so the element is named by
+   its text. The culprits are detail only; they never decide whether the
+   check fires.
 2. text-clipped
    A text line box extends past the padding box of its nearest ancestor
    with overflow hidden or clip on that axis.
@@ -477,6 +497,7 @@ cleanly. Bump schemaVersion on any incompatible change.
 ```
 {
   "schemaVersion": 3,
+  "suite": "v1",                       // the stress suite (D-044)
   "brief": "hello-card",
   "candidate": "_samples/hello-card/brittle",
   "fixture": "baseline",
@@ -748,9 +769,16 @@ candidates appear as rows and are not stressed.
 the given models (default: every non-mock model in runner/models.toml)
 for the corpus briefs and writes three files to <dir> (results/spike for
 the step 8 spike, results/spike-v2 and results/spike-v3 for its
-re-stresses in steps 9 and 10). It reads stress summaries of
+re-stresses in steps 9 and 10, results/spike-v3b for the step 11
+summarize of the step 10 runs). It reads stress summaries of
 schemaVersion 3 only and stops with an error on any other, so a runs
-directory from an older harness must be stressed again:
+directory from an older harness must be stressed again. It also stops on
+a summary of another suite; a schema 3 summary without the suite field
+was written by the step 10 harness, which is suite v1, and the report
+says how many summaries predate the field. Numbers are computed exact
+and rounded once, when summary.json is written (4 decimals; costs and
+per-case counts keep their own precision), so the report formats exact
+values:
 - summary.json (schemaVersion 3, no timestamp): per model the provider
   model id, the reported model ids and the first and last call; per model
   and variant, and pooled across models per variant when there are
@@ -778,6 +806,15 @@ Per model and variant:
   content
 - tokens (input, cached input, output, of which reasoning) and cost: the
   reported cost where there is one, else the estimate
+
+Per variant, pooled over every model in the report, the headline
+sensitivity (D-045): the core headline recomputed with one case family
+removed at a time, where a family is a mutation together with its @320
+case (an environment mutation is a family of one case). The first row
+removes nothing and equals the pooled headline; each row gives the
+count, share, 95% interval and the change in percentage points.
+text-unbroken is extreme only and is left out, since removing it never
+changes the headline.
 
 Every scored number covers clean-baseline candidates only; born-broken
 and crashed candidates are counted, not scored.
@@ -842,8 +879,10 @@ Found in step 8 and step 9:
   left-to-right page) cannot be scrolled to and is not reported. Not yet
   observed as a missed failure: the step 9 review saw it only in cases
   that other checks failed.
-- One cause often produces many findings (one per element). Scores use
-  failed cases, not finding counts.
+- One cause often produces many findings (one per element): in the
+  step 10 review, one case with two problems had 14 findings. Scores use
+  failed cases, not finding counts, so this only makes findings harder
+  to read.
 - off-screen treats an off-canvas drawer parked at exactly one viewport
   width (translateX(-100%)) as cut off. Not yet observed.
 - content-hidden matches values as substrings of the visible text: a
@@ -859,6 +898,10 @@ Found in step 8 and step 9:
   unaffected.
 
 Found in step 10:
+- A scroll container counts as reachable even when its scrollbar is
+  hidden, so content cut off at its edge with no sign that it scrolls
+  (a nav row with a hidden scrollbar, seen in the step 10 review) is
+  neither an error nor content hidden.
 - The match key has no positions (D-040), so an error that the reference
   render has in one item of a list also covers the same check on every
   other element with the same tags and classes. A mutation that makes
@@ -874,7 +917,10 @@ caught by off-screen (D-035). Closed in step 10: selector drift (a list
 that grows or shrinks shifting nth-child indices, so an existing flaw
 looked new) by the match key (D-040); an info finding in the reference
 cancelling an error (D-041); invisible 1 to 2px spills (D-042); and
-spills hidden by a scroll container outside the card (D-043).
+spills hidden by a scroll container outside the card (D-043). Closed in
+step 11: page-overflow-x named no culprit, or the wrong elements, when
+a word ran out of its element; its culprits now include text line boxes
+and replaced elements.
 
 ## Roadmap
 1. Attribution setup (done)
@@ -886,11 +932,11 @@ spills hidden by a scroll container outside the card (D-043).
 7. Generation runner, one model (done)
 8. Spike on free models (done)
 9. Post-spike changes and re-stress (done)
-10. Tiers and check refinements; re-stress
-11. Second run: more samples and stronger models; decide on the
-    comparison
-12. Brief corpus, size decided after step 11
-13. Published multi-model run
+10. Tiers and check refinements; re-stress (done)
+11. Suite v1 frozen; ten more briefs (20 in total)
+12. Second run on 20 briefs with more models; decide on the comparison
+13. Published multi-model run, with more briefs if step 12 calls for
+    them
 14. Labelling tool and calibration
 15. Scoring and report tables
 16. Results site

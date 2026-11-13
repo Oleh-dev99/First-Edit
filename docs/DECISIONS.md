@@ -310,3 +310,32 @@ the boxed ancestor included. Before, every overflow ancestor clipped it,
 so pills running out of a card that itself ran past a sideways-scrolling
 board's window were cut at the window and the spill went unmeasured
 (the step 9 missed failure).
+
+## D-044 Suite v1 is frozen; later changes are bug fixes only (2026-11-13)
+The stress suite (the cases and their tiers, the checks and their
+tolerances, and the new-finding rule) is frozen as suite v1: the suite
+of step 10, plus the step 11 change to page-overflow-x culprits, which
+changes detail only and no outcome. From now on only bug fixes change
+it, and each fix is recorded here with its lab case and its effect on
+results. Every stress summary and report.md records the suite version.
+Numbers from the second run onwards are then comparable with each
+other, which steps 9 and 10 (D-032, D-039) did not allow.
+
+## D-045 text-longword stays core; the report shows the headline per family removed (2026-11-13)
+text-longword and text-longword@320, the 30-letter word, stay in the
+core tier. The report adds a sensitivity table: per variant, pooled
+over models, the core headline recomputed with each case family (a
+mutation and its @320 case) removed in turn, so a reader can see how
+much of the headline one family carries. On the step 10 runs
+(results/spike-v3b), removing text-longword moves plain from 12 of 19
+(63.2%) to 7 of 19 (36.8%) and hinted from 5 of 16 (31.2%) to 3 of 16
+(18.8%); no other family moves either variant by more than one
+candidate.
+
+## D-046 Briefs are added before the second run (2026-11-13)
+The corpus grows from ten to twenty briefs before the second run. A
+new brief adds independent evidence (another component, another layout
+problem), while another sample of the same brief and model is
+correlated with the first and mostly repeats what it showed. The Wilson
+interval treats every candidate as independent, so candidates from more
+briefs make it more honest than more samples of the same briefs.

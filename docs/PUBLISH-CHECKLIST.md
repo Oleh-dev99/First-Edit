@@ -23,16 +23,37 @@ and the affected stress runs.
 | Wrenfield Analytics | inbox-list (fixture, sender) |
 | Inklane | hero-section (brief, fixture) |
 | Quarrystone, Hollowmere, Copperline, Velvet Finch, Saltmarsh, Tessellate | hero-section (fixture, customers) |
+| Gantrywell | confirm-dialog (brief) |
+| Penmoor | tabs-panel (brief) |
+| Halden Freight | tabs-panel (fixture, document name) |
+| Tarnwick | sidebar-nav (brief) |
+| Mossbank Design Co. | sidebar-nav (fixture, workspace) |
+| Quillby Inn | sidebar-nav (fixture, project name) |
+| Fettlebook | invoice-summary (brief) |
+| Saltgrove Studio | invoice-summary (fixture, seller) |
+| Kettleby Outdoor Ltd | invoice-summary (fixture, buyer) |
+| Corbelhouse | activity-feed (brief) |
+| Hollinmere | team-directory (brief) |
+| Kiteward | testimonial-grid (brief, fixture) |
+| Quenby Freight, Marrowstone Architects, Hatchling Health, Fennick Robotics, Orrin & Vale, Brackenfold Studios | testimonial-grid (fixture, companies) |
+| Thistlecombe | checkout-summary (brief) |
+| Wickerlight | site-footer (brief, fixture) |
+| Morrowly | day-agenda (brief) |
+| Thornquist | day-agenda (fixture, event title) |
+| Fennel & Fig | day-agenda (fixture, restaurant) |
 
 Also check that no person named in a fixture is a recognisable real
-person, and add any name introduced by later briefs to this table.
+person, that the street addresses in the invoice-summary fixture are not
+the address of a real business, and add any name introduced by later
+briefs to this table.
 
 ## 2. Re-check prior work
 - `npm run typecheck`, `npm test` and `npm run briefs:check` in harness/,
   and `python -m pytest runner` from the repo root, all pass.
-- Every reference still survives every applicable mutation and still
-  shows all of its fixture content (D-019); look at the baseline,
-  viewport-320, text-unbroken and list-many screenshots again.
+- Every reference still survives every applicable case of both tiers
+  and still shows all of its fixture content (D-019); look at the
+  baseline, viewport-320, text-longword@320, text-unbroken@320 and
+  list-many screenshots again.
 - Briefs and props.ts comments still follow rules 1 to 10 (brief format),
   including a human read for hints the banned-word check cannot see.
 - docs/SPEC.md, docs/DECISIONS.md and the README describe the code as it
