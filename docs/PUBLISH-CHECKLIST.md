@@ -54,7 +54,14 @@ Models so far (all through OpenRouter, https://openrouter.ai/api/v1):
 
 | Model id | Provider model id | Date | Runs |
 |---|---|---|---|
-| claude-haiku-5.5 | anthropic/claude-haiku-5.5 | 2026-11-13 | step 8 spike: not run yet (no API key) |
-| deepseek-v4.1-flash | deepseek/deepseek-v4.1-flash-1017 | 2026-11-13 | step 8 spike: not run yet (no API key) |
-| gpt-6.1-terra | openai/gpt-6.1-terra | 2026-11-13 | step 8 spike: not run yet (no API key) |
-| gemini-4-carbon | google/gemini-4-carbon | 2026-11-13 | step 8 spike: not run yet (no API key) |
+| claude-haiku-5.5 | anthropic/claude-haiku-5.5 | 2026-11-13 | not run (the spike ran on free variants, D-030) |
+| deepseek-v4.1-flash | deepseek/deepseek-v4.1-flash-1017 | 2026-11-13 | not run (the spike ran on free variants, D-030) |
+| gpt-6.1-terra | openai/gpt-6.1-terra | 2026-11-13 | not run (the spike ran on free variants, D-030) |
+| gemini-4-carbon | google/gemini-4-carbon | 2026-11-13 | not run (the spike ran on free variants, D-030) |
+| ernie-5.5-flash-free | baidu/ernie-5.5-flash-preview:free | 2026-11-13 | step 8 spike: plain and hinted, 1 sample, 10 briefs; params { max_tokens = 32000 }; spike only, not for publication (D-030) |
+| nemotron-3.5-free | nvidia/nemotron-3.5-super-vl:free | 2026-11-13 | step 8 spike: plain and hinted, 1 sample, 10 briefs; params { max_tokens = 32000 }; spike only, not for publication (D-030) |
+| inkling-2-small-free | thinkingmachines/inkling-2-small:free | 2026-11-13 | step 8 spike: dropped after 2 API errors (HTTP 403, not available in this region); no candidates |
+
+Free variants (ids ending in ":free") are not the published comparison
+(D-030). A published run uses the paid endpoints and records the above
+for every model.

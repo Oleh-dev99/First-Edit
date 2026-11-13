@@ -525,9 +525,9 @@ key name are not part of the key.
 
 ### Calls, retries and budget
 - Timeouts, HTTP 429 and 5xx are retried with exponential backoff (2, 4
-  and 8 s), at most four attempts. Any other API error fails the sample
-  at once; it is recorded and, since nothing is cached, called again on
-  the next run (D-025).
+  and 8 s), at most four attempts (two for a free model variant, below).
+  Any other API error fails the sample at once; it is recorded and, since
+  nothing is cached, called again on the next run (D-025).
 - --max-requests: stop before the provider call that would exceed this
   count. A call and its retries count once; cache hits are free.
 - --max-cost: when the entry has prices, stop before a call whose upper
@@ -539,6 +539,26 @@ key name are not part of the key.
 - The read timeout is 600 s: a long reply with reasoning can take
   minutes, and a timed-out call that is retried may be billed twice.
 - Skipped samples are printed and get no files.
+
+### Free model variants
+A model whose provider model id ends in ":free" (OpenRouter's free
+variants) costs nothing but is limited per account: 20 requests a minute
+and 50 a day, where every request counts, retries and failures included.
+For such a model the runner:
+- counts every HTTP request it sends, retries included, per UTC day in
+  results/cache/free-requests.json (one count for all free models), and
+  refuses to send the 46th request of a day, a margin below the
+  provider's 50. A request is counted before it is sent.
+- makes at most two attempts per sample instead of four.
+- sends requests at least 4 s apart, across commands too: the ledger
+  keeps the time of the last request.
+- prints the day's requests sent and left after every generate command.
+
+A sample whose call, or retry, is refused by the ledger is skipped like a
+budget skip: it gets no files and is called on a later run, and every
+call after it in the same command is skipped too. Replies already
+received are cached, so a run resumes another day at no cost. The
+doctor's listing requests are not counted; they are not model requests.
 
 ### Candidate files and validity
 Each sample is written to

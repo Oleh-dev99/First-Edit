@@ -185,3 +185,13 @@ can then be repeated, compared and thrown away without filling the
 history with unreviewed model output, and nothing is published by
 accident. Outputs are committed deliberately at the step that publishes a
 run, together with the record the publish checklist asks for.
+
+## D-030 The step 8 spike ran on free model variants (2026-11-13)
+The first end-to-end run used OpenRouter's free variants of two models
+(ernie-5.5-flash-free and nemotron-3.5-free; inkling-2-small-free was
+dropped after two geo-restriction errors) instead of four paid models. It
+establishes whether the pipeline and the checks work on real model
+output. It is not the published comparison: free variants can be
+previews and are rate limited and served apart from the paid endpoints,
+two models are no cross-vendor sample, and one sample per brief and
+variant is no estimate of a model's rate.
