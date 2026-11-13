@@ -1,0 +1,13 @@
+{
+  "tabs": { "kind": "list", "min": 1, "max": 8 },
+  "tabs[].id": { "kind": "id" },
+  "tabs[].label": { "kind": "label", "required": true },
+  "tabs[].count": { "kind": "number" },
+  "tabs[].active": { "kind": "fixed" },
+  "panel.heading": { "kind": "label", "required": true },
+  "panel.description": { "kind": "prose" },
+  "panel.items": { "kind": "list", "max": 40 },
+  "panel.items[].id": { "kind": "id" },
+  "panel.items[].name": { "kind": "label", "required": true },
+  "panel.items[].detail": { "kind": "label" }
+}

@@ -1,0 +1,34 @@
+{
+  "tabs": [
+    { "id": "drafts", "label": "Drafts", "count": 7, "active": false },
+    { "id": "in-review", "label": "In review", "count": 4, "active": true },
+    { "id": "scheduled", "label": "Scheduled", "count": 3, "active": false },
+    { "id": "published", "label": "Published", "count": 126, "active": false }
+  ],
+  "panel": {
+    "heading": "In review",
+    "description": "Documents waiting for an editor's approval before they can be scheduled.",
+    "items": [
+      {
+        "id": "doc-481",
+        "name": "Spring product launch announcement",
+        "detail": "Waiting on Ines Carvalho · Updated 2 hours ago"
+      },
+      {
+        "id": "doc-477",
+        "name": "Customer story: Halden Freight",
+        "detail": "Waiting on Marcus Lee · Updated yesterday"
+      },
+      {
+        "id": "doc-470",
+        "name": "Pricing page rewrite",
+        "detail": "Changes requested by Ines Carvalho · Updated 3 days ago"
+      },
+      {
+        "id": "doc-466",
+        "name": "Onboarding email series, part 2",
+        "detail": "Waiting on Dana Whitfield · Updated last week"
+      }
+    ]
+  }
+}
