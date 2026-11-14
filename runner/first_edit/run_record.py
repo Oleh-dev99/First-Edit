@@ -4,10 +4,10 @@ was called, with which parameters, when, and what came back.
 It is written from the generation records (candidates/<model>/<brief>/
 <variant>-s<n>/generation.json) of the models that runner/plan.toml queues,
 and from their stress summaries in the plan's runs directory, which hold the
-suite version, the harness commit and the browser versions. Nothing in it is
-typed by hand, and it has no timestamp of its own, so it changes only when the
-run does. It is regenerated whenever the run advances (docs/SPEC.md, Daily
-routine).
+suite version, the harness commit and the browser versions. The samples set
+aside in results/archive/ (D-059) are listed with what they scored. Nothing in
+it is typed by hand; the only date of its own is the UTC day it was written.
+run-next rewrites it after every pass, so it cannot go stale.
 """
 
 from __future__ import annotations
@@ -19,10 +19,11 @@ from typing import Any
 
 from .ledger import is_free
 from .models import ModelEntry
-from .paths import CANDIDATES_DIR, REPO_ROOT
+from .paths import ARCHIVE_DIR, CANDIDATES_DIR, REPO_ROOT
 from .prompts import VARIANTS
 from .run_queue import Plan, QueueState, active_jobs
 from .stress import find_candidates
+from .summarize import Candidate, load_candidates
 
 
 def _read_json(path: Path) -> dict[str, Any] | None:
@@ -103,20 +104,46 @@ def _model_record(entry: ModelEntry, brief_ids: list[str], candidates_dir: Path,
     }
 
 
-def build_record(plan: Plan, models: dict[str, ModelEntry], brief_ids: list[str], *,
-                 plan_file: Path, candidates_dir: Path = CANDIDATES_DIR) -> dict[str, Any]:
+def _survival(candidate: Candidate, tier: str | None) -> dict[str, int] | None:
+    """Survived / applicable cases of a stressed candidate, of one tier or of all."""
+    if candidate.summary is None:
+        return None
+    cases = candidate.applicable_cases(tier)
+    return {"survived": sum(1 for entry in cases if entry.get("survived")), "applicable": len(cases)}
+
+
+def _superseded(model_ids: list[str], brief_ids: list[str], archive_dir: Path, runs_name: str) -> list[dict[str, Any]]:
+    """The samples of these models set aside in each archive folder (D-059):
+    generated from an earlier text of a brief, kept with their stress runs in
+    <archive folder>/<runs directory name>/, and never counted in the run."""
+    folders = []
+    for folder in sorted(p for p in archive_dir.iterdir() if p.is_dir()) if archive_dir.is_dir() else []:
+        found = load_candidates(model_ids, brief_ids, candidates_dir=folder / "candidates", runs_dir=folder / runs_name)
+        samples = [{"model": c.model, "brief": c.brief, "variant": c.variant, "sample": c.sample, "state": c.state,
+                    "core": _survival(c, "core"), "all": _survival(c, None),
+                    "brokeCore": c.broke("core") if c.state == "clean" else None} for c in found]
+        if samples:
+            folders.append({"archive": _display(folder), "samples": samples})
+    return folders
+
+
+def build_record(plan: Plan, models: dict[str, ModelEntry], brief_ids: list[str], *, plan_file: Path,
+                 written: str, candidates_dir: Path = CANDIDATES_DIR, archive_dir: Path = ARCHIVE_DIR) -> dict[str, Any]:
     """The record of every model of the plan's active jobs, in plan order, as
     summarize reads them: every generated sample of those models over the
-    given briefs, whether or not a job of this plan generated it."""
+    given briefs, whether or not a job of this plan generated it, and their
+    superseded samples. `written` is the UTC date the record is written."""
     state = QueueState(plan.state_file)
     jobs = active_jobs(plan, state)
     model_ids = list(dict.fromkeys(job.model for job in jobs))
     inactive = [job for job in plan.jobs if job not in jobs]
     return {
+        "written": written,
         "plan": _display(plan_file),
         "runsDir": _display(plan.runs_dir),
         "out": _display(plan.out_dir),
         "models": [_model_record(models[model_id], brief_ids, candidates_dir, plan.runs_dir) for model_id in model_ids],
+        "superseded": _superseded(model_ids, brief_ids, archive_dir, plan.runs_dir.name),
         "blocked": dict(sorted(state.blocked.items())),
         "inactiveFallbacks": [{"model": job.model, "onlyIfBlocked": list(job.only_if_blocked)} for job in inactive],
     }
@@ -124,6 +151,10 @@ def build_record(plan: Plan, models: dict[str, ModelEntry], brief_ids: list[str]
 
 def _join(counts: dict[str, int]) -> str:
     return ", ".join(f"{value} ({count})" for value, count in counts.items()) or "-"
+
+
+def _fraction(survival: dict[str, int] | None) -> str:
+    return "-" if survival is None else f"{survival['survived']}/{survival['applicable']}"
 
 
 def _table(header: list[str], rows: list[list[str]]) -> list[str]:
@@ -146,13 +177,15 @@ def render_record(record: dict[str, Any]) -> str:
     lines = [
         "# Run record",
         "",
-        "Written by `python -m first_edit run-record --out docs/RUNS.md` from the",
-        f"generation records of the models queued in {record['plan']} and from their",
-        f"stress summaries in {record['runsDir']}; the run's report is {record['out']}.",
-        "Do not edit it by hand: run the command again whenever the run advances",
-        "(docs/SPEC.md, Daily routine). It covers every generated sample of these",
-        "models, the samples of earlier steps that the run reuses included, as the",
-        "run report does.",
+        f"Written on {record['written']} (UTC).",
+        "",
+        "Written by `python -m first_edit run-next` after every pass, or by",
+        "`python -m first_edit run-record --out docs/RUNS.md`, from the generation",
+        f"records of the models queued in {record['plan']} and from their stress",
+        f"summaries in {record['runsDir']}; the run's report is {record['out']}. Do not",
+        "edit it by hand (docs/SPEC.md, Run record). It covers every generated",
+        "sample of these models, the samples of earlier steps that the run reuses",
+        "included, as the run report does.",
         "",
         _free_line(models),
         "",
@@ -205,6 +238,27 @@ def render_record(record: dict[str, Any]) -> str:
                 [[m["id"], str(m["stress"]["stressed"]), str(m["stress"]["notStressed"]), _join(m["stress"]["suites"]),
                   _join(m["stress"]["commits"]), _join(m["stress"]["playwright"]), _join(m["stress"]["chromium"])]
                  for m in models]),
+        "",
+        "## Superseded samples",
+        "",
+        "Samples generated from an earlier text of a brief that has since changed",
+        "(D-059). They are kept, with their stress runs, in the archive folder named",
+        "here, and never counted in the run. State as in D-038; survival is survived",
+        "/ applicable cases of the archived stress run; \"broke in a core case\" is the",
+        "headline's measure, which counts clean candidates only.",
+        "",
+    ]
+    superseded = [(folder["archive"], s) for folder in record["superseded"] for s in folder["samples"]]
+    if superseded:
+        lines += _table(["archive", "model id", "brief", "variant", "state", "core survived", "all survived",
+                         "broke in a core case"],
+                        [[archive, s["model"], s["brief"], f"{s['variant']}-s{s['sample']}", s["state"],
+                          _fraction(s["core"]), _fraction(s["all"]),
+                          "-" if s["brokeCore"] is None else ("yes" if s["brokeCore"] else "no")]
+                         for archive, s in superseded])
+    else:
+        lines.append("None.")
+    lines += [
         "",
         "## Queue",
         "",

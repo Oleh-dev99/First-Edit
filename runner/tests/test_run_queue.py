@@ -3,6 +3,7 @@ resuming after a stop, a blocked model and its fallback, nothing left to
 do, and a dry run. No network and no Node."""
 
 import subprocess
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from first_edit.briefs import list_briefs
 from first_edit.cache import Cache
 from first_edit.ledger import FreeRequestLedger
 from first_edit.models import ModelEntry, load_models
+from first_edit.paths import REPO_ROOT
 from first_edit.providers import MockProvider, ProviderError
 from first_edit.run_queue import Deps, Job, Plan, PlanError, QueueState, load_plan, run_next
 from first_edit.summarize import build_summary, load_candidates, write_outputs
@@ -164,21 +166,47 @@ def test_a_dry_run_calls_and_writes_nothing(tmp_path: Path) -> None:
     assert world.ledger.used() == 0
 
 
+def test_every_pass_rewrites_the_run_record_but_a_dry_run_does_not(tmp_path: Path) -> None:
+    world = World(tmp_path)
+    plan = Plan([job("mock-reference")], tmp_path / "runs", tmp_path / "out", tmp_path / "docs" / "RUNS.md")
+    written: list[Path] = []
+
+    def record(the_plan: Plan) -> list[Path]:
+        # After summarize, so the record and the run report describe the same pass.
+        assert (the_plan.out_dir / "report.md").is_file()
+        written.append(the_plan.record_file)
+        return [the_plan.record_file]
+
+    deps = replace(world.deps(), record=record)
+    run_next(plan, deps, dry_run=True)
+    assert written == []
+    run_next(plan, deps)
+    assert written == [tmp_path / "docs" / "RUNS.md"]
+    assert f"wrote {tmp_path / 'docs' / 'RUNS.md'}" in world.lines
+    # Nothing new to do: the record is still rewritten.
+    run_next(plan, deps)
+    assert len(written) == 2
+
+
 def test_the_plan_file() -> None:
     plan = load_plan(models=load_models())
     assert plan.runs_dir.name == "runs-run2" and plan.out_dir.name == "run2"
+    assert plan.record_file == REPO_ROOT / "docs" / "RUNS.md"
     models = [job.model for job in plan.jobs]
-    assert models[:5] == ["ernie-5.5-flash-free", "nemotron-3.5-free", "gemma-4-31b-free", "nemotron-3-ultra-free",
-                          "north-mini-code-free"]
+    assert models[:7] == ["ernie-5.5-flash-free", "nemotron-3.5-free", "ernie-5.5-flash-free", "nemotron-3.5-free",
+                          "gemma-4-31b-free", "nemotron-3-ultra-free", "north-mini-code-free"]
     assert plan.jobs[-1].only_if_blocked == ("gemma-4-31b-free", "nemotron-3-ultra-free", "north-mini-code-free")
-    # 160 free calls: 2 x 10 x 2 plus 3 x 20 x 2.
-    assert sum(len(job.sample_keys()) for job in plan.jobs if not job.only_if_blocked) == 160
-    assert all(len(job.brief_ids()) in (10, 20) for job in plan.jobs)
+    # 172 free calls: 2 x 3 x 2 superseded, 2 x 10 x 2 and 3 x 20 x 2.
+    assert sum(len(job.sample_keys()) for job in plan.jobs if not job.only_if_blocked) == 172
+    assert all(len(job.brief_ids()) in (3, 10, 20) for job in plan.jobs)
+    # First, the briefs whose text changed in corpus v1.1 for the two models that had them (D-059).
+    changed = {"chat-thread", "hero-section", "nav-header"}
+    assert set(plan.jobs[0].brief_ids()) == set(plan.jobs[1].brief_ids()) == changed
     # The spike models get only the ten step 11 briefs; they have the other ten from step 8.
     step11 = {"activity-feed", "checkout-summary", "confirm-dialog", "day-agenda", "invoice-summary", "sidebar-nav",
               "site-footer", "tabs-panel", "team-directory", "testimonial-grid"}
-    assert set(plan.jobs[0].brief_ids()) == set(plan.jobs[1].brief_ids()) == step11
-    assert set(plan.jobs[2].brief_ids()) == set(list_briefs(corpus_only=True))
+    assert set(plan.jobs[2].brief_ids()) == set(plan.jobs[3].brief_ids()) == step11
+    assert set(plan.jobs[4].brief_ids()) == set(list_briefs(corpus_only=True))
 
 
 def test_an_invalid_plan_is_an_error(tmp_path: Path) -> None:
@@ -191,3 +219,8 @@ def test_an_invalid_plan_is_an_error(tmp_path: Path) -> None:
                     'samples = 1\n', encoding="utf-8")
     with pytest.raises(PlanError, match="variants"):
         load_plan(path, models=MODELS)
+    path.write_text('runs_dir = "r"\nout = "o"\nrecord = 7\n', encoding="utf-8")
+    with pytest.raises(PlanError, match="record must be a file path"):
+        load_plan(path, models=MODELS)
+    path.write_text('runs_dir = "r"\nout = "o"\n', encoding="utf-8")
+    assert load_plan(path, models=MODELS).record_file is None

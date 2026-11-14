@@ -7,6 +7,7 @@ import json
 import os
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
@@ -112,7 +113,7 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _deps(entries: dict[str, ModelEntry]) -> Deps:
+def _deps(entries: dict[str, ModelEntry], plan_file: Path) -> Deps:
     return Deps(
         models=entries,
         provider_factory=lambda entry, ledger: make_provider(entry, ledger=ledger),
@@ -120,7 +121,16 @@ def _deps(entries: dict[str, ModelEntry]) -> Deps:
         stress_runner=run_stress,
         ledger=FreeRequestLedger(),
         summarize=_summarize_plan,
+        record=lambda plan: [_write_record(plan, plan.record_file, plan_file)] if plan.record_file else [],
     )
+
+
+def _write_record(plan: Plan, out: Path, plan_file: Path) -> Path:
+    """The run record (docs/RUNS.md), dated with today's UTC date."""
+    entries = load_models()
+    written = datetime.now(timezone.utc).date().isoformat()
+    record = build_record(plan, entries, list_briefs(corpus_only=True), plan_file=plan_file.resolve(), written=written)
+    return write_record(record, out)
 
 
 def _summarize_plan(plan: Plan, model_ids: list[str], finished: list[str]) -> list[Path]:
@@ -168,7 +178,7 @@ def _summarize(args: argparse.Namespace) -> int:
     finished = None
     if args.plan is not None:
         plan = load_plan(args.plan, models=entries)
-        finished = finished_models(_deps(entries), plan, QueueState(plan.state_file))
+        finished = finished_models(_deps(entries, args.plan), plan, QueueState(plan.state_file))
     summary = build_summary(candidates, model_ids, brief_ids, {e.id: e.describe() for e in entries.values()},
                             finished=finished)
     # A summary driven by a run plan is a run report (results/run2); one without is a spike report.
@@ -210,7 +220,7 @@ def main(argv: list[str] | None = None) -> int:
             return _summarize(args)
         if args.command == "run-next":
             entries = load_models()
-            run_next(load_plan(args.plan, models=entries), _deps(entries), dry_run=args.dry_run)
+            run_next(load_plan(args.plan, models=entries), _deps(entries, args.plan), dry_run=args.dry_run)
             return 0
         if args.command == "cli-probe":
             return _cli_probe(args.model)
@@ -221,10 +231,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"wrote {path}")
             return 0
         if args.command == "run-record":
-            entries = load_models()
-            record = build_record(load_plan(args.plan, models=entries), entries, list_briefs(corpus_only=True),
-                                  plan_file=args.plan.resolve())
-            print(f"wrote {write_record(record, args.out)}")
+            print(f"wrote {_write_record(load_plan(args.plan, models=load_models()), args.out, args.plan)}")
             return 0
         if args.command == "export-site":
             counts = export_site(args.run, args.runs, args.calibration, args.out, references_dir=args.references)

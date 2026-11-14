@@ -7,8 +7,9 @@ once its generation.json says "generated" for the current cache key, so
 finished work is never repeated), stops a free model's job when the daily
 ledger allows no more, marks a model blocked when its first two samples both
 fail with a rate-limit, availability or region error, stresses every valid
-candidate that has no fresh stress result, re-runs summarize, and prints what
-it did, what remains and when it can continue. It is safe to run any number
+candidate that has no fresh stress result, re-runs summarize, rewrites the
+run record (docs/RUNS.md, when the plan names it) and prints what it did,
+what remains and when it can continue. It is safe to run any number
 of times: it never re-rolls a sample and never clears the cache.
 """
 
@@ -78,6 +79,9 @@ class Plan:
     jobs: list[Job]
     runs_dir: Path
     out_dir: Path
+    #: The run record run-next rewrites after every pass (`record` in the plan
+    #: file, e.g. docs/RUNS.md); None: no record.
+    record_file: Path | None = None
 
     @property
     def state_file(self) -> Path:
@@ -89,6 +93,8 @@ def load_plan(path: Path = PLAN_FILE, *, models: dict[str, ModelEntry]) -> Plan:
     for key in ("runs_dir", "out"):
         if not isinstance(data.get(key), str) or not data[key]:
             raise PlanError(f"{path.name}: {key} is required")
+    if "record" in data and (not isinstance(data["record"], str) or not data["record"]):
+        raise PlanError(f"{path.name}: record must be a file path, e.g. docs/RUNS.md")
     jobs = []
     for index, raw in enumerate(data.get("job", [])):
         where = f"job #{index + 1}"
@@ -117,7 +123,8 @@ def load_plan(path: Path = PLAN_FILE, *, models: dict[str, ModelEntry]) -> Plan:
             raise PlanError(f"{where}: only_if_blocked must list known models")
         jobs.append(Job(model, tuple(variants), brief_ids, samples, bool(raw.get("parallel", False)),
                         tuple(fallback_for)))
-    return Plan(jobs, REPO_ROOT / data["runs_dir"], REPO_ROOT / data["out"])
+    record = REPO_ROOT / data["record"] if "record" in data else None
+    return Plan(jobs, REPO_ROOT / data["runs_dir"], REPO_ROOT / data["out"], record)
 
 
 class QueueState:
@@ -169,6 +176,8 @@ class Deps:
     stress_runner: Runner
     ledger: FreeRequestLedger
     summarize: Callable[[Plan, list[str], list[str]], list[Path]]
+    #: Writes the run record to plan.record_file after summarize; returns the files written.
+    record: Callable[[Plan], list[Path]] = lambda plan: []
     cache: Cache = field(default_factory=Cache)
     candidates_dir: Path = CANDIDATES_DIR
     now: Callable[[], datetime] = lambda: datetime.now(timezone.utc)
@@ -337,7 +346,7 @@ def run_next(plan: Plan, deps: Deps, *, dry_run: bool = False) -> dict[str, Any]
     model_ids = list(dict.fromkeys(job.model for job in jobs))
     stressed = stress_new(deps, plan, model_ids)
     finished = finished_models(deps, plan, state)
-    written = deps.summarize(plan, model_ids, finished)
+    written = [*deps.summarize(plan, model_ids, finished), *deps.record(plan)]
 
     results = [result for report in reports for result in report.results]
     count = lambda status: sum(1 for r in results if r.status == status)  # noqa: E731

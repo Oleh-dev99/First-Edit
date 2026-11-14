@@ -6,13 +6,33 @@
 
 runs_dir = "results/runs-run2"
 out = "results/run2"
+# The run record; run-next rewrites it after every pass (docs/SPEC.md, Run record).
+record = "docs/RUNS.md"
 
 # No Claude model is part of the run: the owner declined running them through
 # Claude Code's command line, which adds an identity line and a note with the
 # account's email address and the date to every request (D-047).
 
-# Free models, 160 calls within the daily ledger. The two spike models need
-# only the ten briefs added in step 11; they have the other ten from step 8.
+# Free models, 172 calls within the daily ledger.
+
+# First, the three briefs whose text changed in corpus v1.1 (D-059), for the two
+# models whose samples of them were generated from the earlier text and are now
+# archived. The new samples come from a changed prompt, so they are new
+# samples, not re-runs of the old ones.
+[[job]]
+model = "ernie-5.5-flash-free"
+variants = ["plain", "hinted"]
+briefs = ["chat-thread", "hero-section", "nav-header"]
+samples = 1
+
+[[job]]
+model = "nemotron-3.5-free"
+variants = ["plain", "hinted"]
+briefs = ["chat-thread", "hero-section", "nav-header"]
+samples = 1
+
+# The two spike models need the ten briefs added in step 11; they have seven of
+# the other ten from step 8, and the three above.
 [[job]]
 model = "ernie-5.5-flash-free"
 variants = ["plain", "hinted"]
