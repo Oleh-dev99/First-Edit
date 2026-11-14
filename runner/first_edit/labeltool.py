@@ -28,9 +28,9 @@ from pathlib import Path
 from typing import Any
 
 from .answers import LABELS, AdjudicationStore, AnswerStore, LabelStore
-from .calibrate import ADJUDICATION_TEXT, case_outputs, disagreement_ids, failed_by_suite, load_labels
+from .calibrate import ADJUDICATION_TEXT, case_outputs, disagreement_ids, failed_by_suite, item_run_dir, load_labels
 from .labelset import adjudication_path, describe_case, labels_path, resolve
-from .paths import PACKAGE_DIR, REPO_ROOT
+from .paths import ARCHIVE_DIR, PACKAGE_DIR, REPO_ROOT
 from .providers import SetupError
 
 __all__ = ["LABELS", "LabelStore", "LabelServer", "browser_state", "adjudication_state", "load_examples",
@@ -111,24 +111,30 @@ class LabelServer(ThreadingHTTPServer):
 
     def __init__(self, label_set: dict[str, Any], store: AnswerStore, *, root: Path = REPO_ROOT,
                  ui_dir: Path = UI_DIR, port: int = DEFAULT_PORT,
-                 labels: dict[str, dict[str, Any]] | None = None) -> None:
+                 labels: dict[str, dict[str, Any]] | None = None, archive_dir: Path = ARCHIVE_DIR) -> None:
         """`labels` (the blind labels) switches the server to adjudication."""
         self.label_set = label_set
         self.store = store
         self.ui_dir = ui_dir
         self.labels = labels
         self.examples = load_examples(ui_dir)
+        runs_dir = resolve(label_set["runs"], root)
+
+        def picture(item: dict[str, Any], key: str) -> Path:
+            """Where the set recorded the picture, or, once the candidate was
+            superseded (D-059), the same file in its archived run."""
+            path = resolve(item["pictures"][key], root)
+            return path if path.is_file() else item_run_dir(runs_dir, item, archive_dir) / path.name
+
         self.pictures: dict[str, dict[str, Path | None]] = {
-            item["id"]: {"left": resolve(item["pictures"]["reference"], root),
-                         "right": resolve(item["pictures"]["case"], root)}
+            item["id"]: {"left": picture(item, "reference"), "right": picture(item, "case")}
             for item in label_set["items"]}
         self.findings: dict[str, list[dict[str, Any]]] = {}
         if labels is not None:
-            runs_dir = resolve(label_set["runs"], root)
             by_id = {item["id"]: item for item in label_set["items"]}
             found = disagreement_ids(label_set, labels)
             for item_id in (*found["failedNotBroken"], *found["passedBroken"]):
-                annotated, findings = case_outputs(runs_dir, by_id[item_id])
+                annotated, findings = case_outputs(runs_dir, by_id[item_id], archive_dir)
                 self.pictures[item_id]["annotated"] = annotated
                 self.findings[item_id] = findings
         super().__init__((HOST, port), LabelHandler)

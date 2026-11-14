@@ -22,13 +22,15 @@ Strata sizes: failed-core 4, failed-extreme 10, survived-focus 20, survived-othe
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
 
 from labelfixtures import add_run
 
-from first_edit.calibrate import NO_CHECK, build_calibration, calibrate, load_labels, render_report
+from first_edit.calibrate import (NO_CHECK, build_calibration, calibrate, case_outputs, item_run_dir, load_labels,
+                                  render_report)
 from first_edit.labelset import labels_path
 from first_edit.labeltool import LabelStore
 from first_edit.providers import SetupError
@@ -139,8 +141,26 @@ def test_other_unsure_counts_and_self_consistency(setup) -> None:
     assert consistency["differing"] == [{"item": "i008", "repeat": "i014", "first": "fine", "second": "broken"}]
     assert summary["disagreements"] == {"failedNotBroken": ["i003", "i004"], "passedBroken": ["i007"]}
     assert summary["items"] == {"total": 14, "labelled": 14, "unlabelled": 0, "primary": 12, "repeats": 2}
-    assert summary["harness"] == {"items": 14, "changed": 0, "missingRuns": 0}
+    assert summary["harness"] == {"items": 14, "changed": 0, "missingRuns": 0, "archived": 0}
     assert summary["partial"] is False
+
+
+def test_a_superseded_candidates_run_is_read_from_the_archive(setup, tmp_path: Path) -> None:
+    set_path, label_set, runs = setup
+    item = label_set["items"][0]
+    archive = tmp_path / "archive"
+    moved = archive / "corpus-v1.0" / runs.name / item["brief"] / item["candidate"].replace("/", "__")
+    moved.parent.mkdir(parents=True)
+    shutil.move(item_run_dir(runs, item, archive), moved)
+    assert item_run_dir(runs, item, archive) == moved
+    annotated, findings = case_outputs(runs, item, archive)
+    assert annotated == moved / "text-long.annotated.png" and [f["check"] for f in findings] == ["content-spill"]
+    summary = build_calibration(label_set, load_labels(set_path, label_set), runs, archive_dir=archive)
+    assert summary["harness"] == {"items": 14, "changed": 0, "missingRuns": 0, "archived": 14}
+    assert "14 of 14 items come from candidates superseded since the set was built" in render_report(summary)
+    # Without the archive the runs are missing, and the report warns.
+    missing = build_calibration(label_set, load_labels(set_path, label_set), runs, archive_dir=tmp_path / "none")
+    assert missing["harness"] == {"items": 14, "changed": 0, "missingRuns": 14, "archived": 0}
 
 
 def test_it_refuses_until_every_item_is_labelled_unless_partial(setup, tmp_path: Path) -> None:

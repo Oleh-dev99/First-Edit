@@ -12,6 +12,10 @@ HARNESS_DIR = REPO_ROOT / "harness"
 RESULTS_DIR = REPO_ROOT / "results"
 CACHE_DIR = RESULTS_DIR / "cache"
 RUNS_DIR = RESULTS_DIR / "runs"
+#: Superseded samples, one folder per corpus version they were generated from
+#: (results/archive/corpus-v1.0/), mirroring candidates/ and the runs
+#: directories (D-059).
+ARCHIVE_DIR = RESULTS_DIR / "archive"
 #: Label sets and labels; committed to git (docs/LABELLING.md).
 LABELS_DIR = REPO_ROOT / "labels"
 

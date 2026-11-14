@@ -30,7 +30,7 @@ from typing import Any
 
 from .answers import ADJUDICATIONS, LABELS, AdjudicationStore, LabelStore
 from .labelset import STRATA, adjudication_path, guided_path, labels_path
-from .paths import REPO_ROOT
+from .paths import ARCHIVE_DIR, REPO_ROOT
 from .providers import SetupError
 from .summarize import CHECKS, GALLERY_STYLE, _ci, _figure, _finding, _pct, _share, rounded
 
@@ -97,8 +97,19 @@ def disagreement_ids(label_set: dict[str, Any], labels: dict[str, dict[str, Any]
                              if not failed_by_suite(item) and label_of(item) == "broken"]}
 
 
-def _run_dir(runs_dir: Path, item: dict[str, Any]) -> Path:
-    return runs_dir / item["brief"] / item["candidate"].replace("/", "__")
+def item_run_dir(runs_dir: Path, item: dict[str, Any], archive_dir: Path = ARCHIVE_DIR) -> Path:
+    """An item's stress run in runs_dir or, once its candidate was superseded
+    (D-059), in the archive folder that mirrors runs_dir
+    (results/archive/<corpus>/<runs directory name>/)."""
+    name = item["candidate"].replace("/", "__")
+    run_dir = runs_dir / item["brief"] / name
+    if run_dir.is_dir() or not archive_dir.is_dir():
+        return run_dir
+    for folder in sorted(p for p in archive_dir.iterdir() if p.is_dir()):
+        moved = folder / runs_dir.name / item["brief"] / name
+        if moved.is_dir():
+            return moved
+    return run_dir
 
 
 def _read_json(path: Path) -> dict[str, Any] | None:
@@ -108,9 +119,10 @@ def _read_json(path: Path) -> dict[str, Any] | None:
         return None
 
 
-def case_outputs(runs_dir: Path, item: dict[str, Any]) -> tuple[Path | None, list[dict[str, Any]]]:
+def case_outputs(runs_dir: Path, item: dict[str, Any],
+                 archive_dir: Path = ARCHIVE_DIR) -> tuple[Path | None, list[dict[str, Any]]]:
     """An item's annotated screenshot and new findings, read from its run."""
-    run_dir = _run_dir(runs_dir, item)
+    run_dir = item_run_dir(runs_dir, item, archive_dir)
     summary = _read_json(run_dir / "summary.json") or {}
     entry = next((e for e in summary.get("cases", []) if e.get("id") == item["case"]), {})
     files = entry.get("files") or {}
@@ -157,13 +169,15 @@ def recall_estimate(primaries: list[dict[str, Any]], labels: dict[str, dict[str,
             "estimatedBroken": {"failedBySuite": caught, "passedBySuite": missed}}
 
 
-def harness_check(items: list[dict[str, Any]], runs_dir: Path) -> dict[str, int]:
+def harness_check(items: list[dict[str, Any]], runs_dir: Path, archive_dir: Path = ARCHIVE_DIR) -> dict[str, int]:
     """Items whose run in runs_dir is missing, or was stressed again with
-    another harness commit since the set was built."""
+    another harness commit since the set was built, and items whose run is
+    read from the archive because their candidate was superseded (D-059)."""
     summaries: dict[Path, dict[str, Any] | None] = {}
-    changed = missing = 0
+    changed = missing = archived = 0
     for item in items:
-        run_dir = _run_dir(runs_dir, item)
+        run_dir = item_run_dir(runs_dir, item, archive_dir)
+        archived += run_dir.is_relative_to(archive_dir)
         if run_dir not in summaries:
             summaries[run_dir] = _read_json(run_dir / "summary.json")
         summary = summaries[run_dir]
@@ -171,7 +185,7 @@ def harness_check(items: list[dict[str, Any]], runs_dir: Path) -> dict[str, int]
             missing += 1
         elif (summary.get("harness") or {}).get("commit") != (item.get("harness") or {}).get("commit"):
             changed += 1
-    return {"items": len(items), "changed": changed, "missingRuns": missing}
+    return {"items": len(items), "changed": changed, "missingRuns": missing, "archived": archived}
 
 
 def _counts(group: list[dict[str, Any]], labels: dict[str, dict[str, Any]]) -> dict[str, int]:
@@ -239,7 +253,7 @@ def adjudicated_labels(label_set: dict[str, Any], labels: dict[str, dict[str, An
 def build_calibration(label_set: dict[str, Any], labels: dict[str, dict[str, Any]], runs_dir: Path, *,
                       partial: bool = False, guided: dict[str, Any] | None = None,
                       adjudication: dict[str, dict[str, Any]] | None = None,
-                      adjudication_file: str | None = None) -> dict[str, Any]:
+                      adjudication_file: str | None = None, archive_dir: Path = ARCHIVE_DIR) -> dict[str, Any]:
     """The calibration numbers; refuses while an item has no label, unless `partial`."""
     items = label_set["items"]
     unlabelled = [item for item in items if item["id"] not in labels]
@@ -282,7 +296,7 @@ def build_calibration(label_set: dict[str, Any], labels: dict[str, dict[str, Any
         "unsure": blind["unsure"],
         "selfConsistency": blind["selfConsistency"],
         "disagreements": found,
-        "harness": harness_check(items, runs_dir),
+        "harness": harness_check(items, runs_dir, archive_dir),
         "guided": {**guided, "byStratum": {stratum: sum(1 for item in primaries if item["id"] in guided_cases
                                                         and item["stratum"] == stratum) for stratum in STRATA}},
         "unguided": {"items": {"primary": len(unguided_primaries), "repeats": len(unguided_repeats)}, **unguided},
@@ -371,6 +385,10 @@ def render_report(summary: dict[str, Any]) -> str:
         out += [f"Warning: {harness['changed']} item(s) were stressed again with another harness commit since the "
                 f"set was built, and {harness['missingRuns']} have no run in the runs directory; their findings and "
                 "annotated screenshots may not match what was labelled.", ""]
+    if harness.get("archived"):
+        out += [f"{harness['archived']} of {harness['items']} items come from candidates superseded since the set was "
+                "built (a brief's text changed, D-059). They still measure the suite: their runs, pictures included, "
+                "are read from the archive.", ""]
 
     out += ["## Items labelled", "",
             "Primary items per stratum (each case once), then the repeats. Size is the number of cases in the "
@@ -485,10 +503,10 @@ def _adjudication_section(summary: dict[str, Any]) -> list[str]:
 
 
 def _card(item: dict[str, Any], record: dict[str, Any], runs_dir: Path, out_dir: Path, *,
-          guided: bool = False, adjudicated: dict[str, Any] | None = None) -> str:
-    """One disagreement; every picture and finding is read from runs_dir."""
-    run_dir = _run_dir(runs_dir, item)
-    annotated, findings = case_outputs(runs_dir, item)
+          guided: bool = False, adjudicated: dict[str, Any] | None = None, archive_dir: Path = ARCHIVE_DIR) -> str:
+    """One disagreement; every picture and finding is read from its run (item_run_dir)."""
+    run_dir = item_run_dir(runs_dir, item, archive_dir)
+    annotated, findings = case_outputs(runs_dir, item, archive_dir)
     suite = item["suite"]
     verdict = "failed" if failed_by_suite(item) else "survived"
     meta = [f'<span class="tag {"failed" if verdict == "failed" else "survived"}">suite: {verdict}</span>',
@@ -519,7 +537,8 @@ def _card(item: dict[str, Any], record: dict[str, Any], runs_dir: Path, out_dir:
 
 
 def render_gallery(summary: dict[str, Any], label_set: dict[str, Any], labels: dict[str, dict[str, Any]],
-                   runs_dir: Path, out_dir: Path, adjudication: dict[str, dict[str, Any]] | None = None) -> str:
+                   runs_dir: Path, out_dir: Path, adjudication: dict[str, dict[str, Any]] | None = None, *,
+                   archive_dir: Path = ARCHIVE_DIR) -> str:
     by_id = {item["id"]: item for item in label_set["items"]}
     guided_cases = set(summary["guided"]["cases"])
     sections = []
@@ -527,7 +546,7 @@ def render_gallery(summary: dict[str, Any], label_set: dict[str, Any], labels: d
                        ("passedBroken", "Passed by the suite, labelled broken")):
         ids = summary["disagreements"][key]
         cards = "\n".join(_card(by_id[i], labels[i], runs_dir, out_dir, guided=i in guided_cases,
-                                adjudicated=(adjudication or {}).get(i)) for i in ids) or '<p class="meta">None.</p>'
+                                adjudicated=(adjudication or {}).get(i), archive_dir=archive_dir) for i in ids) or '<p class="meta">None.</p>'
         sections.append(f"<section><h2>{title} ({len(ids)})</h2><div class=\"cards\">\n{cards}\n</div></section>")
     partial = ('<p class="meta"><b>Partial:</b> not every item is labelled yet.</p>' if summary["partial"] else "")
     style = GALLERY_STYLE + (".shots.three { grid-template-columns: repeat(3, 1fr); } "
@@ -555,12 +574,12 @@ def write_calibration(summary: dict[str, Any], gallery: str, out_dir: Path) -> l
 
 
 def calibrate(set_path: Path, label_set: dict[str, Any], runs_dir: Path, out_dir: Path, *,
-              partial: bool = False) -> list[Path]:
+              partial: bool = False, archive_dir: Path = ARCHIVE_DIR) -> list[Path]:
     labels = load_labels(set_path, label_set)
     adjudication = load_adjudication(set_path, label_set)
     summary = build_calibration(label_set, labels, runs_dir, partial=partial, guided=load_guided(set_path, label_set),
                                 adjudication=adjudication,
                                 adjudication_file=_display(adjudication_path(set_path)) if adjudication is not None
-                                else None)
-    gallery = render_gallery(summary, label_set, labels, runs_dir, out_dir, adjudication)
+                                else None, archive_dir=archive_dir)
+    gallery = render_gallery(summary, label_set, labels, runs_dir, out_dir, adjudication, archive_dir=archive_dir)
     return write_calibration(summary, gallery, out_dir)

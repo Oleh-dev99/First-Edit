@@ -6,6 +6,7 @@ from __future__ import annotations
 import http.client
 import json
 import re
+import shutil
 import threading
 import urllib.error
 import urllib.request
@@ -305,6 +306,23 @@ def test_adjudication_shows_each_disagreement_with_the_suites_result(label_set) 
         agreed = next(item for item in data["items"] if item["id"] not in (failed["id"], passed["id"]))
         assert get(f"{origin}/pictures/{agreed['id']}/annotated")[0] == 404
         assert get(f"{origin}/examples/0/left")[0] == 404
+
+
+def test_pictures_of_a_superseded_candidate_are_served_from_the_archive(label_set) -> None:
+    path, data = label_set
+    root = path.parent.parent
+    item = data["items"][0]
+    run_dir = (root / item["pictures"]["case"]).parent
+    archive = root / "archive"
+    moved = archive / "corpus-v1.0" / run_dir.parent.parent.name / run_dir.parent.name / run_dir.name
+    moved.parent.mkdir(parents=True)
+    shutil.move(run_dir, moved)
+    server = LabelServer(data, LabelStore(labels_path(path), [i["id"] for i in data["items"]]), root=root, port=0,
+                         archive_dir=archive)
+    assert server.missing_pictures() == 0
+    with running(server) as origin:
+        status, body = get(f"{origin}/pictures/{item['id']}/right")
+        assert status == 200 and body == (moved / Path(item["pictures"]["case"]).name).read_bytes()
 
 
 def test_the_blind_tool_never_serves_an_annotated_screenshot(label_set) -> None:
