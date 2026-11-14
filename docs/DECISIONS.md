@@ -491,3 +491,37 @@ Invented names are therefore not renamed now, even where the
 pre-publication search finds a business with the same name: what the
 search found is recorded in docs/PUBLISH-CHECKLIST.md, and the site and the
 README state that every name was invented and any match is coincidental.
+D-059 records one exception: corpus v1.1 replaces five names.
+
+## D-059 Corpus v1.1 replaces five invented names (2026-11-14)
+A recorded exception to D-058. The pre-publication web search found an
+established company or product in a related field for four invented names
+(Ledgerloom, Pinecall, Saltmarsh, Tessellate), and the owner added a fifth
+(Copperline, the name of several small firms). They are replaced now, while
+only two models have run, because it will never be cheaper to fix. This is
+not a legal opinion.
+
+Corpus v1.1 changes three briefs and nothing else in them:
+- nav-header: Ledgerloom becomes Sorrelwick, in brief.md and the fixture;
+- chat-thread: Pinecall becomes Murmelby, in brief.md;
+- hero-section: Copperline, Saltmarsh and Tessellate become Pewterwick,
+  Brinefold and Gorsewend in the fixture's list of customers.
+Each new name was kept only after a web search found nothing by that name
+(docs/PUBLISH-CHECKLIST.md). Brookfield Supplies stays: it is in inbox-list,
+which does not change. The props, the fields maps and the other 17 briefs
+are unchanged, and every reference still survives every case.
+
+The samples generated from the earlier text of the three briefs are
+superseded: twelve of the run's (ernie-5.5-flash-free and nemotron-3.5-free,
+plain and hinted, one sample each), plus the step 8 API-error record of
+inkling-2-small-free and the mock-reference outputs. They are archived and
+listed, not discarded: moved, with every stress run of them, to
+results/archive/corpus-v1.0/ under their original paths, with the cache
+untouched. They are never counted in the run, and docs/RUNS.md lists each
+with its state and survival. The new samples come from a changed prompt (the
+brief text or the example props differ, so the cache key differs): they are
+first samples of a changed brief, not a re-run of the same sample, so D-025
+(a sample is never re-rolled) still holds. The two models' jobs for these
+briefs are first in the queue. labels/set-01 stays as it is: 57 of its 215
+items come from superseded candidates; they still measure the suite, and
+calibrate and the label tool read their runs from the archive.

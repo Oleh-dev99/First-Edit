@@ -16,6 +16,10 @@ Every model in the run is a free-tier variant (an OpenRouter model id
 ending in `:free`), and no frontier model was tested (D-057). Which models
 ran, where, with which parameters and when is in the run record,
 [docs/RUNS.md](docs/RUNS.md), written from the generation records.
+Before publication, five invented names that matched real businesses were
+replaced in three briefs (corpus v1.1, D-059). The components generated
+from those briefs' earlier text are archived, never counted, and listed in
+the run record with what they scored.
 
 All product, company and person names in the briefs and fixtures were
 invented for this benchmark. Any match with a real name is coincidental,
@@ -30,13 +34,14 @@ Once, in the repository on GitHub, open Settings, then Pages, and under
 "Build and deployment" choose **GitHub Actions** as the source. Until
 then the workflow cannot deploy.
 
-To refresh the record and the data once `run-next` has moved the run on
-(it rewrites `results/run2`), from the repo root (on Windows; use
-`.venv/bin/python` elsewhere). None of these steps calls a model; the
-whole routine is in [docs/SPEC.md](docs/SPEC.md), Daily routine:
+To refresh the data once `run-next` has moved the run on (it rewrites
+`results/run2` and the run record, `docs/RUNS.md`), from the repo root in
+Windows cmd.exe (in Git Bash write `.venv/Scripts/python`, elsewhere
+`.venv/bin/python`). None of these steps calls a model; the whole routine
+is in [docs/SPEC.md](docs/SPEC.md), Daily routine. `run-record --out
+docs/RUNS.md` writes the run record on demand.
 
-```sh
-.venv\Scripts\python -m first_edit run-record --out docs/RUNS.md
+```bat
 cd harness && npm run briefs:check && cd ..
 .venv\Scripts\python -m first_edit calibrate --set labels/set-01.json --runs results/runs-run2 --out results/calibration
 .venv\Scripts\python -m first_edit export-site --run results/run2 --runs results/runs-run2 --calibration results/calibration --out site/public/data
@@ -85,8 +90,8 @@ baseline fixture in headless Chromium at 1280x800 and 320x800. It writes:
 - `results/smoke/hello-card__robust__320.png`
 
 It prints the page's `scrollWidth` and `clientWidth` for each viewport and
-exits non-zero if the page reports an error or does not become ready
-within 30 seconds.
+exits non-zero if the page reports an error, does not load within 30
+seconds or does not become ready within 30 seconds after loading.
 
 To view a candidate in your own browser, run `npm run dev` in `harness/`
 and open
@@ -103,10 +108,12 @@ npm test
 npm run check -- --brief hello-card --candidate _samples/hello-card/brittle --fixture stress --width 320
 ```
 
-`npm test` runs the unit tests for the fields map and the mutations, every
-check-lab case, the sample matrix (robust and brittle hello-card,
-baseline and stress fixtures, 1280 and 320 wide) and the stress matrix
-(both samples through every case), and asserts the results. Lab cases
+`npm test` runs every test in `harness/test`, among them the unit tests
+for the fields map and the mutations, every check-lab case and
+content-hidden lab case, the sample matrix (robust and brittle
+hello-card, baseline and stress fixtures, 1280 and 320 wide), the stress
+matrix (both samples through every case), the candidate gate, the brief
+rules and the results site's own test, and asserts the results. Lab cases
 can be viewed at `/?lab=<case-id>`.
 
 `npm run check` renders one case and writes the findings JSON, a clean
@@ -141,9 +148,10 @@ placeholder images live in `harness/public/fe-assets/`.
 The runner in `runner/` prompts models for candidates and stress-tests
 them; see [docs/SPEC.md](docs/SPEC.md), Generation. It needs Python 3.13
 and, for the gate and the stress runs, the harness set up as above. From
-the repo root (on Windows; use `.venv/bin/python` elsewhere):
+the repo root in Windows cmd.exe (in Git Bash write `.venv/Scripts/python`,
+elsewhere `.venv/bin/python`):
 
-```sh
+```bat
 python -m venv .venv
 .venv\Scripts\python -m pip install -r runner/requirements.lock -e runner
 .venv\Scripts\python -m first_edit generate --model mock-reference --all
@@ -157,7 +165,11 @@ candidate and needs no network. Before a real run,
 `.venv\Scripts\python -m first_edit doctor` checks every model (key set,
 model listed, prices) without spending tokens. After the stress runs,
 `.venv\Scripts\python -m first_edit summarize --out results/spike` writes
-`summary.json`, `report.md` and a filterable `gallery.html` of the cases.
+`summary.json`, `report.md` and a filterable `gallery.html` of the cases,
+for every configured model unless `--model <id>` names them (without it,
+report.md also names the unused claude-cli entries as run through the
+command line; see docs/SPEC.md, Known gaps). The run itself goes through
+`run-next` (docs/SPEC.md, Run queue).
 Model outputs under `candidates/` are git-ignored until a run is
 published. Before publishing anything, work through
 [docs/PUBLISH-CHECKLIST.md](docs/PUBLISH-CHECKLIST.md).
@@ -173,5 +185,6 @@ then the eight content mutations again at 320 px, 19 cases at most, each
 in the core or the extreme tier (see [docs/SPEC.md](docs/SPEC.md), Cases).
 It prints a table of new errors per check and the survival rate, overall
 and per tier, and writes per-case results, screenshots and
-`summary.json` to `results/runs/<brief>/<candidate>/`. Any case can be
+`summary.json` to `results/runs/<brief>/<candidate with / replaced by __>/`
+(for example `results/runs/hello-card/_samples__hello-card__brittle/`). Any case can be
 reproduced by opening its `query` (in the case JSON) with `npm run dev`.

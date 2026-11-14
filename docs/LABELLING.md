@@ -277,3 +277,15 @@ set-01's disagreements. The adjudication tool does not show it.
   (docs/CALIBRATION-set-01.md) was available beforehand. Either can pull an
   answer towards the suite, so the adjudicated rates always come second
   (D-055).
+- **Fast adjudication answers.** Six of the 14 adjudication answers took
+  under 2.5 seconds (four of them about 1.5 s), all six "we define it
+  differently". At that pace an answer may rest on the first look rather
+  than on the findings and the annotated screenshot.
+- **Some items come from superseded candidates.** 57 of set-01's 215
+  items (49 primary items and 8 repeats) come from candidates of the three
+  briefs whose text changed in corpus v1.1 (D-059). They still measure the
+  suite: each is a real render the suite judged and the labeller labelled,
+  and the suite's verdict on it does not depend on the brief's later text.
+  set-01 is unchanged, and their pictures and runs are in the archive
+  (results/archive/corpus-v1.0/), from which calibrate and the label tool
+  read them.

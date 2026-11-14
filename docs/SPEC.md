@@ -17,7 +17,8 @@ survives when the content changes.
 - Mutation: a deterministic change to the fixture (content) or to the
   render environment (viewport width, text size, direction).
 - Check: a deterministic in-page function that returns findings of the
-  form { check, severity, selector, rect, text, detail }. See Checks (v0).
+  form { check, severity, selector, matchKey, rect, text, detail }. See
+  Checks (v0).
 - Case: one candidate rendered under one mutation at one viewport (a
   content mutation runs at 1280 and at 320; see Cases). A screenshot
   plus findings. Every case is in the core or the extreme tier (D-039).
@@ -49,7 +50,8 @@ survives when the content changes.
   invalid (it failed the gate), baseline crash (the baseline threw or
   timed out), born broken (the baseline has error findings) or clean.
   Each is reported as its own number; a sample whose API call failed has
-  no candidate and is counted as an API error.
+  no candidate and is counted as an API error, and a valid candidate that
+  has not been stressed yet is counted as not stressed.
 - Only clean candidates are scored. The headline is the share of clean
   candidates that broke at least once in a core case, that is with one
   or more failed core cases, with a 95% Wilson interval (D-033, D-039).
@@ -99,7 +101,10 @@ survives when the content changes.
 - runner/ : Python. Generation (see Generation), scoring, labelling and
   calibration
 - labels/ : label sets and their labels, committed (docs/LABELLING.md)
-- results/ : run output, git-ignored
+- results/ : run output, git-ignored. results/archive/<corpus>/ (for
+  example corpus-v1.0) holds superseded samples: the candidates and stress
+  runs generated from an earlier text of a brief, under their original
+  paths (candidates/..., runs-run2/..., D-059)
 - site/ : the results site; site/public/data is its exported data,
   committed (see Results site)
 - .github/workflows/pages.yml : builds the site and deploys it to GitHub
@@ -147,21 +152,24 @@ Rules for writing a corpus brief:
 props.ts is sent to models too, so rules 2, 3, 8 and 9 apply to its
 comments as well.
 
-The 20 corpus briefs are corpus v1, and it is frozen (D-058): their text,
-props, fixtures and fields maps are part of the prompts already sent, so
-none of them changes, the invented names included. What the
+The 20 corpus briefs are corpus v1.1, and it is frozen (D-058): their
+text, props, fixtures and fields maps are part of the prompts already
+sent, so none of them changes. The one exception is recorded: corpus v1.1
+replaced five invented names in three briefs (nav-header, chat-thread,
+hero-section) that matched real businesses, and the samples generated from
+their earlier text, corpus v1.0, are archived (D-059). What the
 pre-publication search found for each name is in docs/PUBLISH-CHECKLIST.md.
 
 `npm run briefs:check [-- --brief <id>]` (in harness/, separate from
 `npm test`) validates every brief: the files and meta.json, the fields
 map against the baseline fixture, the baseline fixture against Props
-with tsc (string-literal unions included), image references and the
-number of applicable mutations. For corpus briefs it also enforces
-rule 1 (word count), rules 2, 3, 8 and 9 on brief.md and props.ts (a
-list of banned words, which catches the common cases but not every
-phrasing), rule 5 (plain data, images), 6 (list sizes) and 7. Rule 10
-needs a human review. It prints one row per brief and exits non-zero if
-any brief fails.
+with tsc (string-literal unions included), rule 5 (plain data in
+props.ts, image references), and it counts the applicable mutations. For
+corpus briefs it also enforces rule 1 (word count), rules 2, 3, 8 and 9
+on brief.md and props.ts (a list of banned words, which catches the
+common cases but not every phrasing), 6 (list sizes) and the minimum of
+rule 7, and checks the reference candidate. Rule 10 needs a human review.
+It prints one row per brief and exits non-zero if any brief fails.
 
 ## Reference candidates
 Every corpus brief ships a reference candidate at
@@ -439,7 +447,10 @@ replaces the deferred off-canvas check.
 - rect: page-overflow-x reports the strip past the viewport. text-clipped
   reports where the cut is visible: the part of the clipped lines inside
   the clipping box, or the clipping box when they are hidden entirely.
-  The other checks report the merged (visible) boxes.
+  content-spill reports the merged boxes of the spilling element, clipped
+  inside its boxed ancestor (D-043); text-overlap the union of the
+  overlapping areas of the pair; off-screen the part on screen, or a 4px
+  strip at the edge (check 5).
 - The check lab (harness/src/lab/cases.ts, route /?lab=<id>) pins the
   behaviour of every check with minimal positive and negative cases.
 
@@ -448,8 +459,12 @@ replaces the deferred off-canvas check.
 renders the baseline and then every applicable case (see Cases), and runs
 the checks on each.
 - Baseline: fixture "baseline", no mutation, 1280x800. Its error findings
-  are "born broken"; they are reported once and never count against a
-  case.
+  are "born broken"; they are reported once. A case is judged against its
+  reference render only: the baseline, or viewport-320 for a content@320
+  case, so a baseline error that viewport-320 does not have can count in
+  a @320 case. A reference render that did not render ok has no findings,
+  and every error of its cases counts as new. Only clean-baseline
+  candidates are scored (D-038).
 - New-finding rule: a finding is new if it is an error and no error of
   the case's reference render has the same check and matchKey (D-040).
   An info finding in the reference cancels nothing (D-041). The
@@ -461,7 +476,8 @@ the checks on each.
   case.
 - render-error: the candidate threw during render or the page crashed.
   window.__FE_ERROR__ holds the message, which the page also shows.
-  timeout: the page did not become ready within 30 s. Both are failed
+  timeout: navigation took more than 30 s, or the page did not become
+  ready within 30 s after it (two separate limits). Both are failed
   cases; the run continues with the next case. The page's console is
   not forwarded to the terminal; the error message is kept in the case
   JSON.
@@ -563,7 +579,7 @@ models for candidates and stress-tests them:
 python -m first_edit generate --model <id> [--brief <id> | --all]
   [--variant plain|hinted] [--samples N] [--max-requests N] [--max-cost USD]
 python -m first_edit stress --model <id> [--brief <id> | --all]
-  [--variant plain|hinted]
+  [--variant plain|hinted] [--runs-dir <dir>]
 python -m first_edit doctor
 python -m first_edit summarize --out <dir> [--model <id> ...] [--runs-dir <dir>]
   [--plan <file>]
@@ -602,14 +618,16 @@ price = { input = 0.0, output = 0.0 }  # USD per million tokens, optional
 ```
 
 - openai-compatible: POST {base_url}/chat/completions with a Bearer key
-  read from the variable named by api_key_env. It is the only real
-  provider type (D-023). Keys live in .env; .env.example lists the names.
+  read from the variable named by api_key_env. It is the only API
+  provider type (D-023); claude-cli (D-047) is the only other real one.
+  Keys live in .env; .env.example lists the names.
 - mock: replies with the brief's reference candidate inside one tsx code
   fence, with no network.
 - claude-cli: runs the installed Claude Code command line once per sample
   (see claude-cli provider). `model` is the command line's alias (haiku,
-  sonnet, opus) and `params = { effort = "medium" }` is required; there
-  is no base URL, key or price.
+  sonnet, opus), and params must be `{ effort = "<level>" }` and nothing
+  else, the level one of low, medium, high, xhigh and max (every entry
+  uses medium); there is no base URL, key or price.
 - A model id matches [a-z0-9][a-z0-9._-]* and is used in paths.
 
 ### Prompt
@@ -686,14 +704,17 @@ key name are not part of the key.
 ### Calls, retries and budget
 - Timeouts, HTTP 429 and 5xx are retried with exponential backoff (2, 4
   and 8 s), at most four attempts (two for a free model variant, below).
-  Any other API error fails the sample at once; it is recorded and, since
-  nothing is cached, called again on the next run (D-025).
+  Any other HTTP error fails the sample at once; it is recorded and, since
+  nothing is cached, called again on the next run (D-025). A network error
+  other than a timeout (connection refused or reset, server disconnected)
+  is neither retried nor recorded: it stops the command (Known gaps).
 - --max-requests: stop before the provider call that would exceed this
   count. A call and its retries count once; cache hits are free.
 - --max-cost: when the entry has prices, stop before a call whose upper
   estimate would exceed the limit. The estimate is the prompt (4
-  characters per token) at the input price plus the params' max_tokens
-  (16,000 if unset) at the output price. Spend counts the cost the
+  characters per token) at the input price plus the params' max_tokens,
+  else max_completion_tokens (16,000 if neither is set), at the output
+  price. Spend counts the cost the
   response reports (OpenRouter's usage.cost), or the configured prices
   times the reported usage when it reports none.
 - The read timeout is 600 s: a long reply with reasoning can take
@@ -832,6 +853,7 @@ runner/plan.toml lists the jobs of a run in order (D-048):
 ```
 runs_dir = "results/runs-run2"     # where the stress results go
 out = "results/run2"               # where summarize writes
+record = "docs/RUNS.md"            # optional: the run record run-next rewrites
 
 [[job]]
 model = "gemma-4-31b-free"         # a model id from runner/models.toml
@@ -852,8 +874,9 @@ only_if_blocked = []               # optional: a fallback, run only if one of th
   limit is reached. Nothing is retried in a loop.
 - Two-sample probe: if a model's first two samples both fail with a
   rate-limit, availability or region error (HTTP 403, 404, 429, 502 or
-  503, or a message saying the model is unavailable or not available in
-  the region), the model is marked blocked and never called again; a job
+  503, or a message that mentions a region, says the model is unavailable
+  or not available, or that there are no endpoints), the model is marked
+  blocked and never called again; a job
   with `only_if_blocked` naming it becomes active. The state is kept in
   <runs_dir>/queue-state.json.
 - It stresses every valid candidate of the queue's models that has no
@@ -861,6 +884,9 @@ only_if_blocked = []               # optional: a fallback, run only if one of th
 - It re-runs summarize into `out`, with the decision lines covering the
   models whose queued jobs are all finished (not blocked, every sample
   generated, every valid candidate stressed).
+- It then rewrites the run record (`record`, docs/RUNS.md; see Run
+  record), so the record cannot go stale. A plan without `record` has no
+  record.
 - It prints what it did, what remains per job, the blocked models, the
   finished models and when it can continue (for free models, the next
   00:00 UTC).
@@ -870,12 +896,14 @@ and writes nothing. run-next is safe to run any number of times; it never
 re-runs a sample to get a better result and never clears the cache.
 
 ### Run record
-`python -m first_edit run-record --out docs/RUNS.md [--plan <file>]` writes
-the run record (D-057) from the generation records of the models of the
-plan's active jobs, in plan order, and from their stress summaries in the
-plan's runs directory. Like summarize, it covers every generated sample of
-those models for the corpus briefs, the samples of earlier steps that the
-run reuses included. Per model:
+run-next rewrites the run record (D-057) after every pass, to the plan's
+`record` file (docs/RUNS.md); `python -m first_edit run-record --out
+docs/RUNS.md [--plan <file>]` writes the same file on demand. It is written
+from the generation records of the models of the plan's active jobs, in
+plan order, and from their stress summaries in the plan's runs directory.
+Like summarize, it covers every generated sample of those models for the
+corpus briefs, the samples of earlier steps that the run reuses included.
+Per model:
 - the provider type and base URL, the provider's model id, and the model
   and the upstream provider the responses reported (reportedModel,
   reportedProvider);
@@ -889,26 +917,33 @@ run reuses included. Per model:
   many not, and the counts per suite version, harness commit (dirty
   marked) and Playwright and Chromium version.
 It also says whether every model is a free variant, names the blocked
-models and the fallback jobs that are not active. It has no timestamp of
-its own, so the same records give the same file. It calls nothing and is
-regenerated whenever the run advances (Daily routine).
+models and the fallback jobs that are not active, and lists the superseded
+samples of these models: those in each folder of results/archive/ (D-059),
+with the archive folder, brief, variant, state (D-038), survived /
+applicable cases per tier and over all cases from the archived stress run,
+and, for a clean candidate, whether it broke in a core case. They are
+never counted with the run's own samples. Its only date is the UTC day it
+was written, at the top; otherwise the same records give the same file. A
+stress run has no date of its own (summary.json has no timestamp): it is
+identified by its candidate, suite version and harness commit, which the
+record gives. It calls nothing.
 
 ### Daily routine
 While the run is going, once a UTC day after the free ledger resets
 (00:00 UTC), from the repo root. Only run-next calls a model:
 1. `python -m first_edit run-next`: generates what the day's ledger
-   allows, stresses the new candidates and rewrites results/run2.
-2. `python -m first_edit run-record --out docs/RUNS.md`: the run record.
-3. `npm run briefs:check` in harness/: the references' runs, whose
+   allows, stresses the new candidates, rewrites results/run2 and
+   rewrites the run record, docs/RUNS.md.
+2. `npm run briefs:check` in harness/: the references' runs, whose
    baseline screenshots the Briefs page shows.
-4. `python -m first_edit calibrate --set labels/set-01.json --runs
+3. `python -m first_edit calibrate --set labels/set-01.json --runs
    results/runs-run2 --out results/calibration`.
-5. `python -m first_edit export-site --run results/run2 --runs
+4. `python -m first_edit export-site --run results/run2 --runs
    results/runs-run2 --calibration results/calibration --out
    site/public/data`.
-6. `npm run site:check` in harness/: the site builds and passes its own
+5. `npm run site:check` in harness/: the site builds and passes its own
    suite.
-7. Commit docs/RUNS.md and site/public/data. The owner pushes main, which
+6. Commit docs/RUNS.md and site/public/data. The owner pushes main, which
    publishes the site.
 
 ### Stress
@@ -932,7 +967,8 @@ re-stresses in steps 9 and 10, results/spike-v3b for the step 11
 summarize of the step 10 runs). It reads stress summaries of
 schemaVersion 3 only and stops with an error on any other, so a runs
 directory from an older harness must be stressed again. It also stops on
-a summary of another suite; a schema 3 summary without the suite field
+a summary of a suite other than v1 and its bug-fix patches (v1.1, v1.2,
+...); a schema 3 summary without the suite field
 was written by the step 10 harness, which is suite v1, and the report
 says how many summaries predate the field. Numbers are computed exact
 and rounded once, when summary.json is written (4 decimals; costs and
@@ -987,8 +1023,12 @@ queued jobs are all finished (summarize --plan, or run-next):
 Without a plan they are not evaluated, and with no finished model they
 say so.
 
-Models run through the Claude Code command line are named in report.md
-and gallery.html with a note that this is not the raw API (D-047).
+Models of the claude-cli provider are named in report.md with a note that
+they ran through the Claude Code command line, which is not the raw API
+(D-047): every claude-cli model in the report's model list, whether or not
+it has candidates, so a summarize without --model, which lists every
+configured non-mock model, names the three unused entries too (Known
+gaps). gallery.html notes the claude-cli models that have candidates.
 
 Per variant, pooled over every model in the report, the headline
 sensitivity (D-045): the core headline recomputed with one case family
@@ -1046,7 +1086,12 @@ docs/LABELLING.md is the full procedure. In short:
   every disagreement. It refuses to run until every item has a label,
   unless --partial is given. Every rate is given twice: over all items,
   and over the unguided items, leaving out the cases listed in
-  labels/<name>.guided.json as discussed before labelling (D-056).
+  labels/<name>.guided.json as discussed before labelling (D-056). It
+  reads each item's run from the runs directory or, when the item's
+  candidate was superseded, from the archive folder that mirrors it
+  (results/archive/<corpus>/<runs directory name>/, D-059), and says how
+  many items it read from the archive; the label tool finds their
+  pictures the same way.
 - `label --adjudicate`, once every item has a label, shows each
   disagreement between the labels and the suite on its own screen, not
   blind: both clean pictures, the annotated screenshot, the findings and
@@ -1095,19 +1140,23 @@ paths first.
 
 The pages: Overview (the question, the core headline per prompt variant
 with the all-cases figure beside it, one before and after pair chosen by
-hand), Results (the headline per model and variant, the paired hint test,
-the failure rate per case with its tier, the sensitivity table, the
-decision lines and their status, the candidates), Gallery (the cases as
-before and after pairs at one scale, with the annotated screenshot and
-findings on demand, filters for outcome, model, variant, brief, case, tier
-and check, and a link to each source), Method (the prompt word for word
-with the notice on invented names, the run record (a link to
-docs/RUNS.md), cases and tiers, checks, the new-finding rule, references,
-calibration, the site's own test, limitations and known gaps, how the
-project was built) and Briefs. Every page carries a banner from run.json
-("Preliminary: N of M models have finished" until all have) that says every
-model in the run is a free-tier variant and no frontier model was tested
-(D-057), and a footer with the notice: "All product, company and person
+hand, named in site/src/pages/Overview.tsx; if the data no longer holds it,
+the first failed core case, and the caption says so), Results (the models
+and the briefs with no component yet, the headline per model and variant,
+the paired hint test, the failure rate per case with its tier, the
+sensitivity table, the decision lines and their status, the candidates
+with the number of briefs that have none), Gallery (the cases as before and
+after pairs at one scale, with the annotated screenshot and findings on
+demand, filters for outcome, model, variant, brief, case, tier and check,
+and a link to each source), Method (the prompt word for word with the
+notice on invented names, the run record (a link to docs/RUNS.md) and the
+superseded samples (D-059), cases and tiers, checks, the new-finding rule,
+references, calibration, the site's own test, limitations and known gaps,
+how the project was built) and Briefs. Every page carries a banner from
+run.json ("Preliminary: N of M models have finished" until all have; while
+some brief has no component from any model, "Components so far cover K of
+the 20 briefs") that says every model in the run is a free-tier variant
+and no frontier model was tested (D-057), and a footer with the notice: "All product, company and person
 names in the briefs and fixtures were invented for this benchmark. Any
 match with a real name is coincidental, and no real organisation or person
 is described." (D-058). Every rate
@@ -1224,6 +1273,20 @@ Found in step 14:
   or with a hidden scrollbar, a box edge that is barely visible against
   what lies behind it, and a pill that runs under neighbouring text pass
   every check. Candidates for a later suite version, not bug fixes.
+
+Found in the pre-publication read of the SPEC against the code
+(2026-11-14):
+- A network error other than a timeout (connection refused or reset,
+  server disconnected) is neither retried nor recorded: the provider
+  retries only timeouts, HTTP 429 and 5xx, and generate_sample catches only
+  provider errors, so the error stops generate or run-next with a
+  traceback. Nothing is lost (replies already received are cached), and
+  the next run calls the sample again; the free ledger has counted the
+  request.
+- summarize without --model lists every configured non-mock model, so its
+  report.md names the three unused claude-cli entries in the note for
+  models run through the Claude Code command line, as if they had run.
+  Runs go through run-next or summarize --model, which do not.
 
 Closed in step 5: a visibly boxed element spilling out of its boxed
 parent (for example a tag pill out of a card) is now caught by
