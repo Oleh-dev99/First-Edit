@@ -1,6 +1,6 @@
 # App navigation header
 
-Build the top navigation header for Ledgerloom, a web app that finance
+Build the top navigation header for Sorrelwick, a web app that finance
 teams use to manage invoices and expenses. It is a full-width bar that
 sits at the top of every page of the app.
 

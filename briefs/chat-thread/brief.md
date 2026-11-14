@@ -1,6 +1,6 @@
 # Chat thread
 
-Build the conversation view of Pinecall, a customer support chat app. It
+Build the conversation view of Murmelby, a customer support chat app. It
 is a self-sized chat panel that sits in the support agent's workspace.
 
 At the top, show the contact's name with their status line and an avatar
