@@ -254,7 +254,8 @@
  "harness": {
   "items": 215,
   "changed": 0,
-  "missingRuns": 0
+  "missingRuns": 0,
+  "archived": 57
  },
  "guided": {
   "file": "labels/set-01.guided.json",

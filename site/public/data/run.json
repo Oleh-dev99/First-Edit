@@ -12,13 +12,13 @@
  },
  "suite": {
   "version": "v1",
-  "stressSummaries": 39,
-  "recorded": 39,
+  "stressSummaries": 27,
+  "recorded": 27,
   "versions": {
-   "v1": 39
+   "v1": 27
   },
   "commits": {
-   "ba2bb3b": 39
+   "ba2bb3b": 27
   }
  },
  "models": [
@@ -30,7 +30,7 @@
     "baidu/ernie-5.5-flash-preview:free"
    ],
    "calls": {
-    "first": "2026-11-13T00:45:50+00:00",
+    "first": "2026-11-13T00:46:10+00:00",
     "last": "2026-11-13T12:03:14+00:00"
    },
    "finished": false
@@ -43,7 +43,7 @@
     "nvidia/nemotron-3.5-super-vl:free"
    ],
    "calls": {
-    "first": "2026-11-13T01:04:55+00:00",
+    "first": "2026-11-13T01:05:28+00:00",
     "last": "2026-11-13T01:23:49+00:00"
    },
    "finished": false
@@ -213,676 +213,18 @@
    "model": "ernie-5.5-flash-free",
    "variant": "plain",
    "pooled": false,
-   "candidates": 12,
-   "valid": 12,
+   "candidates": 9,
+   "valid": 9,
    "invalid": 0,
    "invalidByRule": {},
    "apiErrors": 0,
    "missingBriefs": [
+    "chat-thread",
     "confirm-dialog",
     "day-agenda",
+    "hero-section",
     "invoice-summary",
-    "sidebar-nav",
-    "site-footer",
-    "tabs-panel",
-    "team-directory",
-    "testimonial-grid"
-   ],
-   "notStressed": 0,
-   "cleanBaseline": 12,
-   "bornBroken": 0,
-   "baselineCrash": 0,
-   "brokeOnce": {
-    "core": {
-     "count": 8,
-     "of": 12,
-     "share": 0.6667,
-     "ci95": [
-      0.3906,
-      0.8619
-     ]
-    },
-    "all": {
-     "count": 12,
-     "of": 12,
-     "share": 1.0,
-     "ci95": [
-      0.7575,
-      1.0
-     ]
-    }
-   },
-   "failureRate": {
-    "core": {
-     "failed": 11,
-     "applicable": 190,
-     "rate": 0.0579,
-     "ci95": [
-      0.0326,
-      0.1007
-     ]
-    },
-    "extreme": {
-     "failed": 18,
-     "applicable": 24,
-     "rate": 0.75,
-     "ci95": [
-      0.551,
-      0.88
-     ]
-    },
-    "all": {
-     "failed": 29,
-     "applicable": 214,
-     "rate": 0.1355,
-     "ci95": [
-      0.096,
-      0.1878
-     ]
-    }
-   },
-   "survival": {
-    "core": {
-     "candidates": 12,
-     "mean": 0.942,
-     "min": 0.8667,
-     "max": 1.0
-    },
-    "extreme": {
-     "candidates": 12,
-     "mean": 0.25,
-     "min": 0.0,
-     "max": 0.5
-    },
-    "all": {
-     "candidates": 12,
-     "mean": 0.8648,
-     "min": 0.7647,
-     "max": 0.9474
-    }
-   },
-   "cases": {
-    "applicable": 214,
-    "failed": 29,
-    "renderErrors": 0,
-    "timeouts": 0,
-    "rate": 0.1355,
-    "ci95": [
-     0.096,
-     0.1878
-    ]
-   },
-   "failedByCase": {
-    "text-long": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 12,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2425
-     ]
-    },
-    "text-longword": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 12,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2425
-     ]
-    },
-    "text-unbroken": {
-     "tier": "extreme",
-     "failed": 6,
-     "applicable": 12,
-     "rate": 0.5,
-     "ci95": [
-      0.2538,
-      0.7462
-     ]
-    },
-    "text-empty": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 12,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2425
-     ]
-    },
-    "list-0": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "list-1": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 12,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2425
-     ]
-    },
-    "list-many": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 12,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2425
-     ]
-    },
-    "number-large": {
-     "tier": "core",
-     "failed": 1,
-     "applicable": 8,
-     "rate": 0.125,
-     "ci95": [
-      0.0224,
-      0.4709
-     ]
-    },
-    "viewport-320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 12,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2425
-     ]
-    },
-    "text-200pct": {
-     "tier": "core",
-     "failed": 1,
-     "applicable": 12,
-     "rate": 0.0833,
-     "ci95": [
-      0.0149,
-      0.3539
-     ]
-    },
-    "dir-rtl": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 12,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2425
-     ]
-    },
-    "text-long@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 12,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2425
-     ]
-    },
-    "text-longword@320": {
-     "tier": "core",
-     "failed": 6,
-     "applicable": 12,
-     "rate": 0.5,
-     "ci95": [
-      0.2538,
-      0.7462
-     ]
-    },
-    "text-unbroken@320": {
-     "tier": "extreme",
-     "failed": 12,
-     "applicable": 12,
-     "rate": 1.0,
-     "ci95": [
-      0.7575,
-      1.0
-     ]
-    },
-    "text-empty@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 12,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2425
-     ]
-    },
-    "list-0@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "list-1@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 12,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2425
-     ]
-    },
-    "list-many@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 12,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2425
-     ]
-    },
-    "number-large@320": {
-     "tier": "core",
-     "failed": 3,
-     "applicable": 8,
-     "rate": 0.375,
-     "ci95": [
-      0.1368,
-      0.6943
-     ]
-    }
-   },
-   "failedByCheck": {
-    "page-overflow-x": 13,
-    "text-clipped": 13,
-    "content-spill": 23,
-    "text-overlap": 6,
-    "off-screen": 1
-   },
-   "truncations": {
-    "total": 285,
-    "renderedCases": 226,
-    "perCase": 1.26
-   },
-   "contentHidden": {
-    "total": 13,
-    "measuredCases": 125,
-    "casesWithHidden": 9,
-    "perCase": 0.1
-   },
-   "tokens": {
-    "input": 11628,
-    "cachedInput": 0,
-    "output": 138500,
-    "reasoning": 120854
-   },
-   "cost": {
-    "usd": 0.0,
-    "actualUsd": 0.0,
-    "estimatedUsd": 0.0,
-    "callsWithActualCost": 12
-   }
-  },
-  {
-   "model": "ernie-5.5-flash-free",
-   "variant": "hinted",
-   "pooled": false,
-   "candidates": 11,
-   "valid": 9,
-   "invalid": 2,
-   "invalidByRule": {
-    "empty": 2,
-    "reasoning-exhausted": 2,
-    "truncated": 2
-   },
-   "apiErrors": 0,
-   "missingBriefs": [
-    "checkout-summary",
-    "confirm-dialog",
-    "day-agenda",
-    "invoice-summary",
-    "sidebar-nav",
-    "site-footer",
-    "tabs-panel",
-    "team-directory",
-    "testimonial-grid"
-   ],
-   "notStressed": 0,
-   "cleanBaseline": 9,
-   "bornBroken": 0,
-   "baselineCrash": 0,
-   "brokeOnce": {
-    "core": {
-     "count": 3,
-     "of": 9,
-     "share": 0.3333,
-     "ci95": [
-      0.1206,
-      0.6458
-     ]
-    },
-    "all": {
-     "count": 5,
-     "of": 9,
-     "share": 0.5556,
-     "ci95": [
-      0.2667,
-      0.8112
-     ]
-    }
-   },
-   "failureRate": {
-    "core": {
-     "failed": 4,
-     "applicable": 143,
-     "rate": 0.028,
-     "ci95": [
-      0.0109,
-      0.0697
-     ]
-    },
-    "extreme": {
-     "failed": 6,
-     "applicable": 18,
-     "rate": 0.3333,
-     "ci95": [
-      0.1628,
-      0.5625
-     ]
-    },
-    "all": {
-     "failed": 10,
-     "applicable": 161,
-     "rate": 0.0621,
-     "ci95": [
-      0.0341,
-      0.1105
-     ]
-    }
-   },
-   "survival": {
-    "core": {
-     "candidates": 9,
-     "mean": 0.9698,
-     "min": 0.8462,
-     "max": 1.0
-    },
-    "extreme": {
-     "candidates": 9,
-     "mean": 0.6667,
-     "min": 0.0,
-     "max": 1.0
-    },
-    "all": {
-     "candidates": 9,
-     "mean": 0.9355,
-     "min": 0.8,
-     "max": 1.0
-    }
-   },
-   "cases": {
-    "applicable": 161,
-    "failed": 10,
-    "renderErrors": 0,
-    "timeouts": 0,
-    "rate": 0.0621,
-    "ci95": [
-     0.0341,
-     0.1105
-    ]
-   },
-   "failedByCase": {
-    "text-long": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "text-longword": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "text-unbroken": {
-     "tier": "extreme",
-     "failed": 1,
-     "applicable": 9,
-     "rate": 0.1111,
-     "ci95": [
-      0.0199,
-      0.435
-     ]
-    },
-    "text-empty": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "list-0": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 8,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.3244
-     ]
-    },
-    "list-1": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "list-many": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "number-large": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 5,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.4345
-     ]
-    },
-    "viewport-320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "text-200pct": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "dir-rtl": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "text-long@320": {
-     "tier": "core",
-     "failed": 1,
-     "applicable": 9,
-     "rate": 0.1111,
-     "ci95": [
-      0.0199,
-      0.435
-     ]
-    },
-    "text-longword@320": {
-     "tier": "core",
-     "failed": 3,
-     "applicable": 9,
-     "rate": 0.3333,
-     "ci95": [
-      0.1206,
-      0.6458
-     ]
-    },
-    "text-unbroken@320": {
-     "tier": "extreme",
-     "failed": 5,
-     "applicable": 9,
-     "rate": 0.5556,
-     "ci95": [
-      0.2667,
-      0.8112
-     ]
-    },
-    "text-empty@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "list-0@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 8,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.3244
-     ]
-    },
-    "list-1@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "list-many@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 9,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2991
-     ]
-    },
-    "number-large@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 5,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.4345
-     ]
-    }
-   },
-   "failedByCheck": {
-    "page-overflow-x": 5,
-    "text-clipped": 3,
-    "content-spill": 10,
-    "text-overlap": 0,
-    "off-screen": 3
-   },
-   "truncations": {
-    "total": 3,
-    "renderedCases": 170,
-    "perCase": 0.02
-   },
-   "contentHidden": {
-    "total": 0,
-    "measuredCases": 94,
-    "casesWithHidden": 0,
-    "perCase": 0.0
-   },
-   "tokens": {
-    "input": 11075,
-    "cachedInput": 9472,
-    "output": 191295,
-    "reasoning": 176981
-   },
-   "cost": {
-    "usd": 0.0,
-    "actualUsd": 0.0,
-    "estimatedUsd": 0.0,
-    "callsWithActualCost": 11
-   }
-  },
-  {
-   "model": "nemotron-3.5-free",
-   "variant": "plain",
-   "pooled": false,
-   "candidates": 10,
-   "valid": 9,
-   "invalid": 1,
-   "invalidByRule": {
-    "parse": 1
-   },
-   "apiErrors": 0,
-   "missingBriefs": [
-    "activity-feed",
-    "checkout-summary",
-    "confirm-dialog",
-    "day-agenda",
-    "invoice-summary",
+    "nav-header",
     "sidebar-nav",
     "site-footer",
     "tabs-panel",
@@ -915,93 +257,93 @@
    },
    "failureRate": {
     "core": {
-     "failed": 14,
+     "failed": 9,
      "applicable": 145,
-     "rate": 0.0966,
+     "rate": 0.0621,
      "ci95": [
-      0.0584,
-      0.1555
+      0.033,
+      0.1137
      ]
     },
     "extreme": {
-     "failed": 15,
+     "failed": 14,
      "applicable": 18,
-     "rate": 0.8333,
+     "rate": 0.7778,
      "ci95": [
-      0.6078,
-      0.9416
+      0.5479,
+      0.91
      ]
     },
     "all": {
-     "failed": 29,
+     "failed": 23,
      "applicable": 163,
-     "rate": 0.1779,
+     "rate": 0.1411,
      "ci95": [
-      0.1268,
-      0.2438
+      0.0959,
+      0.2028
      ]
     }
    },
    "survival": {
     "core": {
      "candidates": 9,
-     "mean": 0.8956,
-     "min": 0.5385,
+     "mean": 0.9377,
+     "min": 0.8667,
      "max": 1.0
     },
     "extreme": {
      "candidates": 9,
-     "mean": 0.1667,
+     "mean": 0.2222,
      "min": 0.0,
      "max": 0.5
     },
     "all": {
      "candidates": 9,
-     "mean": 0.8152,
-     "min": 0.4667,
+     "mean": 0.8586,
+     "min": 0.7647,
      "max": 0.9474
     }
    },
    "cases": {
     "applicable": 163,
-    "failed": 29,
+    "failed": 23,
     "renderErrors": 0,
     "timeouts": 0,
-    "rate": 0.1779,
+    "rate": 0.1411,
     "ci95": [
-     0.1268,
-     0.2438
+     0.0959,
+     0.2028
     ]
    },
    "failedByCase": {
     "text-long": {
      "tier": "core",
-     "failed": 1,
+     "failed": 0,
      "applicable": 9,
-     "rate": 0.1111,
+     "rate": 0.0,
      "ci95": [
-      0.0199,
-      0.435
+      0.0,
+      0.2991
      ]
     },
     "text-longword": {
      "tier": "core",
-     "failed": 2,
+     "failed": 0,
      "applicable": 9,
-     "rate": 0.2222,
+     "rate": 0.0,
      "ci95": [
-      0.0632,
-      0.5474
+      0.0,
+      0.2991
      ]
     },
     "text-unbroken": {
      "tier": "extreme",
-     "failed": 6,
+     "failed": 5,
      "applicable": 9,
-     "rate": 0.6667,
+     "rate": 0.5556,
      "ci95": [
-      0.3542,
-      0.8794
+      0.2667,
+      0.8112
      ]
     },
     "text-empty": {
@@ -1017,11 +359,11 @@
     "list-0": {
      "tier": "core",
      "failed": 0,
-     "applicable": 8,
+     "applicable": 7,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.3244
+      0.3543
      ]
     },
     "list-1": {
@@ -1036,32 +378,32 @@
     },
     "list-many": {
      "tier": "core",
-     "failed": 1,
+     "failed": 0,
      "applicable": 9,
-     "rate": 0.1111,
+     "rate": 0.0,
      "ci95": [
-      0.0199,
-      0.435
+      0.0,
+      0.2991
      ]
     },
     "number-large": {
      "tier": "core",
-     "failed": 0,
-     "applicable": 6,
-     "rate": 0.0,
+     "failed": 1,
+     "applicable": 7,
+     "rate": 0.1429,
      "ci95": [
-      0.0,
-      0.3903
+      0.0257,
+      0.5131
      ]
     },
     "viewport-320": {
      "tier": "core",
-     "failed": 1,
+     "failed": 0,
      "applicable": 9,
-     "rate": 0.1111,
+     "rate": 0.0,
      "ci95": [
-      0.0199,
-      0.435
+      0.0,
+      0.2991
      ]
     },
     "text-200pct": {
@@ -1086,22 +428,22 @@
     },
     "text-long@320": {
      "tier": "core",
-     "failed": 2,
+     "failed": 0,
      "applicable": 9,
-     "rate": 0.2222,
+     "rate": 0.0,
      "ci95": [
-      0.0632,
-      0.5474
+      0.0,
+      0.2991
      ]
     },
     "text-longword@320": {
      "tier": "core",
-     "failed": 5,
+     "failed": 4,
      "applicable": 9,
-     "rate": 0.5556,
+     "rate": 0.4444,
      "ci95": [
-      0.2667,
-      0.8112
+      0.1888,
+      0.7333
      ]
     },
     "text-unbroken@320": {
@@ -1127,11 +469,11 @@
     "list-0@320": {
      "tier": "core",
      "failed": 0,
-     "applicable": 8,
+     "applicable": 7,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.3244
+      0.3543
      ]
     },
     "list-1@320": {
@@ -1155,6 +497,280 @@
      ]
     },
     "number-large@320": {
+     "tier": "core",
+     "failed": 3,
+     "applicable": 7,
+     "rate": 0.4286,
+     "ci95": [
+      0.1582,
+      0.7495
+     ]
+    }
+   },
+   "failedByCheck": {
+    "page-overflow-x": 11,
+    "text-clipped": 9,
+    "content-spill": 19,
+    "text-overlap": 6,
+    "off-screen": 1
+   },
+   "truncations": {
+    "total": 279,
+    "renderedCases": 172,
+    "perCase": 1.62
+   },
+   "contentHidden": {
+    "total": 0,
+    "measuredCases": 95,
+    "casesWithHidden": 0,
+    "perCase": 0.0
+   },
+   "tokens": {
+    "input": 9473,
+    "cachedInput": 0,
+    "output": 90558,
+    "reasoning": 76748
+   },
+   "cost": {
+    "usd": 0.0,
+    "actualUsd": 0.0,
+    "estimatedUsd": 0.0,
+    "callsWithActualCost": 9
+   }
+  },
+  {
+   "model": "ernie-5.5-flash-free",
+   "variant": "hinted",
+   "pooled": false,
+   "candidates": 8,
+   "valid": 6,
+   "invalid": 2,
+   "invalidByRule": {
+    "empty": 2,
+    "reasoning-exhausted": 2,
+    "truncated": 2
+   },
+   "apiErrors": 0,
+   "missingBriefs": [
+    "chat-thread",
+    "checkout-summary",
+    "confirm-dialog",
+    "day-agenda",
+    "hero-section",
+    "invoice-summary",
+    "nav-header",
+    "sidebar-nav",
+    "site-footer",
+    "tabs-panel",
+    "team-directory",
+    "testimonial-grid"
+   ],
+   "notStressed": 0,
+   "cleanBaseline": 6,
+   "bornBroken": 0,
+   "baselineCrash": 0,
+   "brokeOnce": {
+    "core": {
+     "count": 1,
+     "of": 6,
+     "share": 0.1667,
+     "ci95": [
+      0.0301,
+      0.5635
+     ]
+    },
+    "all": {
+     "count": 2,
+     "of": 6,
+     "share": 0.3333,
+     "ci95": [
+      0.0968,
+      0.7
+     ]
+    }
+   },
+   "failureRate": {
+    "core": {
+     "failed": 1,
+     "applicable": 98,
+     "rate": 0.0102,
+     "ci95": [
+      0.0018,
+      0.0556
+     ]
+    },
+    "extreme": {
+     "failed": 3,
+     "applicable": 12,
+     "rate": 0.25,
+     "ci95": [
+      0.0889,
+      0.5323
+     ]
+    },
+    "all": {
+     "failed": 4,
+     "applicable": 110,
+     "rate": 0.0364,
+     "ci95": [
+      0.0142,
+      0.0898
+     ]
+    }
+   },
+   "survival": {
+    "core": {
+     "candidates": 6,
+     "mean": 0.9902,
+     "min": 0.9412,
+     "max": 1.0
+    },
+    "extreme": {
+     "candidates": 6,
+     "mean": 0.75,
+     "min": 0.0,
+     "max": 1.0
+    },
+    "all": {
+     "candidates": 6,
+     "mean": 0.9639,
+     "min": 0.8421,
+     "max": 1.0
+    }
+   },
+   "cases": {
+    "applicable": 110,
+    "failed": 4,
+    "renderErrors": 0,
+    "timeouts": 0,
+    "rate": 0.0364,
+    "ci95": [
+     0.0142,
+     0.0898
+    ]
+   },
+   "failedByCase": {
+    "text-long": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "text-longword": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "text-unbroken": {
+     "tier": "extreme",
+     "failed": 1,
+     "applicable": 6,
+     "rate": 0.1667,
+     "ci95": [
+      0.0301,
+      0.5635
+     ]
+    },
+    "text-empty": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-0": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-1": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-many": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "number-large": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 4,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.4899
+     ]
+    },
+    "viewport-320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "text-200pct": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "dir-rtl": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "text-long@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "text-longword@320": {
      "tier": "core",
      "failed": 1,
      "applicable": 6,
@@ -1163,45 +779,105 @@
       0.0301,
       0.5635
      ]
+    },
+    "text-unbroken@320": {
+     "tier": "extreme",
+     "failed": 2,
+     "applicable": 6,
+     "rate": 0.3333,
+     "ci95": [
+      0.0968,
+      0.7
+     ]
+    },
+    "text-empty@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-0@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-1@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-many@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "number-large@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 4,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.4899
+     ]
     }
    },
    "failedByCheck": {
-    "page-overflow-x": 17,
-    "text-clipped": 0,
-    "content-spill": 15,
-    "text-overlap": 8,
-    "off-screen": 15
+    "page-overflow-x": 1,
+    "text-clipped": 2,
+    "content-spill": 4,
+    "text-overlap": 0,
+    "off-screen": 1
    },
    "truncations": {
-    "total": 97,
-    "renderedCases": 172,
-    "perCase": 0.56
+    "total": 0,
+    "renderedCases": 116,
+    "perCase": 0.0
    },
    "contentHidden": {
-    "total": 32,
-    "measuredCases": 95,
-    "casesWithHidden": 7,
-    "perCase": 0.34
+    "total": 0,
+    "measuredCases": 64,
+    "casesWithHidden": 0,
+    "perCase": 0.0
    },
    "tokens": {
-    "input": 9825,
-    "cachedInput": 0,
-    "output": 58441,
-    "reasoning": 49250
+    "input": 8782,
+    "cachedInput": 7680,
+    "output": 174531,
+    "reasoning": 164009
    },
    "cost": {
     "usd": 0.0,
     "actualUsd": 0.0,
     "estimatedUsd": 0.0,
-    "callsWithActualCost": 10
+    "callsWithActualCost": 8
    }
   },
   {
    "model": "nemotron-3.5-free",
-   "variant": "hinted",
+   "variant": "plain",
    "pooled": false,
-   "candidates": 10,
-   "valid": 9,
+   "candidates": 7,
+   "valid": 6,
    "invalid": 1,
    "invalidByRule": {
     "parse": 1
@@ -1209,10 +885,13 @@
    "apiErrors": 0,
    "missingBriefs": [
     "activity-feed",
+    "chat-thread",
     "checkout-summary",
     "confirm-dialog",
     "day-agenda",
+    "hero-section",
     "invoice-summary",
+    "nav-header",
     "sidebar-nav",
     "site-footer",
     "tabs-panel",
@@ -1220,25 +899,358 @@
     "testimonial-grid"
    ],
    "notStressed": 0,
-   "cleanBaseline": 8,
+   "cleanBaseline": 6,
    "bornBroken": 0,
-   "baselineCrash": 1,
+   "baselineCrash": 0,
    "brokeOnce": {
     "core": {
-     "count": 2,
-     "of": 8,
-     "share": 0.25,
+     "count": 4,
+     "of": 6,
+     "share": 0.6667,
      "ci95": [
-      0.0715,
-      0.5907
+      0.3,
+      0.9032
      ]
     },
     "all": {
-     "count": 8,
-     "of": 8,
+     "count": 6,
+     "of": 6,
      "share": 1.0,
      "ci95": [
-      0.6756,
+      0.6097,
+      1.0
+     ]
+    }
+   },
+   "failureRate": {
+    "core": {
+     "failed": 5,
+     "applicable": 100,
+     "rate": 0.05,
+     "ci95": [
+      0.0215,
+      0.1118
+     ]
+    },
+    "extreme": {
+     "failed": 9,
+     "applicable": 12,
+     "rate": 0.75,
+     "ci95": [
+      0.4677,
+      0.9111
+     ]
+    },
+    "all": {
+     "failed": 14,
+     "applicable": 112,
+     "rate": 0.125,
+     "ci95": [
+      0.0759,
+      0.1989
+     ]
+    }
+   },
+   "survival": {
+    "core": {
+     "candidates": 6,
+     "mean": 0.9497,
+     "min": 0.8824,
+     "max": 1.0
+    },
+    "extreme": {
+     "candidates": 6,
+     "mean": 0.25,
+     "min": 0.0,
+     "max": 0.5
+    },
+    "all": {
+     "candidates": 6,
+     "mean": 0.8751,
+     "min": 0.7895,
+     "max": 0.9474
+    }
+   },
+   "cases": {
+    "applicable": 112,
+    "failed": 14,
+    "renderErrors": 0,
+    "timeouts": 0,
+    "rate": 0.125,
+    "ci95": [
+     0.0759,
+     0.1989
+    ]
+   },
+   "failedByCase": {
+    "text-long": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "text-longword": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "text-unbroken": {
+     "tier": "extreme",
+     "failed": 3,
+     "applicable": 6,
+     "rate": 0.5,
+     "ci95": [
+      0.1876,
+      0.8124
+     ]
+    },
+    "text-empty": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-0": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-1": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-many": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "number-large": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 5,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.4345
+     ]
+    },
+    "viewport-320": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 6,
+     "rate": 0.1667,
+     "ci95": [
+      0.0301,
+      0.5635
+     ]
+    },
+    "text-200pct": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "dir-rtl": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "text-long@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "text-longword@320": {
+     "tier": "core",
+     "failed": 3,
+     "applicable": 6,
+     "rate": 0.5,
+     "ci95": [
+      0.1876,
+      0.8124
+     ]
+    },
+    "text-unbroken@320": {
+     "tier": "extreme",
+     "failed": 6,
+     "applicable": 6,
+     "rate": 1.0,
+     "ci95": [
+      0.6097,
+      1.0
+     ]
+    },
+    "text-empty@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-0@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-1@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "list-many@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
+     ]
+    },
+    "number-large@320": {
+     "tier": "core",
+     "failed": 1,
+     "applicable": 5,
+     "rate": 0.2,
+     "ci95": [
+      0.0362,
+      0.6245
+     ]
+    }
+   },
+   "failedByCheck": {
+    "page-overflow-x": 12,
+    "text-clipped": 0,
+    "content-spill": 9,
+    "text-overlap": 3,
+    "off-screen": 4
+   },
+   "truncations": {
+    "total": 97,
+    "renderedCases": 118,
+    "perCase": 0.82
+   },
+   "contentHidden": {
+    "total": 0,
+    "measuredCases": 65,
+    "casesWithHidden": 0,
+    "perCase": 0.0
+   },
+   "tokens": {
+    "input": 7650,
+    "cachedInput": 0,
+    "output": 44907,
+    "reasoning": 38020
+   },
+   "cost": {
+    "usd": 0.0,
+    "actualUsd": 0.0,
+    "estimatedUsd": 0.0,
+    "callsWithActualCost": 7
+   }
+  },
+  {
+   "model": "nemotron-3.5-free",
+   "variant": "hinted",
+   "pooled": false,
+   "candidates": 7,
+   "valid": 6,
+   "invalid": 1,
+   "invalidByRule": {
+    "parse": 1
+   },
+   "apiErrors": 0,
+   "missingBriefs": [
+    "activity-feed",
+    "chat-thread",
+    "checkout-summary",
+    "confirm-dialog",
+    "day-agenda",
+    "hero-section",
+    "invoice-summary",
+    "nav-header",
+    "sidebar-nav",
+    "site-footer",
+    "tabs-panel",
+    "team-directory",
+    "testimonial-grid"
+   ],
+   "notStressed": 0,
+   "cleanBaseline": 6,
+   "bornBroken": 0,
+   "baselineCrash": 0,
+   "brokeOnce": {
+    "core": {
+     "count": 2,
+     "of": 6,
+     "share": 0.3333,
+     "ci95": [
+      0.0968,
+      0.7
+     ]
+    },
+    "all": {
+     "count": 6,
+     "of": 6,
+     "share": 1.0,
+     "ci95": [
+      0.6097,
       1.0
      ]
     }
@@ -1246,135 +1258,125 @@
    "failureRate": {
     "core": {
      "failed": 6,
-     "applicable": 128,
-     "rate": 0.0469,
+     "applicable": 98,
+     "rate": 0.0612,
      "ci95": [
-      0.0217,
-      0.0985
+      0.0284,
+      0.1272
      ]
     },
     "extreme": {
-     "failed": 12,
-     "applicable": 16,
+     "failed": 9,
+     "applicable": 12,
      "rate": 0.75,
      "ci95": [
-      0.505,
-      0.8982
+      0.4677,
+      0.9111
      ]
     },
     "all": {
-     "failed": 18,
-     "applicable": 144,
-     "rate": 0.125,
+     "failed": 15,
+     "applicable": 110,
+     "rate": 0.1364,
      "ci95": [
-      0.0806,
-      0.1889
+      0.0844,
+      0.2129
      ]
     }
    },
    "survival": {
     "core": {
-     "candidates": 8,
-     "mean": 0.9539,
+     "candidates": 6,
+     "mean": 0.9386,
      "min": 0.7647,
      "max": 1.0
     },
     "extreme": {
-     "candidates": 8,
+     "candidates": 6,
      "mean": 0.25,
      "min": 0.0,
      "max": 0.5
     },
     "all": {
-     "candidates": 8,
-     "mean": 0.8742,
+     "candidates": 6,
+     "mean": 0.8633,
      "min": 0.6842,
      "max": 0.9474
     }
    },
    "cases": {
-    "applicable": 144,
-    "failed": 18,
+    "applicable": 110,
+    "failed": 15,
     "renderErrors": 0,
     "timeouts": 0,
-    "rate": 0.125,
+    "rate": 0.1364,
     "ci95": [
-     0.0806,
-     0.1889
+     0.0844,
+     0.2129
     ]
    },
    "failedByCase": {
     "text-long": {
      "tier": "core",
      "failed": 0,
-     "applicable": 8,
+     "applicable": 6,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.3244
+      0.3903
      ]
     },
     "text-longword": {
      "tier": "core",
      "failed": 1,
-     "applicable": 8,
-     "rate": 0.125,
+     "applicable": 6,
+     "rate": 0.1667,
      "ci95": [
-      0.0224,
-      0.4709
+      0.0301,
+      0.5635
      ]
     },
     "text-unbroken": {
      "tier": "extreme",
-     "failed": 4,
-     "applicable": 8,
+     "failed": 3,
+     "applicable": 6,
      "rate": 0.5,
      "ci95": [
-      0.2152,
-      0.7848
+      0.1876,
+      0.8124
      ]
     },
     "text-empty": {
      "tier": "core",
      "failed": 0,
-     "applicable": 8,
+     "applicable": 6,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.3244
+      0.3903
      ]
     },
     "list-0": {
      "tier": "core",
      "failed": 0,
-     "applicable": 6,
+     "applicable": 5,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.3903
+      0.4345
      ]
     },
     "list-1": {
      "tier": "core",
      "failed": 0,
-     "applicable": 8,
+     "applicable": 6,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.3244
+      0.3903
      ]
     },
     "list-many": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 8,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.3244
-     ]
-    },
-    "number-large": {
      "tier": "core",
      "failed": 0,
      "applicable": 6,
@@ -1384,107 +1386,107 @@
       0.3903
      ]
     },
-    "viewport-320": {
+    "number-large": {
      "tier": "core",
      "failed": 0,
-     "applicable": 8,
+     "applicable": 5,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.3244
+      0.4345
+     ]
+    },
+    "viewport-320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 6,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.3903
      ]
     },
     "text-200pct": {
      "tier": "core",
      "failed": 2,
-     "applicable": 8,
-     "rate": 0.25,
+     "applicable": 6,
+     "rate": 0.3333,
      "ci95": [
-      0.0715,
-      0.5907
+      0.0968,
+      0.7
      ]
     },
     "dir-rtl": {
      "tier": "core",
      "failed": 0,
-     "applicable": 8,
+     "applicable": 6,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.3244
+      0.3903
      ]
     },
     "text-long@320": {
      "tier": "core",
      "failed": 1,
-     "applicable": 8,
-     "rate": 0.125,
+     "applicable": 6,
+     "rate": 0.1667,
      "ci95": [
-      0.0224,
-      0.4709
+      0.0301,
+      0.5635
      ]
     },
     "text-longword@320": {
      "tier": "core",
      "failed": 2,
-     "applicable": 8,
-     "rate": 0.25,
+     "applicable": 6,
+     "rate": 0.3333,
      "ci95": [
-      0.0715,
-      0.5907
+      0.0968,
+      0.7
      ]
     },
     "text-unbroken@320": {
      "tier": "extreme",
-     "failed": 8,
-     "applicable": 8,
+     "failed": 6,
+     "applicable": 6,
      "rate": 1.0,
      "ci95": [
-      0.6756,
+      0.6097,
       1.0
      ]
     },
     "text-empty@320": {
      "tier": "core",
      "failed": 0,
-     "applicable": 8,
+     "applicable": 6,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.3244
+      0.3903
      ]
     },
     "list-0@320": {
      "tier": "core",
      "failed": 0,
-     "applicable": 6,
+     "applicable": 5,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.3903
+      0.4345
      ]
     },
     "list-1@320": {
      "tier": "core",
      "failed": 0,
-     "applicable": 8,
+     "applicable": 6,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.3244
+      0.3903
      ]
     },
     "list-many@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 8,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.3244
-     ]
-    },
-    "number-large@320": {
      "tier": "core",
      "failed": 0,
      "applicable": 6,
@@ -1493,54 +1495,67 @@
       0.0,
       0.3903
      ]
+    },
+    "number-large@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 5,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.4345
+     ]
     }
    },
    "failedByCheck": {
-    "page-overflow-x": 12,
+    "page-overflow-x": 9,
     "text-clipped": 0,
-    "content-spill": 17,
-    "text-overlap": 9,
-    "off-screen": 3
+    "content-spill": 14,
+    "text-overlap": 8,
+    "off-screen": 2
    },
    "truncations": {
     "total": 0,
-    "renderedCases": 152,
+    "renderedCases": 116,
     "perCase": 0.0
    },
    "contentHidden": {
     "total": 0,
-    "measuredCases": 84,
+    "measuredCases": 64,
     "casesWithHidden": 0,
     "perCase": 0.0
    },
    "tokens": {
-    "input": 10305,
+    "input": 7986,
     "cachedInput": 0,
-    "output": 81236,
-    "reasoning": 70747
+    "output": 60540,
+    "reasoning": 52825
    },
    "cost": {
     "usd": 0.0,
     "actualUsd": 0.0,
     "estimatedUsd": 0.0,
-    "callsWithActualCost": 10
+    "callsWithActualCost": 7
    }
   },
   {
    "model": "all models",
    "variant": "plain",
    "pooled": true,
-   "candidates": 22,
-   "valid": 21,
+   "candidates": 16,
+   "valid": 15,
    "invalid": 1,
    "invalidByRule": {
     "parse": 1
    },
    "apiErrors": 0,
    "missingBriefs": [
+    "chat-thread",
     "confirm-dialog",
     "day-agenda",
+    "hero-section",
     "invoice-summary",
+    "nav-header",
     "sidebar-nav",
     "site-footer",
     "tabs-panel",
@@ -1548,318 +1563,318 @@
     "testimonial-grid"
    ],
    "notStressed": 0,
-   "cleanBaseline": 21,
+   "cleanBaseline": 15,
    "bornBroken": 0,
    "baselineCrash": 0,
    "brokeOnce": {
     "core": {
-     "count": 14,
-     "of": 21,
+     "count": 10,
+     "of": 15,
      "share": 0.6667,
      "ci95": [
-      0.4537,
-      0.8281
+      0.4171,
+      0.8482
      ]
     },
     "all": {
-     "count": 21,
-     "of": 21,
+     "count": 15,
+     "of": 15,
      "share": 1.0,
      "ci95": [
-      0.8454,
+      0.7961,
       1.0
      ]
     }
    },
    "failureRate": {
     "core": {
-     "failed": 25,
-     "applicable": 335,
-     "rate": 0.0746,
+     "failed": 14,
+     "applicable": 245,
+     "rate": 0.0571,
      "ci95": [
-      0.0511,
-      0.1078
+      0.0343,
+      0.0936
      ]
     },
     "extreme": {
-     "failed": 33,
-     "applicable": 42,
-     "rate": 0.7857,
+     "failed": 23,
+     "applicable": 30,
+     "rate": 0.7667,
      "ci95": [
-      0.6406,
-      0.8829
+      0.5907,
+      0.8821
      ]
     },
     "all": {
-     "failed": 58,
-     "applicable": 377,
-     "rate": 0.1538,
+     "failed": 37,
+     "applicable": 275,
+     "rate": 0.1345,
      "ci95": [
-      0.1209,
-      0.1937
+      0.0992,
+      0.1799
      ]
     }
    },
    "survival": {
     "core": {
-     "candidates": 21,
-     "mean": 0.9221,
-     "min": 0.5385,
+     "candidates": 15,
+     "mean": 0.9425,
+     "min": 0.8667,
      "max": 1.0
     },
     "extreme": {
-     "candidates": 21,
-     "mean": 0.2143,
+     "candidates": 15,
+     "mean": 0.2333,
      "min": 0.0,
      "max": 0.5
     },
     "all": {
-     "candidates": 21,
-     "mean": 0.8435,
-     "min": 0.4667,
+     "candidates": 15,
+     "mean": 0.8652,
+     "min": 0.7647,
      "max": 0.9474
     }
    },
    "cases": {
-    "applicable": 377,
-    "failed": 58,
+    "applicable": 275,
+    "failed": 37,
     "renderErrors": 0,
     "timeouts": 0,
-    "rate": 0.1538,
+    "rate": 0.1345,
     "ci95": [
-     0.1209,
-     0.1937
+     0.0992,
+     0.1799
     ]
    },
    "failedByCase": {
     "text-long": {
      "tier": "core",
-     "failed": 1,
-     "applicable": 21,
-     "rate": 0.0476,
+     "failed": 0,
+     "applicable": 15,
+     "rate": 0.0,
      "ci95": [
-      0.0085,
-      0.2267
+      0.0,
+      0.2039
      ]
     },
     "text-longword": {
      "tier": "core",
-     "failed": 2,
-     "applicable": 21,
-     "rate": 0.0952,
+     "failed": 0,
+     "applicable": 15,
+     "rate": 0.0,
      "ci95": [
-      0.0265,
-      0.2891
+      0.0,
+      0.2039
      ]
     },
     "text-unbroken": {
      "tier": "extreme",
-     "failed": 12,
-     "applicable": 21,
-     "rate": 0.5714,
+     "failed": 8,
+     "applicable": 15,
+     "rate": 0.5333,
      "ci95": [
-      0.3655,
-      0.7553
+      0.3012,
+      0.7519
      ]
     },
     "text-empty": {
      "tier": "core",
      "failed": 0,
-     "applicable": 21,
+     "applicable": 15,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1546
+      0.2039
      ]
     },
     "list-0": {
      "tier": "core",
      "failed": 0,
-     "applicable": 17,
+     "applicable": 13,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1843
+      0.2281
      ]
     },
     "list-1": {
      "tier": "core",
      "failed": 0,
-     "applicable": 21,
+     "applicable": 15,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1546
+      0.2039
      ]
     },
     "list-many": {
      "tier": "core",
-     "failed": 1,
-     "applicable": 21,
-     "rate": 0.0476,
+     "failed": 0,
+     "applicable": 15,
+     "rate": 0.0,
      "ci95": [
-      0.0085,
-      0.2267
+      0.0,
+      0.2039
      ]
     },
     "number-large": {
      "tier": "core",
      "failed": 1,
-     "applicable": 14,
-     "rate": 0.0714,
+     "applicable": 12,
+     "rate": 0.0833,
      "ci95": [
-      0.0127,
-      0.3147
+      0.0149,
+      0.3539
      ]
     },
     "viewport-320": {
      "tier": "core",
      "failed": 1,
-     "applicable": 21,
-     "rate": 0.0476,
+     "applicable": 15,
+     "rate": 0.0667,
      "ci95": [
-      0.0085,
-      0.2267
+      0.0119,
+      0.2982
      ]
     },
     "text-200pct": {
      "tier": "core",
-     "failed": 2,
-     "applicable": 21,
-     "rate": 0.0952,
+     "failed": 1,
+     "applicable": 15,
+     "rate": 0.0667,
      "ci95": [
-      0.0265,
-      0.2891
+      0.0119,
+      0.2982
      ]
     },
     "dir-rtl": {
      "tier": "core",
      "failed": 0,
-     "applicable": 21,
+     "applicable": 15,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1546
+      0.2039
      ]
     },
     "text-long@320": {
      "tier": "core",
-     "failed": 2,
-     "applicable": 21,
-     "rate": 0.0952,
+     "failed": 0,
+     "applicable": 15,
+     "rate": 0.0,
      "ci95": [
-      0.0265,
-      0.2891
+      0.0,
+      0.2039
      ]
     },
     "text-longword@320": {
      "tier": "core",
-     "failed": 11,
-     "applicable": 21,
-     "rate": 0.5238,
+     "failed": 7,
+     "applicable": 15,
+     "rate": 0.4667,
      "ci95": [
-      0.3237,
-      0.7166
+      0.2481,
+      0.6988
      ]
     },
     "text-unbroken@320": {
      "tier": "extreme",
-     "failed": 21,
-     "applicable": 21,
+     "failed": 15,
+     "applicable": 15,
      "rate": 1.0,
      "ci95": [
-      0.8454,
+      0.7961,
       1.0
      ]
     },
     "text-empty@320": {
      "tier": "core",
      "failed": 0,
-     "applicable": 21,
+     "applicable": 15,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1546
+      0.2039
      ]
     },
     "list-0@320": {
      "tier": "core",
      "failed": 0,
-     "applicable": 17,
+     "applicable": 13,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1843
+      0.2281
      ]
     },
     "list-1@320": {
      "tier": "core",
      "failed": 0,
-     "applicable": 21,
+     "applicable": 15,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1546
+      0.2039
      ]
     },
     "list-many@320": {
      "tier": "core",
      "failed": 0,
-     "applicable": 21,
+     "applicable": 15,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1546
+      0.2039
      ]
     },
     "number-large@320": {
      "tier": "core",
      "failed": 4,
-     "applicable": 14,
-     "rate": 0.2857,
+     "applicable": 12,
+     "rate": 0.3333,
      "ci95": [
-      0.1172,
-      0.5465
+      0.1381,
+      0.6094
      ]
     }
    },
    "failedByCheck": {
-    "page-overflow-x": 30,
-    "text-clipped": 13,
-    "content-spill": 38,
-    "text-overlap": 14,
-    "off-screen": 16
+    "page-overflow-x": 23,
+    "text-clipped": 9,
+    "content-spill": 28,
+    "text-overlap": 9,
+    "off-screen": 5
    },
    "truncations": {
-    "total": 382,
-    "renderedCases": 398,
-    "perCase": 0.96
+    "total": 376,
+    "renderedCases": 290,
+    "perCase": 1.3
    },
    "contentHidden": {
-    "total": 45,
-    "measuredCases": 220,
-    "casesWithHidden": 16,
-    "perCase": 0.2
+    "total": 0,
+    "measuredCases": 160,
+    "casesWithHidden": 0,
+    "perCase": 0.0
    },
    "tokens": {
-    "input": 21453,
+    "input": 17123,
     "cachedInput": 0,
-    "output": 196941,
-    "reasoning": 170104
+    "output": 135465,
+    "reasoning": 114768
    },
    "cost": {
     "usd": 0.0,
     "actualUsd": 0.0,
     "estimatedUsd": 0.0,
-    "callsWithActualCost": 22
+    "callsWithActualCost": 16
    }
   },
   {
    "model": "all models",
    "variant": "hinted",
    "pooled": true,
-   "candidates": 21,
-   "valid": 18,
+   "candidates": 15,
+   "valid": 12,
    "invalid": 3,
    "invalidByRule": {
     "empty": 2,
@@ -1869,10 +1884,13 @@
    },
    "apiErrors": 0,
    "missingBriefs": [
+    "chat-thread",
     "checkout-summary",
     "confirm-dialog",
     "day-agenda",
+    "hero-section",
     "invoice-summary",
+    "nav-header",
     "sidebar-nav",
     "site-footer",
     "tabs-panel",
@@ -1880,271 +1898,241 @@
     "testimonial-grid"
    ],
    "notStressed": 0,
-   "cleanBaseline": 17,
+   "cleanBaseline": 12,
    "bornBroken": 0,
-   "baselineCrash": 1,
+   "baselineCrash": 0,
    "brokeOnce": {
     "core": {
-     "count": 5,
-     "of": 17,
-     "share": 0.2941,
+     "count": 3,
+     "of": 12,
+     "share": 0.25,
      "ci95": [
-      0.1328,
-      0.5313
+      0.0889,
+      0.5323
      ]
     },
     "all": {
-     "count": 13,
-     "of": 17,
-     "share": 0.7647,
+     "count": 8,
+     "of": 12,
+     "share": 0.6667,
      "ci95": [
-      0.5274,
-      0.9044
+      0.3906,
+      0.8619
      ]
     }
    },
    "failureRate": {
     "core": {
-     "failed": 10,
-     "applicable": 271,
-     "rate": 0.0369,
+     "failed": 7,
+     "applicable": 196,
+     "rate": 0.0357,
      "ci95": [
-      0.0202,
-      0.0666
+      0.0174,
+      0.0719
      ]
     },
     "extreme": {
-     "failed": 18,
-     "applicable": 34,
-     "rate": 0.5294,
+     "failed": 12,
+     "applicable": 24,
+     "rate": 0.5,
      "ci95": [
-      0.3674,
-      0.6855
+      0.3143,
+      0.6857
      ]
     },
     "all": {
-     "failed": 28,
-     "applicable": 305,
-     "rate": 0.0918,
+     "failed": 19,
+     "applicable": 220,
+     "rate": 0.0864,
      "ci95": [
-      0.0643,
-      0.1295
+      0.056,
+      0.1309
      ]
     }
    },
    "survival": {
     "core": {
-     "candidates": 17,
-     "mean": 0.9623,
+     "candidates": 12,
+     "mean": 0.9644,
      "min": 0.7647,
      "max": 1.0
     },
     "extreme": {
-     "candidates": 17,
-     "mean": 0.4706,
+     "candidates": 12,
+     "mean": 0.5,
      "min": 0.0,
      "max": 1.0
     },
     "all": {
-     "candidates": 17,
-     "mean": 0.9066,
+     "candidates": 12,
+     "mean": 0.9136,
      "min": 0.6842,
      "max": 1.0
     }
    },
    "cases": {
-    "applicable": 305,
-    "failed": 28,
+    "applicable": 220,
+    "failed": 19,
     "renderErrors": 0,
     "timeouts": 0,
-    "rate": 0.0918,
+    "rate": 0.0864,
     "ci95": [
-     0.0643,
-     0.1295
+     0.056,
+     0.1309
     ]
    },
    "failedByCase": {
     "text-long": {
      "tier": "core",
      "failed": 0,
-     "applicable": 17,
+     "applicable": 12,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1843
+      0.2425
      ]
     },
     "text-longword": {
      "tier": "core",
      "failed": 1,
-     "applicable": 17,
-     "rate": 0.0588,
+     "applicable": 12,
+     "rate": 0.0833,
      "ci95": [
-      0.0105,
-      0.2698
+      0.0149,
+      0.3539
      ]
     },
     "text-unbroken": {
      "tier": "extreme",
-     "failed": 5,
-     "applicable": 17,
-     "rate": 0.2941,
+     "failed": 4,
+     "applicable": 12,
+     "rate": 0.3333,
      "ci95": [
-      0.1328,
-      0.5313
+      0.1381,
+      0.6094
      ]
     },
     "text-empty": {
      "tier": "core",
      "failed": 0,
-     "applicable": 17,
+     "applicable": 12,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1843
+      0.2425
      ]
     },
     "list-0": {
      "tier": "core",
      "failed": 0,
-     "applicable": 14,
+     "applicable": 11,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.2153
+      0.2588
      ]
     },
     "list-1": {
      "tier": "core",
      "failed": 0,
-     "applicable": 17,
+     "applicable": 12,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1843
+      0.2425
      ]
     },
     "list-many": {
      "tier": "core",
      "failed": 0,
-     "applicable": 17,
+     "applicable": 12,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1843
+      0.2425
      ]
     },
     "number-large": {
      "tier": "core",
      "failed": 0,
-     "applicable": 11,
+     "applicable": 9,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.2588
+      0.2991
      ]
     },
     "viewport-320": {
      "tier": "core",
      "failed": 0,
-     "applicable": 17,
+     "applicable": 12,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1843
+      0.2425
      ]
     },
     "text-200pct": {
      "tier": "core",
      "failed": 2,
-     "applicable": 17,
-     "rate": 0.1176,
+     "applicable": 12,
+     "rate": 0.1667,
      "ci95": [
-      0.0329,
-      0.3434
+      0.047,
+      0.448
      ]
     },
     "dir-rtl": {
      "tier": "core",
      "failed": 0,
-     "applicable": 17,
+     "applicable": 12,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1843
+      0.2425
      ]
     },
     "text-long@320": {
      "tier": "core",
-     "failed": 2,
-     "applicable": 17,
-     "rate": 0.1176,
+     "failed": 1,
+     "applicable": 12,
+     "rate": 0.0833,
      "ci95": [
-      0.0329,
-      0.3434
+      0.0149,
+      0.3539
      ]
     },
     "text-longword@320": {
      "tier": "core",
-     "failed": 5,
-     "applicable": 17,
-     "rate": 0.2941,
+     "failed": 3,
+     "applicable": 12,
+     "rate": 0.25,
      "ci95": [
-      0.1328,
-      0.5313
+      0.0889,
+      0.5323
      ]
     },
     "text-unbroken@320": {
      "tier": "extreme",
-     "failed": 13,
-     "applicable": 17,
-     "rate": 0.7647,
+     "failed": 8,
+     "applicable": 12,
+     "rate": 0.6667,
      "ci95": [
-      0.5274,
-      0.9044
+      0.3906,
+      0.8619
      ]
     },
     "text-empty@320": {
      "tier": "core",
      "failed": 0,
-     "applicable": 17,
+     "applicable": 12,
      "rate": 0.0,
      "ci95": [
       0.0,
-      0.1843
+      0.2425
      ]
     },
     "list-0@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 14,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.2153
-     ]
-    },
-    "list-1@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 17,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.1843
-     ]
-    },
-    "list-many@320": {
-     "tier": "core",
-     "failed": 0,
-     "applicable": 17,
-     "rate": 0.0,
-     "ci95": [
-      0.0,
-      0.1843
-     ]
-    },
-    "number-large@320": {
      "tier": "core",
      "failed": 0,
      "applicable": 11,
@@ -2153,57 +2141,87 @@
       0.0,
       0.2588
      ]
+    },
+    "list-1@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "list-many@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 12,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2425
+     ]
+    },
+    "number-large@320": {
+     "tier": "core",
+     "failed": 0,
+     "applicable": 9,
+     "rate": 0.0,
+     "ci95": [
+      0.0,
+      0.2991
+     ]
     }
    },
    "failedByCheck": {
-    "page-overflow-x": 17,
-    "text-clipped": 3,
-    "content-spill": 27,
-    "text-overlap": 9,
-    "off-screen": 6
+    "page-overflow-x": 10,
+    "text-clipped": 2,
+    "content-spill": 18,
+    "text-overlap": 8,
+    "off-screen": 3
    },
    "truncations": {
-    "total": 3,
-    "renderedCases": 322,
-    "perCase": 0.01
+    "total": 0,
+    "renderedCases": 232,
+    "perCase": 0.0
    },
    "contentHidden": {
     "total": 0,
-    "measuredCases": 178,
+    "measuredCases": 128,
     "casesWithHidden": 0,
     "perCase": 0.0
    },
    "tokens": {
-    "input": 21380,
-    "cachedInput": 9472,
-    "output": 272531,
-    "reasoning": 247728
+    "input": 16768,
+    "cachedInput": 7680,
+    "output": 235071,
+    "reasoning": 216834
    },
    "cost": {
     "usd": 0.0,
     "actualUsd": 0.0,
     "estimatedUsd": 0.0,
-    "callsWithActualCost": 21
+    "callsWithActualCost": 15
    }
   }
  ],
  "hintEffect": {
   "perModel": {
    "ernie-5.5-flash-free": {
-    "pairs": 9,
-    "bothBroke": 3,
+    "pairs": 6,
+    "bothBroke": 1,
     "plainOnly": 3,
     "hintedOnly": 0,
-    "neither": 3,
+    "neither": 2,
     "p": 0.25
    },
    "nemotron-3.5-free": {
-    "pairs": 7,
+    "pairs": 5,
     "bothBroke": 1,
-    "plainOnly": 4,
+    "plainOnly": 2,
     "hintedOnly": 0,
     "neither": 2,
-    "p": 0.125
+    "p": 0.5
    },
    "gemma-4-31b-free": {
     "pairs": 0,
@@ -2231,236 +2249,236 @@
    }
   },
   "pooled": {
-   "pairs": 16,
-   "bothBroke": 4,
-   "plainOnly": 7,
+   "pairs": 11,
+   "bothBroke": 2,
+   "plainOnly": 5,
    "hintedOnly": 0,
-   "neither": 5,
-   "p": 0.0156
+   "neither": 4,
+   "p": 0.0625
   }
  },
  "sensitivity": {
   "plain": [
    {
     "removed": null,
-    "count": 14,
-    "of": 21,
+    "count": 10,
+    "of": 15,
     "share": 0.6667,
     "ci95": [
-     0.4537,
-     0.8281
+     0.4171,
+     0.8482
     ]
    },
    {
     "removed": "text-long",
-    "count": 14,
-    "of": 21,
+    "count": 10,
+    "of": 15,
     "share": 0.6667,
     "ci95": [
-     0.4537,
-     0.8281
+     0.4171,
+     0.8482
     ]
    },
    {
     "removed": "text-longword",
-    "count": 8,
-    "of": 21,
-    "share": 0.381,
+    "count": 6,
+    "of": 15,
+    "share": 0.4,
     "ci95": [
-     0.2075,
-     0.5912
+     0.1982,
+     0.6425
     ]
    },
    {
     "removed": "text-empty",
-    "count": 14,
-    "of": 21,
+    "count": 10,
+    "of": 15,
     "share": 0.6667,
     "ci95": [
-     0.4537,
-     0.8281
+     0.4171,
+     0.8482
     ]
    },
    {
     "removed": "list-0",
-    "count": 14,
-    "of": 21,
+    "count": 10,
+    "of": 15,
     "share": 0.6667,
     "ci95": [
-     0.4537,
-     0.8281
+     0.4171,
+     0.8482
     ]
    },
    {
     "removed": "list-1",
-    "count": 14,
-    "of": 21,
+    "count": 10,
+    "of": 15,
     "share": 0.6667,
     "ci95": [
-     0.4537,
-     0.8281
+     0.4171,
+     0.8482
     ]
    },
    {
     "removed": "list-many",
-    "count": 14,
-    "of": 21,
+    "count": 10,
+    "of": 15,
     "share": 0.6667,
     "ci95": [
-     0.4537,
-     0.8281
+     0.4171,
+     0.8482
     ]
    },
    {
     "removed": "number-large",
-    "count": 13,
-    "of": 21,
-    "share": 0.619,
+    "count": 9,
+    "of": 15,
+    "share": 0.6,
     "ci95": [
-     0.4088,
-     0.7925
+     0.3575,
+     0.8018
     ]
    },
    {
     "removed": "viewport-320",
-    "count": 13,
-    "of": 21,
-    "share": 0.619,
+    "count": 9,
+    "of": 15,
+    "share": 0.6,
     "ci95": [
-     0.4088,
-     0.7925
+     0.3575,
+     0.8018
     ]
    },
    {
     "removed": "text-200pct",
-    "count": 13,
-    "of": 21,
-    "share": 0.619,
+    "count": 9,
+    "of": 15,
+    "share": 0.6,
     "ci95": [
-     0.4088,
-     0.7925
+     0.3575,
+     0.8018
     ]
    },
    {
     "removed": "dir-rtl",
-    "count": 14,
-    "of": 21,
+    "count": 10,
+    "of": 15,
     "share": 0.6667,
     "ci95": [
-     0.4537,
-     0.8281
+     0.4171,
+     0.8482
     ]
    }
   ],
   "hinted": [
    {
     "removed": null,
-    "count": 5,
-    "of": 17,
-    "share": 0.2941,
+    "count": 3,
+    "of": 12,
+    "share": 0.25,
     "ci95": [
-     0.1328,
-     0.5313
+     0.0889,
+     0.5323
     ]
    },
    {
     "removed": "text-long",
-    "count": 5,
-    "of": 17,
-    "share": 0.2941,
+    "count": 3,
+    "of": 12,
+    "share": 0.25,
     "ci95": [
-     0.1328,
-     0.5313
+     0.0889,
+     0.5323
     ]
    },
    {
     "removed": "text-longword",
-    "count": 3,
-    "of": 17,
-    "share": 0.1765,
+    "count": 2,
+    "of": 12,
+    "share": 0.1667,
     "ci95": [
-     0.0619,
-     0.4103
+     0.047,
+     0.448
     ]
    },
    {
     "removed": "text-empty",
-    "count": 5,
-    "of": 17,
-    "share": 0.2941,
+    "count": 3,
+    "of": 12,
+    "share": 0.25,
     "ci95": [
-     0.1328,
-     0.5313
+     0.0889,
+     0.5323
     ]
    },
    {
     "removed": "list-0",
-    "count": 5,
-    "of": 17,
-    "share": 0.2941,
+    "count": 3,
+    "of": 12,
+    "share": 0.25,
     "ci95": [
-     0.1328,
-     0.5313
+     0.0889,
+     0.5323
     ]
    },
    {
     "removed": "list-1",
-    "count": 5,
-    "of": 17,
-    "share": 0.2941,
+    "count": 3,
+    "of": 12,
+    "share": 0.25,
     "ci95": [
-     0.1328,
-     0.5313
+     0.0889,
+     0.5323
     ]
    },
    {
     "removed": "list-many",
-    "count": 5,
-    "of": 17,
-    "share": 0.2941,
+    "count": 3,
+    "of": 12,
+    "share": 0.25,
     "ci95": [
-     0.1328,
-     0.5313
+     0.0889,
+     0.5323
     ]
    },
    {
     "removed": "number-large",
-    "count": 5,
-    "of": 17,
-    "share": 0.2941,
+    "count": 3,
+    "of": 12,
+    "share": 0.25,
     "ci95": [
-     0.1328,
-     0.5313
+     0.0889,
+     0.5323
     ]
    },
    {
     "removed": "viewport-320",
-    "count": 5,
-    "of": 17,
-    "share": 0.2941,
+    "count": 3,
+    "of": 12,
+    "share": 0.25,
     "ci95": [
-     0.1328,
-     0.5313
+     0.0889,
+     0.5323
     ]
    },
    {
     "removed": "text-200pct",
-    "count": 5,
-    "of": 17,
-    "share": 0.2941,
+    "count": 3,
+    "of": 12,
+    "share": 0.25,
     "ci95": [
-     0.1328,
-     0.5313
+     0.0889,
+     0.5323
     ]
    },
    {
     "removed": "dir-rtl",
-    "count": 5,
-    "of": 17,
-    "share": 0.2941,
+    "count": 3,
+    "of": 12,
+    "share": 0.25,
     "ci95": [
-     0.1328,
-     0.5313
+     0.0889,
+     0.5323
     ]
    }
   ]
@@ -2479,8 +2497,8 @@
     "north-mini-code-free": "-"
    },
    "chat-thread": {
-    "ernie-5.5-flash-free": "15/15 core, 1/2 extreme",
-    "nemotron-3.5-free": "15/15 core, 0/2 extreme",
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
     "gemma-4-31b-free": "-",
     "nemotron-3-ultra-free": "-",
     "north-mini-code-free": "-"
@@ -2514,8 +2532,8 @@
     "north-mini-code-free": "-"
    },
    "hero-section": {
-    "ernie-5.5-flash-free": "16/17 core, 0/2 extreme",
-    "nemotron-3.5-free": "14/17 core, 0/2 extreme",
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
     "gemma-4-31b-free": "-",
     "nemotron-3-ultra-free": "-",
     "north-mini-code-free": "-"
@@ -2542,8 +2560,8 @@
     "north-mini-code-free": "-"
    },
    "nav-header": {
-    "ernie-5.5-flash-free": "12/13 core, 1/2 extreme",
-    "nemotron-3.5-free": "7/13 core, 0/2 extreme",
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
     "gemma-4-31b-free": "-",
     "nemotron-3-ultra-free": "-",
     "north-mini-code-free": "-"
@@ -2621,8 +2639,8 @@
     "north-mini-code-free": "-"
    },
    "chat-thread": {
-    "ernie-5.5-flash-free": "15/15 core, 1/2 extreme",
-    "nemotron-3.5-free": "baseline crash",
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
     "gemma-4-31b-free": "-",
     "nemotron-3-ultra-free": "-",
     "north-mini-code-free": "-"
@@ -2656,8 +2674,8 @@
     "north-mini-code-free": "-"
    },
    "hero-section": {
-    "ernie-5.5-flash-free": "16/17 core, 1/2 extreme",
-    "nemotron-3.5-free": "17/17 core, 1/2 extreme",
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
     "gemma-4-31b-free": "-",
     "nemotron-3-ultra-free": "-",
     "north-mini-code-free": "-"
@@ -2684,8 +2702,8 @@
     "north-mini-code-free": "-"
    },
    "nav-header": {
-    "ernie-5.5-flash-free": "11/13 core, 1/2 extreme",
-    "nemotron-3.5-free": "13/13 core, 0/2 extreme",
+    "ernie-5.5-flash-free": "-",
+    "nemotron-3.5-free": "-",
     "gemma-4-31b-free": "-",
     "nemotron-3-ultra-free": "-",
     "north-mini-code-free": "-"
@@ -2756,12 +2774,12 @@
   }
  },
  "totals": {
-  "candidates": 43,
+  "candidates": 31,
   "tokens": {
-   "input": 42833,
-   "cachedInput": 9472,
-   "output": 469472,
-   "reasoning": 417832
+   "input": 33891,
+   "cachedInput": 7680,
+   "output": 370536,
+   "reasoning": 331602
   },
   "costUsd": 0.0
  }

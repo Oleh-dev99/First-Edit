@@ -1,0 +1,176 @@
+type OrderStatus = 'paid' | 'pending' | 'refunded' | 'failed';
+
+export interface Order {
+  /** Order number shown to staff, e.g. "#10482". */
+  id: string;
+  customerName: string;
+  email: string;
+  status: OrderStatus;
+  /** Order total, in the panel's currency. */
+  amount: number;
+  /** Already formatted for display, e.g. "Nov 11, 2026". */
+  date: string;
+}
+
+/** The recent orders panel of a store dashboard. */
+export interface Props {
+  title: string;
+  /** Shown under the title. */
+  summary: string;
+  /** ISO 4217 code used for every amount, e.g. "USD". */
+  currency: string;
+  orders: Order[];
+}
+
+const STATUS_STYLES: Record<OrderStatus, string> = {
+  paid: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  pending: 'border-amber-200 bg-amber-50 text-amber-700',
+  refunded: 'border-sky-200 bg-sky-50 text-sky-700',
+  failed: 'border-rose-200 bg-rose-50 text-rose-700',
+};
+
+const STATUS_DOTS: Record<OrderStatus, string> = {
+  paid: 'bg-emerald-500',
+  pending: 'bg-amber-500',
+  refunded: 'bg-sky-500',
+  failed: 'bg-rose-500',
+};
+
+function formatAmount(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      currencyDisplay: 'symbol',
+    }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
+}
+
+const labelClass =
+  'mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 md:hidden';
+
+const cellClass =
+  'block py-1.5 first:pt-0 last:pb-0 md:table-cell md:border-b md:border-slate-100 md:px-3 md:py-3 md:align-middle md:first:pt-3 md:last:pb-3';
+
+export default function RecentOrdersPanel({
+  title,
+  summary,
+  currency,
+  orders,
+}: Props) {
+  return (
+    <section className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <header className="min-w-0">
+        <h2 className="text-lg font-semibold tracking-tight text-slate-900 [overflow-wrap:anywhere] sm:text-xl">
+          {title}
+        </h2>
+        <p className="mt-1 text-sm text-slate-600 [overflow-wrap:anywhere]">
+          {summary}
+        </p>
+      </header>
+
+      {orders.length === 0 ? (
+        <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center">
+          <p className="text-sm font-medium text-slate-700">No orders yet</p>
+          <p className="mt-1 text-xs text-slate-500">
+            New orders will appear here as they come in.
+          </p>
+        </div>
+      ) : (
+        <table className="mt-6 block w-full border-collapse text-left md:table md:table-fixed">
+          <thead className="hidden md:table-header-group">
+            <tr>
+              <th
+                scope="col"
+                className="w-[16%] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500"
+              >
+                Order
+              </th>
+              <th
+                scope="col"
+                className="w-[34%] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500"
+              >
+                Customer
+              </th>
+              <th
+                scope="col"
+                className="w-[14%] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500"
+              >
+                Status
+              </th>
+              <th
+                scope="col"
+                className="w-[16%] px-3 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500"
+              >
+                Date
+              </th>
+              <th
+                scope="col"
+                className="w-[20%] px-3 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500"
+              >
+                Amount
+              </th>
+            </tr>
+          </thead>
+
+          <tbody className="block space-y-3 md:table-row-group md:space-y-0">
+            {orders.map((order) => (
+              <tr
+                key={order.id}
+                className="block rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:table-row md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none"
+              >
+                <td className={cellClass}>
+                  <span className={labelClass}>Order</span>
+                  <span className="block font-mono text-sm font-semibold text-slate-900 [overflow-wrap:anywhere]">
+                    {order.id}
+                  </span>
+                </td>
+
+                <td className={cellClass}>
+                  <span className={labelClass}>Customer</span>
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="block text-sm font-medium text-slate-900 [overflow-wrap:anywhere]">
+                      {order.customerName}
+                    </span>
+                    <span className="block text-xs text-slate-500 [overflow-wrap:anywhere]">
+                      {order.email}
+                    </span>
+                  </div>
+                </td>
+
+                <td className={cellClass}>
+                  <span className={labelClass}>Status</span>
+                  <span
+                    className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${STATUS_STYLES[order.status]}`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${STATUS_DOTS[order.status]}`}
+                      aria-hidden="true"
+                    />
+                    {order.status}
+                  </span>
+                </td>
+
+                <td className={cellClass}>
+                  <span className={labelClass}>Date</span>
+                  <span className="block text-sm text-slate-600 [overflow-wrap:anywhere]">
+                    {order.date}
+                  </span>
+                </td>
+
+                <td className={`${cellClass} md:text-right`}>
+                  <span className={labelClass}>Amount</span>
+                  <span className="block text-sm font-semibold tabular-nums text-slate-900 [overflow-wrap:anywhere] md:text-right">
+                    {formatAmount(order.amount, currency)}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
+  );
+}
