@@ -208,6 +208,16 @@ export async function loadData(extra: ('cases' | 'briefs' | 'calibration')[]): P
   return data;
 }
 
+/**
+ * The briefs with no component from any model yet, in the run's brief order:
+ * the queue has not reached them, or their components were superseded when the
+ * brief's text changed (D-059). A model's own gaps are in its groups' missingBriefs.
+ */
+export function briefsWithoutComponent(run: Run): string[] {
+  const own = run.groups.filter((group) => !group.pooled);
+  return run.briefs.filter((brief) => own.every((group) => group.missingBriefs.includes(brief)));
+}
+
 /** z for a two-sided 95% interval, as in the run report. */
 const Z_95 = 1.959964;
 

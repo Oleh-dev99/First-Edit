@@ -3,23 +3,26 @@ import { Pair } from '../components/Pair.tsx';
 import { Figure } from '../components/Rates.tsx';
 import type { Cases, CaseEntry, Group, Run, Variant } from '../data.ts';
 
-/** The pair shown on this page: chosen by hand because it reads at a glance, not because it is typical. */
-const FEATURED = 'nemotron-3.5-free/hero-section/plain-s1/text-longword@320';
+/**
+ * The pair shown on this page: chosen by hand because it reads at a glance, not because it is typical. Labelled
+ * broken in the blind calibration (set-01). The earlier choice, from hero-section, was superseded (D-059).
+ */
+const FEATURED = 'nemotron-3.5-free/pricing-table/hinted-s1/text-longword@320';
 
 function pooled(run: Run, variant: Variant): Group | undefined {
   const groups = run.groups.filter((group) => group.variant === variant);
   return groups.find((group) => group.pooled) ?? (groups.length === 1 ? groups[0] : undefined);
 }
 
-function featured(cases: Cases): CaseEntry | undefined {
-  return (
-    cases.cases.find((entry) => entry.id === FEATURED) ??
-    cases.cases.find((entry) => entry.outcome === 'failed' && entry.tier === 'core')
-  );
+/** The chosen pair; if the data no longer holds it, the first failed core case, and the caption says so. */
+function featured(cases: Cases): { entry: CaseEntry | undefined; chosen: boolean } {
+  const chosen = cases.cases.find((entry) => entry.id === FEATURED);
+  if (chosen) return { entry: chosen, chosen: true };
+  return { entry: cases.cases.find((entry) => entry.outcome === 'failed' && entry.tier === 'core'), chosen: false };
 }
 
 export function Overview({ run, cases }: { run: Run; cases: Cases }) {
-  const shown = featured(cases);
+  const { entry: shown, chosen } = featured(cases);
   const withCandidates = new Set(run.groups.filter((group) => !group.pooled).map((group) => group.model));
   const clean = run.groups.filter((group) => !group.pooled).reduce((sum, group) => sum + group.cleanBaseline, 0);
   return (
@@ -84,7 +87,9 @@ export function Overview({ run, cases }: { run: Run; cases: Cases }) {
             What breaking looks like
           </h2>
           <p className="mt-2 max-w-[42rem] text-ink-2">
-            One failed case, picked because it reads at a glance, not because it is typical: {shown.description}{' '}
+            One failed case,{' '}
+            {chosen ? 'picked because it reads at a glance, not because it is typical' : 'the first in the gallery'}
+            : {shown.description}{' '}
             ({shown.case}) in the {shown.brief} brief, by {shown.model} with the {shown.variant} prompt. The suite
             found: {shown.checks.join(', ')}.
           </p>

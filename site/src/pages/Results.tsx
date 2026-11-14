@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DECISIONS, PageHead, Prose, Section, TableFrame, pageUrl } from '../components/Layout.tsx';
 import { RateCells, RateHeads } from '../components/Rates.tsx';
-import { exact, points, type Group, type Run, type Variant } from '../data.ts';
+import { briefsWithoutComponent, exact, points, type Group, type Run, type Variant } from '../data.ts';
 
 const VARIANTS: Variant[] = ['plain', 'hinted'];
 const POOLED = 'all models';
@@ -232,12 +232,15 @@ function DecisionLines({ run }: { run: Run }) {
 function CandidatesTable({ run }: { run: Run }) {
   return (
     <TableFrame caption={<>Every generated component. Only those with a clean baseline are scored: a born-broken or crashed baseline is
-          counted, not scored.</>}>
+          counted, not scored. Briefs with none have no component from that model and prompt yet: the queue has not
+          reached them, or their earlier components were set aside when the brief&rsquo;s text changed (D-059; the run
+          record lists them with what they scored).</>}>
       <table className="data-table">
         <thead>
           <tr>
             <th scope="col">model</th>
             <th scope="col">prompt</th>
+            <th scope="col" className="num">briefs with none</th>
             <th scope="col" className="num">generated</th>
             <th scope="col" className="num">valid</th>
             <th scope="col" className="num">invalid</th>
@@ -252,6 +255,7 @@ function CandidatesTable({ run }: { run: Run }) {
             <tr key={`${group.model}-${group.variant}`} className={group.pooled ? 'pooled' : undefined}>
               <th scope="row" className="font-normal">{groupName(group)}</th>
               <td>{group.variant}</td>
+              <td className="num">{group.missingBriefs.length}</td>
               <td className="num">{group.candidates}</td>
               <td className="num">{group.valid}</td>
               <td className="num">{group.invalid}</td>
@@ -270,6 +274,7 @@ function CandidatesTable({ run }: { run: Run }) {
 export function Results({ run }: { run: Run }) {
   const withCandidates = new Set(run.groups.filter((group) => !group.pooled).map((group) => group.model));
   const without = run.models.filter((model) => !withCandidates.has(model.id)).map((model) => model.id);
+  const briefsWithout = briefsWithoutComponent(run);
   return (
     <>
       <PageHead title="Results">
@@ -283,6 +288,12 @@ export function Results({ run }: { run: Run }) {
         <p className="mt-6 max-w-[46rem] border-l-4 border-accent bg-accent-wash px-4 py-3 text-sm text-ink-2">
           No components yet from {without.join(', ')}: {withCandidates.size} of {run.models.length} models have
           candidates so far.
+        </p>
+      )}
+      {briefsWithout.length > 0 && (
+        <p className="mt-4 max-w-[46rem] border-l-4 border-accent bg-accent-wash px-4 py-3 text-sm text-ink-2">
+          No component yet for {briefsWithout.length} of the {run.briefs.length} briefs: {briefsWithout.join(', ')}.
+          Every number below covers the other {run.briefs.length - briefsWithout.length}.
         </p>
       )}
 

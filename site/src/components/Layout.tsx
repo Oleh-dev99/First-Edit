@@ -1,5 +1,5 @@
 import { useId, useState, type ReactNode } from 'react';
-import { url, type Run } from '../data.ts';
+import { briefsWithoutComponent, url, type Run } from '../data.ts';
 
 export type PageId = 'overview' | 'results' | 'gallery' | 'method' | 'briefs';
 
@@ -34,6 +34,10 @@ export function repoFile(path: string): string {
 /** The status of the run, from run.json: preliminary until every model has finished its queued jobs. */
 export function StatusBanner({ run }: { run: Run }) {
   const { finished, models, preliminary } = run.status;
+  const without = briefsWithoutComponent(run).length;
+  const coverage = without > 0
+    ? ` Components so far cover ${run.briefs.length - without} of the ${run.briefs.length} briefs.`
+    : '';
   return (
     <div className="border-b border-rule bg-wash" role="note" aria-label="Status of the results">
       <p className="mx-auto max-w-[72rem] px-4 py-2 text-sm text-ink-2 sm:px-6">
@@ -42,11 +46,12 @@ export function StatusBanner({ run }: { run: Run }) {
             <strong className="font-semibold text-accent-deep">
               Preliminary: {finished.length} of {models} models have finished.
             </strong>{' '}
-            The run is not finished, so every number here can still change. {FREE_TIER}
+            The run is not finished, so every number here can still change.{coverage} {FREE_TIER}
           </>
         ) : (
           <>
-            <strong className="font-semibold">Complete: all {models} models have finished.</strong> {FREE_TIER}
+            <strong className="font-semibold">Complete: all {models} models have finished.</strong>{coverage}{' '}
+            {FREE_TIER}
           </>
         )}
       </p>

@@ -187,6 +187,12 @@ export function Method({ run, briefs, calibration }: { run: Run; briefs: Briefs;
             <a href={repoFile('docs/RUNS.md')}>docs/RUNS.md</a>. It is written from the generation records and
             regenerated whenever the run advances.
           </p>
+          <p>
+            Three briefs changed after the first components were generated: five invented names that turned out to match
+            real businesses were replaced (corpus v1.1, D-059). The components generated from their earlier text are set
+            aside, never counted, and listed in the run record with what they scored; the new ones come from the changed
+            prompt.
+          </p>
         </Prose>
       </Section>
 
