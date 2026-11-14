@@ -1,12 +1,14 @@
 # Run record
 
-Written by `python -m first_edit run-record --out docs/RUNS.md` from the
-generation records of the models queued in runner/plan.toml and from their
-stress summaries in results/runs-run2; the run's report is results/run2.
-Do not edit it by hand: run the command again whenever the run advances
-(docs/SPEC.md, Daily routine). It covers every generated sample of these
-models, the samples of earlier steps that the run reuses included, as the
-run report does.
+Written on 2026-11-14 (UTC).
+
+Written by `python -m first_edit run-next` after every pass, or by
+`python -m first_edit run-record --out docs/RUNS.md`, from the generation
+records of the models queued in runner/plan.toml and from their stress
+summaries in results/runs-run2; the run's report is results/run2. Do not
+edit it by hand (docs/SPEC.md, Run record). It covers every generated
+sample of these models, the samples of earlier steps that the run reuses
+included, as the run report does.
 
 Every model in this run is a free-tier variant: its provider model id ends in ":free". No frontier model was tested (D-057).
 
@@ -17,8 +19,8 @@ time its record was written.
 
 | model id | provider | base URL | provider model id | reported model | served by | first call | last call |
 |---|---|---|---|---|---|---|---|
-| ernie-5.5-flash-free | openai-compatible | https://openrouter.ai/api/v1 | baidu/ernie-5.5-flash-preview:free | baidu/ernie-5.5-flash-preview:free | Baidu | 2026-11-13T00:45:50+00:00 | 2026-11-13T12:03:14+00:00 |
-| nemotron-3.5-free | openai-compatible | https://openrouter.ai/api/v1 | nvidia/nemotron-3.5-super-vl:free | nvidia/nemotron-3.5-super-vl:free | Nvidia | 2026-11-13T01:04:55+00:00 | 2026-11-13T01:23:49+00:00 |
+| ernie-5.5-flash-free | openai-compatible | https://openrouter.ai/api/v1 | baidu/ernie-5.5-flash-preview:free | baidu/ernie-5.5-flash-preview:free | Baidu | 2026-11-13T00:46:10+00:00 | 2026-11-13T12:03:14+00:00 |
+| nemotron-3.5-free | openai-compatible | https://openrouter.ai/api/v1 | nvidia/nemotron-3.5-super-vl:free | nvidia/nemotron-3.5-super-vl:free | Nvidia | 2026-11-13T01:05:28+00:00 | 2026-11-13T01:23:49+00:00 |
 | gemma-4-31b-free | openai-compatible | https://openrouter.ai/api/v1 | google/gemma-4-31b-it:free | - | - | no calls yet | - |
 | nemotron-3-ultra-free | openai-compatible | https://openrouter.ai/api/v1 | nvidia/nemotron-3-ultra-550b-a55b:free | - | - | no calls yet | - |
 | north-mini-code-free | openai-compatible | https://openrouter.ai/api/v1 | cohere/north-mini-code:free | - | - | no calls yet | - |
@@ -31,15 +33,15 @@ passed the gate. Invalid: a reply that failed it (D-025). Failed: no reply
 
 | model id | variant | samples | sample numbers | briefs | valid | invalid | failed |
 |---|---|---|---|---|---|---|---|
-| ernie-5.5-flash-free | plain | 12 | s1 | 12 | 12 | 0 | 0 |
-| ernie-5.5-flash-free | hinted | 11 | s1 | 11 | 9 | 2 | 0 |
-| nemotron-3.5-free | plain | 10 | s1 | 10 | 9 | 1 | 0 |
-| nemotron-3.5-free | hinted | 10 | s1 | 10 | 9 | 1 | 0 |
+| ernie-5.5-flash-free | plain | 9 | s1 | 9 | 9 | 0 | 0 |
+| ernie-5.5-flash-free | hinted | 8 | s1 | 8 | 6 | 2 | 0 |
+| nemotron-3.5-free | plain | 7 | s1 | 7 | 6 | 1 | 0 |
+| nemotron-3.5-free | hinted | 7 | s1 | 7 | 6 | 1 | 0 |
 | gemma-4-31b-free | - | 0 | - | 0 | 0 | 0 | 0 |
 | nemotron-3-ultra-free | - | 0 | - | 0 | 0 | 0 | 0 |
 | north-mini-code-free | - | 0 | - | 0 | 0 | 0 | 0 |
 
-In all: 43 samples, 39 valid, 4 invalid, 0 failed.
+In all: 31 samples, 27 valid, 4 invalid, 0 failed.
 
 ## Request parameters
 
@@ -61,11 +63,34 @@ the number of summaries for each value.
 
 | model id | stressed | valid, not stressed | suite | harness commit | Playwright | Chromium |
 |---|---|---|---|---|---|---|
-| ernie-5.5-flash-free | 21 | 0 | v1 (21) | ba2bb3b (21) | 1.65.0 (21) | 158.0.8127.18 (21) |
-| nemotron-3.5-free | 18 | 0 | v1 (18) | ba2bb3b (18) | 1.65.0 (18) | 158.0.8127.18 (18) |
+| ernie-5.5-flash-free | 15 | 0 | v1 (15) | ba2bb3b (15) | 1.65.0 (15) | 158.0.8127.18 (15) |
+| nemotron-3.5-free | 12 | 0 | v1 (12) | ba2bb3b (12) | 1.65.0 (12) | 158.0.8127.18 (12) |
 | gemma-4-31b-free | 0 | 0 | - | - | - | - |
 | nemotron-3-ultra-free | 0 | 0 | - | - | - | - |
 | north-mini-code-free | 0 | 0 | - | - | - | - |
+
+## Superseded samples
+
+Samples generated from an earlier text of a brief that has since changed
+(D-059). They are kept, with their stress runs, in the archive folder named
+here, and never counted in the run. State as in D-038; survival is survived
+/ applicable cases of the archived stress run; "broke in a core case" is the
+headline's measure, which counts clean candidates only.
+
+| archive | model id | brief | variant | state | core survived | all survived | broke in a core case |
+|---|---|---|---|---|---|---|---|
+| results/archive/corpus-v1.0 | ernie-5.5-flash-free | chat-thread | hinted-s1 | clean | 15/15 | 16/17 | no |
+| results/archive/corpus-v1.0 | ernie-5.5-flash-free | chat-thread | plain-s1 | clean | 15/15 | 16/17 | no |
+| results/archive/corpus-v1.0 | ernie-5.5-flash-free | hero-section | hinted-s1 | clean | 16/17 | 17/19 | yes |
+| results/archive/corpus-v1.0 | ernie-5.5-flash-free | hero-section | plain-s1 | clean | 16/17 | 16/19 | yes |
+| results/archive/corpus-v1.0 | ernie-5.5-flash-free | nav-header | hinted-s1 | clean | 11/13 | 12/15 | yes |
+| results/archive/corpus-v1.0 | ernie-5.5-flash-free | nav-header | plain-s1 | clean | 12/13 | 13/15 | yes |
+| results/archive/corpus-v1.0 | nemotron-3.5-free | chat-thread | hinted-s1 | baseline-crash | 0/15 | 0/17 | - |
+| results/archive/corpus-v1.0 | nemotron-3.5-free | chat-thread | plain-s1 | clean | 15/15 | 15/17 | no |
+| results/archive/corpus-v1.0 | nemotron-3.5-free | hero-section | hinted-s1 | clean | 17/17 | 18/19 | no |
+| results/archive/corpus-v1.0 | nemotron-3.5-free | hero-section | plain-s1 | clean | 14/17 | 14/19 | yes |
+| results/archive/corpus-v1.0 | nemotron-3.5-free | nav-header | hinted-s1 | clean | 13/13 | 13/15 | no |
+| results/archive/corpus-v1.0 | nemotron-3.5-free | nav-header | plain-s1 | clean | 7/13 | 7/15 | yes |
 
 ## Queue
 
