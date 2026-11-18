@@ -110,9 +110,8 @@ survives when the content changes.
   committed (see Results site)
 - .github/workflows/pages.yml : builds the site and deploys it to GitHub
   Pages when main is pushed
-- docs/ : spec, methodology, decisions, docs/RUNS.md, the run record, and
-  docs/WRITEUP.md, the write-up
-  (see Run record)
+- docs/ : spec, methodology, decisions, docs/RUNS.md, the run record (see
+  Run record), and docs/WRITEUP.md, the write-up
 
 ## Brief format
 briefs/<id>/ contains exactly:
