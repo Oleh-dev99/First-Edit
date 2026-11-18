@@ -69,6 +69,33 @@ it under the GitHub Pages path `/First-Edit/`, as the workflow does
 (leave out the slashes in Git Bash, which would otherwise turn
 `/First-Edit/` into a Windows path).
 
+## Check your own component
+
+The suite the benchmark runs on model output also runs on any component
+that follows the candidate contract: one `.tsx` file with a default export,
+importing `react` only, styled with Tailwind classes and inline styles, with
+no network, timers, randomness or storage. Set up the harness as under
+Smoke test, write the component's example props as JSON, and from
+`harness/`:
+
+```sh
+npm run first-edit -- ../path/to/ProfileCard.tsx --props ../path/to/profile.json
+```
+
+It renders the component with the example props, then under the 19 cases
+(longer text, a 30- and a 60-letter word, empty and long lists, large
+numbers, a 320 px screen, 200% text and right-to-left), runs the five checks
+and prints which cases survived. Without `--fields`, the fields map (what
+each prop is: label, prose, number, list, id or fixed) is guessed from the
+example props and written beside the results; correct it and pass it back
+with `--fields`. Results, screenshots included, go to `results/cli/<name>/`
+unless `--out` says otherwise. The exit code is 0 when no core case failed,
+1 when one did (`--fail-on all` counts the extreme cases too, `--fail-on
+none` never fails), 2 when the input cannot be used and 3 when the harness
+failed, so it can run in CI. Images must come from the `/fe-assets/`
+placeholders: the harness blocks every other request. The details are in
+[docs/SPEC.md](docs/SPEC.md), Command line.
+
 ## Smoke test
 
 The render harness lives in `harness/` and needs Node 26. From the repo

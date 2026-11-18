@@ -525,3 +525,29 @@ first samples of a changed brief, not a re-run of the same sample, so D-025
 briefs are first in the queue. labels/set-01 stays as it is: 57 of its 215
 items come from superseded candidates; they still measure the suite, and
 calibrate and the label tool read their runs from the archive.
+
+## D-060 The command line runs suite v1 on any component (2026-11-18)
+`npm run first-edit -- <Component.tsx> --props <props.json>` (in harness/)
+stresses a component that is not a corpus candidate with the same 19 cases,
+checks and new-finding rule, so anyone can test their own component the way
+the benchmark tests a model's.
+- The component must follow the candidate contract (one file, react only,
+  Tailwind classes and inline styles, no network, timers, randomness or
+  storage); the command refuses one that does not before rendering anything.
+  There is no brief, so the Props type is not checked.
+- It is copied, with its example props and fields map, into
+  candidates/_cli/<name>/ (git-ignored), because the harness app loads
+  components, and Tailwind generates classes, only from candidates/. The page
+  /?cli=<name> renders it; nothing in the suite changes.
+- The fields map can be given with --fields. Otherwise it is inferred from
+  the example props by fixed rules (the keys' last words and the values'
+  shapes) and written beside the results, so the guess can be read and
+  corrected. A wrong guess changes which mutations apply and what they touch,
+  never how a case is judged.
+- Exit codes: 0 survived, 1 broke, 2 the input cannot be used, 3 the harness
+  failed. By default a failed core case, or a baseline that is not clean,
+  is a break (--fail-on core); --fail-on all adds the extreme cases, and
+  --fail-on none never fails. The command can then run in a CI job.
+- It runs from this repository, with Node 26, the harness's dependencies and
+  Chromium installed. harness/package.json names it first-edit in `bin`, for
+  npm link; it is not published to npm.

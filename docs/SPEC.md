@@ -96,7 +96,8 @@ survives when the content changes.
   fixture.baseline.json, fields.json. See Brief format.
 - candidates/<source>/<brief-id>/<variant>/Component.tsx
   (source is _samples, _reference or a model id; model outputs are
-  git-ignored, D-029)
+  git-ignored, D-029). candidates/_cli/<name>/ is the command line's
+  workspace, also git-ignored (see Command line)
 - harness/ : Node. Vite app, Playwright runner, mutations, checks
 - runner/ : Python. Generation (see Generation), scoring, labelling and
   calibration
@@ -570,6 +571,50 @@ cleanly. Bump schemaVersion on any incompatible change.
   }
 }
 ```
+
+## Command line (any component)
+`npm run first-edit -- <Component.tsx> --props <props.json> [--fields
+<fields.json>] [--name <name>] [--out <dir>] [--fail-on core|all|none]`
+in harness/ stresses a component that is not a corpus candidate with suite
+v1: the same 19 cases, checks and new-finding rule (D-060). Paths are taken
+from the folder the command was started in.
+- The component follows the candidate contract (Candidate contract): the
+  contract rules of the gate run first (parse, default export, react only,
+  no network, timers, randomness, storage or dynamic import, no hard-coded
+  URL). A component that breaks one is refused with the reasons, exit 2,
+  before anything renders. The Props type is not checked: there is no brief.
+- --props is a JSON object of example props: the baseline. Every request
+  except the harness's own is blocked, so images must come from the
+  /fe-assets/ placeholders (Images); the command warns about props that
+  point to another server.
+- --fields is the fields map (Fields map). Without it, one is inferred from
+  the example props (harness/src/mutations/infer-fields.ts): null needs no
+  declaration; a boolean is fixed; a number is an id under an id key
+  (id, uuid, guid, key, slug as the key's last word) and otherwise a number;
+  a string is an id under an id key, fixed under a key whose last word names
+  an address, image, enum, date or colour (href, url, src, image, avatar,
+  icon, color, variant, type, kind, tone, size, date, time, at and others)
+  or when it looks like one (a URL or path, an ISO date, a colour, or a
+  lower-case token such as in-progress), prose when it has several words and
+  reads as a sentence (over 60 characters, or 4 words or more with . ! or
+  ?), and otherwise a label; an array is a list with its items under "[]";
+  items that disagree merge to prose (label and prose) or fixed (any other
+  mix). Nothing is marked required and lists get no bounds. The map, given
+  or inferred, must be valid for the props, or the command stops with exit 2.
+- The component, the props and the fields map are copied to
+  candidates/_cli/<name>/ (Component.tsx, props.json, fields.json), replacing
+  the folder; the app renders it at /?cli=<name>[&mutation=<id>]. The name
+  comes from --name, or from the file: its folder for Component.tsx,
+  otherwise its name in lower case with dashes.
+- The results go to --out (default results/cli/<name>/), as for a stress
+  run (Case results), plus the fields map used. The folder is replaced, so
+  it must be new, empty or an earlier first-edit output.
+- It prints the stress table, then the baseline state, survived / applicable
+  cases per tier with the failed ones named, content hidden, and the result.
+  Exit codes: 0 survived, 1 broke, 2 the input cannot be used, 3 the harness
+  failed. With --fail-on core (the default), a failed core case or a
+  baseline that did not render or has error findings is a break; --fail-on
+  all adds the extreme cases; --fail-on none always exits 0.
 
 ## Generation
 The Python runner (runner/, package first_edit, Python 3.13) prompts
@@ -1317,6 +1362,6 @@ and replaced elements.
 12. Second run on free models (in progress; one model a day)
 13. Labelling tool and blind calibration, set 1 (done)
 14. Calibration follow-ups and results site (done)
-15. CLI packaging
+15. CLI packaging (done: Command line, D-060)
 16. Decision on the comparison when the queue finishes; label set 2
 17. Write-up and README
