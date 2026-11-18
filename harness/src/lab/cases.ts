@@ -534,7 +534,7 @@ export const LAB_CASES: LabCase[] = [
     viewport: NARROW,
     html:
       `<header style="${FIXED_HEADER}; white-space:nowrap">` +
-      `<span style="flex:none; width:200px">Ledgerloom</span><span style="flex:none">Account settings</span>` +
+      `<span style="flex:none; width:200px">Sorrelwick</span><span style="flex:none">Account settings</span>` +
       `</header>`,
     expected: { 'off-screen': { error: 1 } },
   },
@@ -545,7 +545,7 @@ export const LAB_CASES: LabCase[] = [
     viewport: NARROW,
     html:
       `<header style="${FIXED_HEADER}">` +
-      `<span style="flex:none; width:320px">Ledgerloom</span><button style="flex:none">New invoice</button>` +
+      `<span style="flex:none; width:320px">Sorrelwick</span><button style="flex:none">New invoice</button>` +
       `</header>`,
     expected: { 'off-screen': { error: 1 } },
   },
@@ -561,7 +561,7 @@ export const LAB_CASES: LabCase[] = [
     check: 'off-screen',
     description: '- a fixed header that fits the viewport',
     viewport: NARROW,
-    html: `<header style="${FIXED_HEADER}"><span>Ledgerloom</span><button>Menu</button></header>`,
+    html: `<header style="${FIXED_HEADER}"><span>Sorrelwick</span><button>Menu</button></header>`,
     expected: {},
   },
   {
