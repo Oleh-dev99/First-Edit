@@ -1,6 +1,6 @@
 # Run record
 
-Written on 2026-11-14 (UTC).
+Written on 2026-11-18 (UTC).
 
 Written by `python -m first_edit run-next` after every pass, or by
 `python -m first_edit run-record --out docs/RUNS.md`, from the generation
@@ -19,8 +19,8 @@ time its record was written.
 
 | model id | provider | base URL | provider model id | reported model | served by | first call | last call |
 |---|---|---|---|---|---|---|---|
-| ernie-5.5-flash-free | openai-compatible | https://openrouter.ai/api/v1 | baidu/ernie-5.5-flash-preview:free | baidu/ernie-5.5-flash-preview:free | Baidu | 2026-11-13T00:46:10+00:00 | 2026-11-13T12:03:14+00:00 |
-| nemotron-3.5-free | openai-compatible | https://openrouter.ai/api/v1 | nvidia/nemotron-3.5-super-vl:free | nvidia/nemotron-3.5-super-vl:free | Nvidia | 2026-11-13T01:05:28+00:00 | 2026-11-13T01:23:49+00:00 |
+| ernie-5.5-flash-free | openai-compatible | https://openrouter.ai/api/v1 | baidu/ernie-5.5-flash-preview:free | baidu/ernie-5.5-flash-preview:free | Baidu | 2026-11-13T00:46:10+00:00 | 2026-11-18T11:54:55+00:00 |
+| nemotron-3.5-free | openai-compatible | https://openrouter.ai/api/v1 | nvidia/nemotron-3.5-super-vl:free | nvidia/nemotron-3.5-super-vl:free | Nvidia | 2026-11-13T01:05:28+00:00 | 2026-11-18T12:05:31+00:00 |
 | gemma-4-31b-free | openai-compatible | https://openrouter.ai/api/v1 | google/gemma-4-31b-it:free | - | - | no calls yet | - |
 | nemotron-3-ultra-free | openai-compatible | https://openrouter.ai/api/v1 | nvidia/nemotron-3-ultra-550b-a55b:free | - | - | no calls yet | - |
 | north-mini-code-free | openai-compatible | https://openrouter.ai/api/v1 | cohere/north-mini-code:free | - | - | no calls yet | - |
@@ -33,15 +33,15 @@ passed the gate. Invalid: a reply that failed it (D-025). Failed: no reply
 
 | model id | variant | samples | sample numbers | briefs | valid | invalid | failed |
 |---|---|---|---|---|---|---|---|
-| ernie-5.5-flash-free | plain | 9 | s1 | 9 | 9 | 0 | 0 |
-| ernie-5.5-flash-free | hinted | 8 | s1 | 8 | 6 | 2 | 0 |
-| nemotron-3.5-free | plain | 7 | s1 | 7 | 6 | 1 | 0 |
-| nemotron-3.5-free | hinted | 7 | s1 | 7 | 6 | 1 | 0 |
+| ernie-5.5-flash-free | plain | 20 | s1 | 20 | 19 | 1 | 0 |
+| ernie-5.5-flash-free | hinted | 20 | s1 | 20 | 12 | 8 | 0 |
+| nemotron-3.5-free | plain | 17 | s1 | 17 | 16 | 1 | 0 |
+| nemotron-3.5-free | hinted | 16 | s1 | 16 | 15 | 1 | 0 |
 | gemma-4-31b-free | - | 0 | - | 0 | 0 | 0 | 0 |
 | nemotron-3-ultra-free | - | 0 | - | 0 | 0 | 0 | 0 |
 | north-mini-code-free | - | 0 | - | 0 | 0 | 0 | 0 |
 
-In all: 31 samples, 27 valid, 4 invalid, 0 failed.
+In all: 73 samples, 62 valid, 11 invalid, 0 failed.
 
 ## Request parameters
 
@@ -63,8 +63,8 @@ the number of summaries for each value.
 
 | model id | stressed | valid, not stressed | suite | harness commit | Playwright | Chromium |
 |---|---|---|---|---|---|---|
-| ernie-5.5-flash-free | 15 | 0 | v1 (15) | ba2bb3b (15) | 1.65.0 (15) | 158.0.8127.18 (15) |
-| nemotron-3.5-free | 12 | 0 | v1 (12) | ba2bb3b (12) | 1.65.0 (12) | 158.0.8127.18 (12) |
+| ernie-5.5-flash-free | 31 | 0 | v1 (31) | a100edf (16), ba2bb3b (15) | 1.65.0 (31) | 158.0.8127.18 (31) |
+| nemotron-3.5-free | 31 | 0 | v1 (31) | a100edf (19), ba2bb3b (12) | 1.65.0 (31) | 158.0.8127.18 (31) |
 | gemma-4-31b-free | 0 | 0 | - | - | - | - |
 | nemotron-3-ultra-free | 0 | 0 | - | - | - | - |
 | north-mini-code-free | 0 | 0 | - | - | - | - |
