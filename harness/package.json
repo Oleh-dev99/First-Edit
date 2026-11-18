@@ -7,11 +7,15 @@
   "engines": {
     "node": ">=26"
   },
+  "bin": {
+    "first-edit": "scripts/first-edit.ts"
+  },
   "scripts": {
     "briefs:check": "node scripts/briefs-check.ts",
     "candidate:check": "node scripts/candidate-check.ts",
     "check": "node scripts/check.ts",
     "dev": "vite",
+    "first-edit": "node scripts/first-edit.ts",
     "label:examples": "node scripts/label-examples.ts",
     "site:check": "node scripts/site-check.ts",
     "smoke": "node scripts/smoke.ts",

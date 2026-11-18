@@ -19,6 +19,11 @@ export function candidateQuery(
   return mutation === null ? query : `${query}&mutation=${mutation}`;
 }
 
+/** The query string of a case of a component in the command line's workspace (candidates/_cli/<name>/). */
+export function cliQuery(name: string, mutation: string | null = null): string {
+  return mutation === null ? `?cli=${name}` : `?cli=${name}&mutation=${mutation}`;
+}
+
 /** How a page load ended. */
 export type LoadStatus = 'ok' | 'render-error' | 'timeout';
 

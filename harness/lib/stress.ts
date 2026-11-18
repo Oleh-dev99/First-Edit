@@ -12,6 +12,7 @@ import { CHECK_NAMES, type CheckName, type Finding } from '../src/checks/finding
 import { hiddenValues, type VisibleValue } from '../src/measures/visible-values.ts';
 import { CASES, CASE_TIERS, type CaseId, type CaseKind, type CaseTier, type FindingsReference } from '../src/mutations/cases.ts';
 import { applyContentMutation } from '../src/mutations/content.ts';
+import type { FieldsMap } from '../src/mutations/fields.ts';
 import { isContentMutation, mutationKind, viewportFor, type MutationId, type Viewport } from '../src/mutations/index.ts';
 import { annotate } from './annotate.ts';
 import { loadBrief } from './briefs.ts';
@@ -175,11 +176,23 @@ async function renderCase(browser: Browser, origin: string, query: string, viewp
   }
 }
 
+/**
+ * A component outside the corpus (the command line, D-060): its example
+ * props, its fields map and the query that opens one of its cases.
+ */
+export interface StressInput {
+  fixture: unknown;
+  fields: FieldsMap;
+  query(mutation: MutationId | null): string;
+}
+
 export interface StressOptions {
   browser: Browser;
   origin: string;
   brief: string;
   candidate: string;
+  /** Instead of the brief's baseline fixture and fields map; the suite is the same. */
+  input?: StressInput;
   /** Write the results here, replacing the directory. Omit to write nothing. */
   outDir?: string;
 }
@@ -194,9 +207,11 @@ export interface StressOptions {
  * never fails a case.
  */
 export async function runStress(options: StressOptions): Promise<StressSummary> {
-  const { browser, origin, brief, candidate, outDir } = options;
+  const { browser, origin, brief, candidate, input, outDir } = options;
   const fixtureName = 'baseline';
-  const { fixture, fields } = loadBrief(brief, fixtureName);
+  const { fixture, fields } = input ?? loadBrief(brief, fixtureName);
+  const queryFor = (mutation: MutationId | null): string =>
+    input ? input.query(mutation) : candidateQuery(brief, candidate, fixtureName, mutation);
   if (outDir) {
     // Retries ride out transient Windows locks (EBUSY) from scanners or open folder windows.
     await rm(outDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
@@ -219,7 +234,7 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
   };
 
   const baselineViewport = viewportFor(null);
-  const baselineQuery = candidateQuery(brief, candidate, fixtureName);
+  const baselineQuery = queryFor(null);
   const baseline = await renderCase(browser, origin, baselineQuery, baselineViewport);
   const bornBroken = baseline.findings.filter((finding) => finding.severity === 'error');
   const baselineTruncations = baseline.status === 'ok' ? truncationCount(baseline.findings) : null;
@@ -257,7 +272,7 @@ export async function runStress(options: StressOptions): Promise<StressSummary> 
       });
       continue;
     }
-    const query = candidateQuery(brief, candidate, fixtureName, mutation);
+    const query = queryFor(mutation);
     const rendered = await renderCase(browser, origin, query, viewport);
     renders.set(id, rendered);
     const renderedOk = rendered.status === 'ok';

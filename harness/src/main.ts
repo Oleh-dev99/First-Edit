@@ -10,6 +10,7 @@ import { describe, fail, markReady } from './status.ts';
 
 // Routes:
 //   /?brief=<brief-id>&candidate=<source>/<brief-id>/<variant>[&fixture=<name>][&mutation=<id>]
+//   /?cli=<name>[&mutation=<id>]   (a component in the command line's workspace, D-060)
 //   /?lab=<case-id>
 
 const FONT_FAMILY = 'Inter Variable';

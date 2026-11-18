@@ -21,6 +21,59 @@ const fixtures = import.meta.glob<unknown>('../../briefs/*/fixture.*.json', {
 // Keys look like "../../briefs/hello-card/fields.json".
 const fieldsMaps = import.meta.glob<unknown>('../../briefs/*/fields.json', { import: 'default' });
 
+// The command line's workspace (D-060): candidates/_cli/<name>/ holds the
+// Component.tsx, props.json and fields.json of a component outside the corpus.
+const cliProps = import.meta.glob<unknown>('../../candidates/_cli/*/props.json', { import: 'default' });
+const cliFields = import.meta.glob<unknown>('../../candidates/_cli/*/fields.json', { import: 'default' });
+
+type Loader = () => Promise<unknown>;
+
+interface Source {
+  /** Names the fixture in error messages. */
+  label: string;
+  candidateId: string;
+  loadFixture: Loader;
+  loadFields: Loader;
+  loadCandidate: () => Promise<CandidateModule>;
+}
+
+/** A corpus brief's fixture and fields map, and a candidate under candidates/. */
+function briefSource(params: URLSearchParams): Source {
+  const briefId = params.get('brief');
+  const candidateId = params.get('candidate');
+  const fixtureName = params.get('fixture') ?? 'baseline';
+  if (!briefId) throw new Error('Missing query parameter "brief"');
+  if (!candidateId) throw new Error('Missing query parameter "candidate"');
+
+  const briefDir = `../../briefs/${briefId}/`;
+  if (!Object.keys(fixtures).some((key) => key.startsWith(briefDir))) {
+    throw new Error(`Unknown brief: "${briefId}"`);
+  }
+  const loadFixture = fixtures[`${briefDir}fixture.${fixtureName}.json`];
+  if (!loadFixture) throw new Error(`Unknown fixture "${fixtureName}" for brief "${briefId}"`);
+  const loadFields = fieldsMaps[`${briefDir}fields.json`];
+  if (!loadFields) throw new Error(`Brief "${briefId}" has no fields.json`);
+  const loadCandidate = candidates[`../../candidates/${candidateId}/Component.tsx`];
+  if (!loadCandidate) throw new Error(`Unknown candidate: "${candidateId}"`);
+  return {
+    label: `fields map of brief "${briefId}" for fixture "${fixtureName}"`,
+    candidateId,
+    loadFixture,
+    loadFields,
+    loadCandidate,
+  };
+}
+
+/** A component in the command line's workspace, with its example props and fields map. */
+function cliSource(name: string): Source {
+  const dir = `../../candidates/_cli/${name}/`;
+  const loadCandidate = candidates[`${dir}Component.tsx`];
+  const loadFixture = cliProps[`${dir}props.json`];
+  const loadFields = cliFields[`${dir}fields.json`];
+  if (!loadCandidate || !loadFixture || !loadFields) throw new Error(`Unknown command-line component: "${name}"`);
+  return { label: `fields map of "${name}"`, candidateId: `_cli/${name}`, loadFixture, loadFields, loadCandidate };
+}
+
 class ErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
 
@@ -57,34 +110,25 @@ function readMutation(params: URLSearchParams): MutationId | null {
 /**
  * Renders /?brief=<brief-id>&candidate=<source>/<brief-id>/<variant>
  *          [&fixture=<name>][&mutation=<id>]
+ * or, for the command line, /?cli=<name>[&mutation=<id>]
  * into `root`. The fixture defaults to "baseline" and is checked against the
  * brief's fields map. A content mutation is applied to the fixture; an
  * environment mutation changes <html>. Resolves once the candidate is on
  * screen with its fonts and images loaded.
  */
 export async function renderCandidate(root: HTMLElement, params: URLSearchParams): Promise<void> {
-  const briefId = params.get('brief');
-  const candidateId = params.get('candidate');
-  const fixtureName = params.get('fixture') ?? 'baseline';
   const mutation = readMutation(params);
-  if (!briefId) throw new Error('Missing query parameter "brief"');
-  if (!candidateId) throw new Error('Missing query parameter "candidate"');
+  const cli = params.get('cli');
+  const source = cli !== null ? cliSource(cli) : briefSource(params);
 
-  const briefDir = `../../briefs/${briefId}/`;
-  if (!Object.keys(fixtures).some((key) => key.startsWith(briefDir))) {
-    throw new Error(`Unknown brief: "${briefId}"`);
-  }
-  const loadFixture = fixtures[`${briefDir}fixture.${fixtureName}.json`];
-  if (!loadFixture) throw new Error(`Unknown fixture "${fixtureName}" for brief "${briefId}"`);
-  const loadFields = fieldsMaps[`${briefDir}fields.json`];
-  if (!loadFields) throw new Error(`Brief "${briefId}" has no fields.json`);
-  const loadCandidate = candidates[`../../candidates/${candidateId}/Component.tsx`];
-  if (!loadCandidate) throw new Error(`Unknown candidate: "${candidateId}"`);
-
-  const [fixture, fields, candidateModule] = await Promise.all([loadFixture(), loadFields(), loadCandidate()]);
-  assertValidFields(fixture, fields, `fields map of brief "${briefId}" for fixture "${fixtureName}"`);
+  const [fixture, fields, candidateModule] = await Promise.all([
+    source.loadFixture(),
+    source.loadFields(),
+    source.loadCandidate(),
+  ]);
+  assertValidFields(fixture, fields, source.label);
   const Candidate = candidateModule.default;
-  if (!Candidate) throw new Error(`Candidate "${candidateId}" has no default export`);
+  if (!Candidate) throw new Error(`Candidate "${source.candidateId}" has no default export`);
 
   let props = fixture;
   if (mutation !== null && isContentMutation(mutation)) {
