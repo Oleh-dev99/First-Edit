@@ -4,7 +4,15 @@ Benchmarks for AI-generated UI score how the output looks at the moment
 it is generated. First Edit scores what happens next: whether the layout
 survives when the content changes.
 
-Status: early development
+The write-up, [docs/WRITEUP.md](docs/WRITEUP.md), says what was measured,
+how, what came out and how far it can be trusted.
+
+Status: the run on free-tier models is under way and its results are
+preliminary. Done: the stress suite (v1, frozen), the 20 briefs (corpus
+v1.1), the blind calibration of the suite (label set 1), the results site
+and the command line for your own component. Left: the rest of the run, the
+decision on the comparison once it finishes, and a second label set
+([docs/SPEC.md](docs/SPEC.md), Roadmap).
 
 ## Results site
 

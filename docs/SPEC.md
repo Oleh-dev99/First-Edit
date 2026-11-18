@@ -110,7 +110,8 @@ survives when the content changes.
   committed (see Results site)
 - .github/workflows/pages.yml : builds the site and deploys it to GitHub
   Pages when main is pushed
-- docs/ : spec, methodology, decisions, and docs/RUNS.md, the run record
+- docs/ : spec, methodology, decisions, docs/RUNS.md, the run record, and
+  docs/WRITEUP.md, the write-up
   (see Run record)
 
 ## Brief format
@@ -1364,4 +1365,5 @@ and replaced elements.
 14. Calibration follow-ups and results site (done)
 15. CLI packaging (done: Command line, D-060)
 16. Decision on the comparison when the queue finishes; label set 2
-17. Write-up and README
+17. Write-up and README (drafted: docs/WRITEUP.md, preliminary until the run finishes,
+    when its numbers are refreshed)
