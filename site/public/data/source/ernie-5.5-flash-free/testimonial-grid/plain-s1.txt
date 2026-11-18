@@ -1,0 +1,134 @@
+import * as React from "react";
+
+export interface Testimonial {
+  id: string;
+  quote: string;
+  authorName: string;
+  jobTitle: string;
+  company: string;
+  /** From 1 to 5 stars. */
+  rating: number;
+}
+
+export interface Props {
+  heading: string;
+  /** Shown under the heading. */
+  subheading: string;
+  testimonials: Testimonial[];
+}
+
+function getInitials(name: string) {
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+      .join("") || "?"
+  );
+}
+
+function StarRating({ rating }: { rating: number }) {
+  const filledStars = Math.max(0, Math.min(5, Math.round(rating)));
+
+  return (
+    <div
+      className="flex items-center gap-1"
+      role="img"
+      aria-label={`Rated ${rating} out of 5 stars`}
+    >
+      {Array.from({ length: 5 }, (_, index) => (
+        <svg
+          key={index}
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className={`h-4 w-4 ${
+            index < filledStars ? "text-[#b96b1f]" : "text-[#ddd4c5]"
+          }`}
+        >
+          <path d="M10 1.5l2.6 5.27 5.82 .85 -4.21 4.1 .99 5.79L10 14.77l-5.2 2.73 .99 -5.79 -4.21 -4.1 5.82 -.85L10 1.5Z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+const Testimonials: React.FC<Props> = ({
+  heading,
+  subheading,
+  testimonials,
+}) => {
+  return (
+    <section
+      aria-labelledby="testimonials-heading"
+      className="w-full border-y border-[#e8e1d5] bg-[#f4f0e8] py-20 sm:py-24 lg:py-28"
+    >
+      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2
+            id="testimonials-heading"
+            className="text-balance text-3xl font-semibold tracking-[-0.035em] text-[#172a2f] sm:text-4xl lg:text-5xl"
+          >
+            {heading}
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-7 text-[#5b686c] sm:text-lg sm:leading-8">
+            {subheading}
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-6">
+          {testimonials.map((testimonial) => (
+            <article
+              key={testimonial.id}
+              className="flex h-full flex-col rounded-3xl border border-[#e4dccf] bg-[#fffdfa] p-6 shadow-[0_10px_30px_-20px_rgba(23,42,47,0.25)] sm:p-7 lg:p-8"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <span
+                  aria-hidden="true"
+                  className="-ml-1 select-none font-serif text-5xl leading-none text-[#d8cab4]"
+                >
+                  “
+                </span>
+                <StarRating rating={testimonial.rating} />
+              </div>
+
+              <blockquote className="mt-3 flex-1 break-words font-serif text-lg leading-8 text-[#24353a] text-pretty sm:text-xl sm:leading-9">
+                {testimonial.quote}
+              </blockquote>
+
+              <footer className="mt-8 flex items-center gap-3 border-t border-[#eee7dc] pt-5">
+                <div
+                  aria-hidden="true"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#ded5c6] bg-[#ece5d8] text-xs font-semibold tracking-[0.08em] text-[#4f5e62]"
+                >
+                  {getInitials(testimonial.authorName)}
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#1b2b30]">
+                    {testimonial.authorName}
+                  </p>
+                  <p className="mt-0.5 text-sm leading-6 text-[#5f6d71]">
+                    {testimonial.jobTitle}
+                    <span
+                      aria-hidden="true"
+                      className="mx-1.5 text-[#b3a997]"
+                    >
+                      ·
+                    </span>
+                    <span className="font-medium text-[#3d4e52]">
+                      {testimonial.company}
+                    </span>
+                  </p>
+                </div>
+              </footer>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Testimonials;

@@ -1,0 +1,180 @@
+import * as React from "react";
+
+export type PresenceStatus = "available" | "busy" | "away" | "offline";
+
+export interface Person {
+  id: string;
+  name: string;
+  role: string;
+  department: string;
+  location: string;
+  email: string;
+  status: PresenceStatus;
+}
+
+export interface Props {
+  /** The team directory of a company intranet. */
+  heading: string;
+  /** The number of members in the whole directory. */
+  memberCount: number;
+  people: Person[];
+  /** Label of the button that adds a member. */
+  addMemberLabel: string;
+}
+
+type StatusStyle = {
+  label: string;
+  chip: string;
+  dot: string;
+  edge: string;
+};
+
+const statusStyles: Record<PresenceStatus, StatusStyle> = {
+  available: {
+    label: "Available",
+    chip: "rounded-full border-emerald-200 bg-emerald-50 text-emerald-800",
+    dot: "rounded-full bg-emerald-500",
+    edge: "bg-emerald-400",
+  },
+  busy: {
+    label: "Busy",
+    chip: "rounded-md border-rose-200 bg-rose-50 text-rose-800",
+    dot: "rounded-[2px] bg-rose-500",
+    edge: "bg-rose-400",
+  },
+  away: {
+    label: "Away",
+    chip: "rounded-full border-dashed border-amber-300 bg-amber-50 text-amber-800",
+    dot: "rounded-full bg-amber-500",
+    edge: "bg-amber-400",
+  },
+  offline: {
+    label: "Offline",
+    chip: "rounded-full border-slate-200 bg-slate-100 text-slate-600",
+    dot: "rounded-full bg-slate-400",
+    edge: "bg-slate-300",
+  },
+};
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+export default function TeamDirectory({ heading, memberCount, people, addMemberLabel }: Props) {
+  return (
+    <React.Fragment>
+      <section className="w-full bg-[#f4f1e8] text-[#1d2a23]">
+        <header className="border-b border-[#ddd7ca] bg-[#faf8f2]">
+          <div className="mx-auto w-full max-w-[1440px] px-5 py-10 sm:px-8 lg:px-12 lg:py-14 xl:px-16">
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl">
+                <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#66746c]">
+                  <span className="h-2 w-2 rounded-full bg-[#1f3b2d]" />
+                  <span>People directory</span>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
+                  <h1 className="text-4xl font-semibold tracking-[-0.045em] text-[#17231d] sm:text-5xl lg:text-6xl">
+                    {heading}
+                  </h1>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-[#d8d1c3] bg-white px-4 py-2 shadow-[0_8px_24px_-16px_rgba(31,59,45,0.5)]">
+                    <span className="text-lg font-semibold leading-none text-[#1f3b2d]">{memberCount}</span>
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6b776f]">
+                      {memberCount === 1 ? "member" : "members"}
+                    </span>
+                  </div>
+                </div>
+                <p className="mt-5 max-w-xl text-sm leading-6 text-[#66746c] sm:text-base">
+                  A directory of the people building Hollinmere, across every team, timezone, and discipline.
+                </p>
+              </div>
+
+              <div className="flex shrink-0 items-center">
+                <button
+                  type="button"
+                  className="group inline-flex items-center gap-3 rounded-full bg-[#1f3b2d] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_14px_34px_-16px_rgba(31,59,45,0.9)] transition hover:bg-[#163025] focus:outline-none focus:ring-2 focus:ring-[#1f3b2d] focus:ring-offset-2 focus:ring-offset-[#faf8f2] sm:px-6"
+                >
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-white/40 text-base font-normal leading-none">
+                    +
+                  </span>
+                  <span>{addMemberLabel}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="mx-auto w-full max-w-[1440px] px-5 py-10 sm:px-8 lg:px-12 lg:py-14 xl:px-16">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {people.map((person) => {
+              const status = statusStyles[person.status];
+              const initials = getInitials(person.name);
+
+              return (
+                <article
+                  key={person.id}
+                  className="relative overflow-hidden rounded-2xl border border-[#e0dbd0] bg-[#fffdf9] p-5 shadow-[0_18px_50px_-38px_rgba(31,59,45,0.55)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-36px_rgba(31,59,45,0.45)] sm:p-6"
+                >
+                  <div className={`absolute inset-y-0 left-0 w-1.5 ${status.edge}`} />
+
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3.5">
+                      <div
+                        aria-hidden="true"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#eef2ec] text-xs font-bold tracking-[0.08em] text-[#315442] ring-1 ring-[#d8e1d8]"
+                      >
+                        {initials}
+                      </div>
+                      <div className="min-w-0">
+                        <h2 className="truncate text-xl font-semibold tracking-[-0.025em] text-[#17231d] sm:text-[22px]">
+                          {person.name}
+                        </h2>
+                        <p className="mt-1 truncate text-sm font-medium text-[#68756e]">{person.role}</p>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`inline-flex shrink-0 items-center gap-1.5 border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${status.chip}`}
+                    >
+                      <span className={`h-1.5 w-1.5 ${status.dot}`} />
+                      {status.label}
+                    </span>
+                  </div>
+
+                  <dl className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <dt className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#929b95]">
+                        Department
+                      </dt>
+                      <dd className="mt-1 text-sm font-medium text-[#34423b]">{person.department}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#929b95]">
+                        Location
+                      </dt>
+                      <dd className="mt-1 text-sm font-medium text-[#34423b]">{person.location}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-5 flex flex-col gap-1 border-t border-[#ece7dd] pt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#929b95]">
+                      Email
+                    </span>
+                    <span className="select-all break-all text-xs font-medium text-[#425148] sm:text-right">
+                      {person.email}
+                    </span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </main>
+      </section>
+    </React.Fragment>
+  );
+}

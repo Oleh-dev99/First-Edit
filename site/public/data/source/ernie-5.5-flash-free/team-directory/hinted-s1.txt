@@ -1,0 +1,297 @@
+interface Props {
+  heading: string;
+  /** The number of members in the whole directory. */
+  memberCount: number;
+  people: Person[];
+  /** Label of the button that adds a member. */
+  addMemberLabel: string;
+}
+
+type PresenceStatus = 'available' | 'busy' | 'away' | 'offline';
+
+interface Person {
+  id: string;
+  name: string;
+  role: string;
+  department: string;
+  location: string;
+  email: string;
+  status: PresenceStatus;
+}
+
+const STATUS_META: Record<
+  PresenceStatus,
+  { label: string; dot: string; badge: string }
+> = {
+  available: {
+    label: 'Available',
+    dot: 'bg-emerald-500',
+    badge: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
+  },
+  busy: {
+    label: 'Busy',
+    dot: 'bg-rose-500',
+    badge: 'bg-rose-50 text-rose-800 ring-rose-200',
+  },
+  away: {
+    label: 'Away',
+    dot: 'bg-amber-500',
+    badge: 'bg-amber-50 text-amber-900 ring-amber-200',
+  },
+  offline: {
+    label: 'Offline',
+    dot: 'bg-slate-400',
+    badge: 'bg-slate-100 text-slate-700 ring-slate-300',
+  },
+};
+
+const AVATAR_PALETTE = [
+  'bg-indigo-100 text-indigo-800 ring-indigo-200',
+  'bg-teal-100 text-teal-800 ring-teal-200',
+  'bg-rose-100 text-rose-800 ring-rose-200',
+  'bg-sky-100 text-sky-800 ring-sky-200',
+  'bg-violet-100 text-violet-800 ring-violet-200',
+];
+
+const TOTAL_STAGES = 8;
+
+/** Small, dependency-free hash so avatar colors stay stable across renders. */
+function hashString(value: string): number {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) % 1_000_003;
+  }
+  return hash;
+}
+
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '·';
+  const first = parts[0]!.charAt(0);
+  const last = parts.length > 1 ? parts[parts.length - 1]!.charAt(0) : '';
+  return (first + last).toUpperCase();
+}
+
+function formatCount(value: number): string {
+  return new Intl.NumberFormat('en-US').format(value);
+}
+
+export default function TeamDirectory({
+  heading,
+  memberCount,
+  people,
+  addMemberLabel,
+}: Props) {
+  const total = formatCount(memberCount);
+  const stages = people.length === 0 ? 1 : Math.min(TOTAL_STAGES, people.length);
+
+  return (
+    <section className="w-full min-w-0 bg-slate-50 px-4 py-10 text-slate-900 sm:px-6 lg:px-8 lg:py-14">
+      <div className="mx-auto w-full max-w-7xl">
+        {/* Header */}
+        <div className="flex w-full flex-col gap-6 border-b border-slate-200 pb-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200 ring-inset">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
+              <span className="min-w-0 truncate">Hollinmere intranet</span>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-4">
+              <h2 className="min-w-0 max-w-full text-3xl leading-tight font-semibold tracking-tight break-words text-slate-900 sm:text-4xl">
+                {heading}
+              </h2>
+              <p className="min-w-0 text-sm font-medium text-slate-500">
+                <span className="tabular-nums">{total}</span>{' '}
+                <span className="break-words">
+                  {memberCount === 1 ? 'member' : 'members'}
+                </span>
+              </p>
+            </div>
+
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">
+              Everyone across Hollinmere, with their role, team and where
+              they work. Presence updates as people move through their day.
+            </p>
+          </div>
+
+          <div className="flex shrink-0 lg:justify-end">
+            <span
+              className="inline-flex max-w-full items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm"
+              aria-disabled="true"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                className="h-4 w-4 shrink-0"
+              >
+                <path d="M10 4.5v11M4.5 10h11" />
+              </svg>
+              <span className="min-w-0 break-words text-left">
+                {addMemberLabel}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        {/* Status key */}
+        <ul className="mt-6 flex flex-wrap items-center gap-2">
+          {(Object.keys(STATUS_META) as PresenceStatus[]).map((status) => (
+            <li
+              key={status}
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${STATUS_META[status].badge}`}
+            >
+              <span
+                className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_META[status].dot}`}
+              />
+              {STATUS_META[status].label}
+            </li>
+          ))}
+        </ul>
+
+        {/* People */}
+        {people.length === 0 ? (
+          <div className="mt-10 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+            <p className="text-base font-semibold text-slate-900">
+              No members yet
+            </p>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-600">
+              When someone joins the directory they will show up here with
+              their role, department, location and current status.
+            </p>
+          </div>
+        ) : (
+          <ul
+            role="list"
+            className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          >
+            {people.map((person, index) => {
+              const meta = STATUS_META[person.status];
+              const avatar =
+                AVATAR_PALETTE[
+                  hashString(person.id) % AVATAR_PALETTE.length
+                ]!;
+
+              return (
+                <li
+                  key={person.id}
+                  className="flex min-w-0 flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  <div className="flex min-w-0 items-start gap-3">
+                    <div className="relative shrink-0">
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-full text-sm font-semibold ring-1 ring-inset ${avatar}`}
+                        aria-hidden="true"
+                      >
+                        {initialsOf(person.name)}
+                      </div>
+                      <span
+                        className={`absolute -right-0.5 -bottom-0.5 h-3.5 w-3.5 rounded-full ring-2 ring-white ${meta.dot}`}
+                        aria-hidden="true"
+                      />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <h3 className="min-w-0 text-lg leading-snug font-semibold break-words text-slate-900">
+                        {person.name}
+                      </h3>
+                      <p className="mt-0.5 min-w-0 text-sm leading-snug break-words text-slate-700">
+                        {person.role}
+                      </p>
+                    </div>
+                  </div>
+
+                  <dl className="grid min-w-0 grid-cols-1 gap-x-4 gap-y-2 text-sm">
+                    <div className="flex min-w-0 items-start gap-2">
+                      <dt className="sr-only">Department</dt>
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={1.6}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="mt-0.5 h-4 w-4 shrink-0 text-slate-400"
+                      >
+                        <path d="M3.5 17V4.5A1 1 0 0 1 4.5 3.5h6a1 1 0 0 1 1 1V17M11.5 8h4a1 1 0 0 1 1 1v8M2 17h16M6.5 7h2M6.5 10.5h2M6.5 14h2M14 11.5h.01M14 14.5h.01" />
+                      </svg>
+                      <dd className="min-w-0 break-words text-slate-600">
+                        {person.department}
+                      </dd>
+                    </div>
+
+                    <div className="flex min-w-0 items-start gap-2">
+                      <dt className="sr-only">Location</dt>
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={1.6}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="mt-0.5 h-4 w-4 shrink-0 text-slate-400"
+                      >
+                        <path d="M10 17s5-4.4 5-8a5 5 0 1 0-10 0c0 3.6 5 8 5 8Z" />
+                        <circle cx="10" cy="9" r="1.9" />
+                      </svg>
+                      <dd className="min-w-0 break-words text-slate-600">
+                        {person.location}
+                      </dd>
+                    </div>
+
+                    <div className="flex min-w-0 items-start gap-2">
+                      <dt className="sr-only">Email</dt>
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={1.6}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="mt-0.5 h-4 w-4 shrink-0 text-slate-400"
+                      >
+                        <rect x="2.5" y="4.5" width="15" height="11" rx="2" />
+                        <path d="m3.5 6.5 6.5 4.6 6.5-4.6" />
+                      </svg>
+                      <dd className="min-w-0 text-indigo-700 underline decoration-indigo-200 underline-offset-2 [overflow-wrap:anywhere]">
+                        {person.email}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+                    <span
+                      className={`inline-flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${meta.badge}`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 shrink-0 rounded-full ${meta.dot}`}
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0 break-words">
+                        {meta.label}
+                      </span>
+                    </span>
+                    <span className="text-xs text-slate-400 tabular-nums">
+                      #{index + 1}
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        <p className="mt-8 text-xs leading-relaxed text-slate-500">
+          Showing {formatCount(people.length)} of {total}{' '}
+          {memberCount === 1 ? 'member' : 'members'}.
+        </p>
+      </div>
+    </section>
+  );
+}

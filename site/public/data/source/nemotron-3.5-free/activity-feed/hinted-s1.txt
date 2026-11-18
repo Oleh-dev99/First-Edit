@@ -1,0 +1,69 @@
+interface Filter {
+  id: string;
+  label: string;
+  active: boolean;
+}
+
+interface ActivityEvent {
+  id: string;
+  actor: string;
+  action: string;
+  target: string;
+  time: string;
+  comment: string | null;
+}
+
+interface Props {
+  title: string;
+  filters: Filter[];
+  events: ActivityEvent[];
+}
+
+export default function ActivityFeed({ title, filters, events }: Props) {
+  return (
+    <section className="w-full">
+      <h2 className="text-lg font-semibold text-slate-900 mb-2">{title}</h2>
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {filters.map((filter) => (
+          <button
+            key={filter.id}
+            type="button"
+            aria-current={filter.active ? "true" : undefined}
+            className={
+              filter.active
+                ? "px-3 py-1.5 text-sm font-medium bg-slate-100 text-slate-900 rounded-md"
+                : "px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-md"
+            }
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-0">
+        {events.length === 0 ? (
+          <p className="py-4 text-sm text-slate-500">No recent activity.</p>
+        ) : (
+          events.map((event) => (
+            <div key={event.id} className="border-b border-slate-200 py-4 last:border-b-0">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                <p className="text-sm text-slate-900 break-words" style={{ overflowWrap: "break-word" }}>
+                  <span className="font-medium">{event.actor}</span>{" "}
+                  {event.action}{" "}
+                  <span className="font-medium">{event.target}</span>
+                </p>
+                <span className="text-xs text-slate-400 sm:self-end">{event.time}</span>
+              </div>
+              {event.comment != null && (
+                <p className="mt-1.5 text-sm text-slate-600 break-words" style={{ overflowWrap: "break-word" }}>
+                  {event.comment}
+                </p>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
+}

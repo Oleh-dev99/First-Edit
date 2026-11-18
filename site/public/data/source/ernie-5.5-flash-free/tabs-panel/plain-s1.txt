@@ -1,0 +1,115 @@
+export interface Props {
+  /** A tabbed section of a documents page: the tabs and the active tab's panel. */
+  tabs: Tab[];
+  /** The panel of the active tab. */
+  panel: Panel;
+}
+
+export interface Tab {
+  id: string;
+  label: string;
+  /** The number of documents behind the tab. */
+  count: number;
+  /** True for the tab whose panel is shown. */
+  active: boolean;
+}
+
+export interface Panel {
+  heading: string;
+  description: string;
+  items: PanelItem[];
+}
+
+export interface PanelItem {
+  id: string;
+  /** The document's name. */
+  name: string;
+  /** Shown under the name, e.g. who the document is waiting on. */
+  detail: string;
+}
+
+export default function DocumentReviewTabs({ tabs, panel }: Props) {
+  return (
+    <section
+      aria-label="Document review tabs"
+      className="w-full border-b border-stone-200 bg-white"
+    >
+      <div className="border-b border-stone-200">
+        <div
+          role="tablist"
+          aria-label="Document status"
+          className="mx-auto flex w-full max-w-6xl items-stretch gap-1 overflow-x-auto px-4 sm:px-6 lg:px-8"
+        >
+          {tabs.map((tab) => (
+            <div
+              key={tab.id}
+              role="tab"
+              aria-selected={tab.active}
+              tabIndex={tab.active ? 0 : -1}
+              className={[
+                "inline-flex shrink-0 items-center gap-2 border-b-2 px-4 py-4 text-sm font-medium transition-colors",
+                tab.active
+                  ? "border-emerald-700 bg-emerald-50/60 text-emerald-950"
+                  : "border-transparent text-stone-500",
+              ].join(" ")}
+            >
+              <span>{tab.label}</span>
+              <span
+                className={[
+                  "inline-flex min-w-6 items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-semibold tabular-nums",
+                  tab.active
+                    ? "bg-emerald-100 text-emerald-800"
+                    : "bg-stone-100 text-stone-600",
+                ].join(" ")}
+              >
+                {tab.count}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div
+        role="tabpanel"
+        aria-label={panel.heading}
+        className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8"
+      >
+        <div className="flex flex-col gap-4 border-b border-stone-200 pb-8 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="font-serif text-2xl font-semibold tracking-tight text-stone-950 sm:text-3xl">
+              {panel.heading}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">
+              {panel.description}
+            </p>
+          </div>
+          <p className="shrink-0 text-sm font-medium text-stone-500">
+            {panel.items.length}{" "}
+            {panel.items.length === 1 ? "document" : "documents"}
+          </p>
+        </div>
+
+        {panel.items.length > 0 ? (
+          <ul className="divide-y divide-stone-200">
+            {panel.items.map((item) => (
+              <li key={item.id} className="py-5 sm:py-6">
+                <h3 className="break-words text-base font-semibold text-stone-900">
+                  {item.name}
+                </h3>
+                <p className="mt-1.5 break-words text-sm leading-6 text-stone-500">
+                  {item.detail}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="mt-6 rounded-xl border border-dashed border-stone-300 bg-stone-50 px-6 py-10 text-center">
+            <p className="text-sm font-medium text-stone-600">
+              No documents in this view yet.
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}

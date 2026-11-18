@@ -1,0 +1,78 @@
+interface Props {
+  headline: string;
+  subheadline: string;
+  primaryCtaLabel: string;
+  secondaryCtaLabel: string;
+  benefits: string[];
+  customerCount: number;
+  customers: string[];
+}
+
+export default function Hero({
+  headline,
+  subheadline,
+  primaryCtaLabel,
+  secondaryCtaLabel,
+  benefits,
+  customerCount,
+  customers,
+}: Props) {
+  return (
+    <section className="w-full bg-white">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
+        <div className="mx-auto max-w-2xl text-center sm:text-left">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight mb-6">
+            {headline}
+          </h1>
+          <p className="text-lg sm:text-xl text-slate-600 mb-10 leading-relaxed">
+            {subheadline}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center sm:justify-start">
+            <button
+              type="button"
+              className="px-6 py-3 sm:px-8 sm:py-4 bg-slate-900 text-white rounded-xl font-semibold text-sm sm:text-base shadow-sm hover:bg-slate-800 transition"
+            >
+              {primaryCtaLabel}
+            </button>
+            <button
+              type="button"
+              className="px-6 py-3 sm:px-8 sm:py-4 border border-slate-300 text-slate-700 rounded-xl font-semibold text-sm sm:text-base bg-white hover:bg-slate-50 transition"
+            >
+              {secondaryCtaLabel}
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-16 mx-auto max-w-2xl sm:mx-0 sm:max-w-none">
+          <h2 className="sr-only">Benefits</h2>
+          <p className="text-xs sm:text-sm font-semibold text-slate-400 uppercase tracking-wider mb-6">
+            What you get
+          </p>
+          <ul className="flex flex-col sm:flex-row gap-3 sm:gap-6 justify-center sm:justify-start list-none p-0">
+            {benefits.map((benefit) => (
+              <li key={benefit} className="flex items-center gap-2 text-sm sm:text-base text-slate-600">
+                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                {benefit}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="mt-20 border-t border-slate-200 pt-12">
+          <div className="mb-6">
+            <span className="text-3xl sm:text-4xl font-bold text-slate-900">
+              Trusted by {new Intl.NumberFormat("en-US").format(customerCount)} teams
+            </span>
+          </div>
+          <div className="flex flex-wrap justify-center sm:justify-start gap-x-6 gap-y-4 text-sm sm:text-base font-medium text-slate-400">
+            {customers.map((name) => (
+              <span key={name} className="whitespace-nowrap">
+                {name}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

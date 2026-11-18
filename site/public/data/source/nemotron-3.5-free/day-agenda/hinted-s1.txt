@@ -1,0 +1,84 @@
+import { type FC } from "react";
+
+export interface Props {
+  /** Already formatted for display, e.g. "Thursday, 19 November". */
+  dateLabel: string;
+  /** In order of start time. */
+  events: AgendaEvent[];
+  /** Label of the button that adds an event. */
+  addEventLabel: string;
+}
+
+export type TagColor = 'blue' | 'green' | 'amber' | 'red' | 'purple' | 'gray';
+
+export interface EventTag {
+  label: string;
+  color: TagColor;
+}
+
+export interface AgendaEvent {
+  id: string;
+  /** Already formatted for display, e.g. "9:30 AM". */
+  start: string;
+  /** Already formatted for display, e.g. "10:00 AM". */
+  end: string;
+  title: string;
+  location: string;
+  /** The names of the people attending. */
+  attendees: string[];
+  tag: EventTag;
+}
+
+const TAG_VARIANTS: Record<TagColor, string> = {
+  blue: "border-blue-200 bg-blue-100 text-blue-800",
+  green: "border-green-200 bg-green-100 text-green-800",
+  amber: "border-amber-200 bg-amber-100 text-amber-800",
+  red: "border-red-200 bg-red-100 text-red-800",
+  purple: "border-purple-200 bg-purple-100 text-purple-800",
+  gray: "border-gray-200 bg-gray-100 text-gray-800",
+};
+
+const DayAgenda: FC<Props> = ({ dateLabel, events, addEventLabel }) => {
+  return (
+    <section className="w-full max-w-md flex flex-col gap-4 border border-gray-200 rounded-xl bg-white shadow-sm p-4">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <h2 className="text-lg font-semibold text-gray-900 min-w-0">{dateLabel}</h2>
+        <button
+          type="button"
+          className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100"
+        >
+          {addEventLabel}
+        </button>
+      </header>
+
+      <div className="flex flex-col gap-3">
+        {events.length === 0 ? (
+          <p className="text-sm text-gray-500">No events</p>
+        ) : (
+          events.map((event) => (
+            <article
+              key={event.id}
+              className="flex flex-col gap-1.5 border border-gray-200 rounded-lg p-3 bg-gray-50"
+            >
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-mono text-gray-500">{event.start}</span>
+                <span className="text-xs text-gray-400">—</span>
+                <span className="text-sm font-mono text-gray-500">{event.end}</span>
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900 break-words">{event.title}</h3>
+              <p className="text-sm text-gray-600 break-words">{event.location}</p>
+              <p className="text-xs text-gray-500 break-words">{event.attendees.join(", ")}</p>
+              <span
+                className={`inline-block px-2 py-0.5 rounded text-xs font-medium border ${TAG_VARIANTS[event.tag.color]}`}
+              >
+                {event.tag.label}
+              </span>
+            </article>
+          ))
+        )}
+      </div>
+    </section>
+  );
+};
+
+export default DayAgenda;

@@ -1,0 +1,158 @@
+import type { ReactElement } from "react";
+
+export interface Props {
+  contact: Contact;
+  messages: Message[];
+  composer: Composer;
+}
+
+export interface Contact {
+  name: string;
+  status: string;
+}
+
+export type Sender = "me" | "them";
+
+export interface Message {
+  id: string;
+  from: Sender;
+  author: string;
+  text: string;
+  time: string;
+}
+
+export interface Composer {
+  placeholder: string;
+  sendLabel: string;
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) {
+    return "?";
+  }
+
+  if (parts.length === 1) {
+    return (parts[0] ?? "?").slice(0, 2).toUpperCase();
+  }
+
+  const first = parts[0]?.charAt(0) ?? "";
+  const last = parts[parts.length - 1]?.charAt(0) ?? "";
+
+  return `${first}${last}`.toUpperCase() || "?";
+}
+
+export default function ChatThread({
+  contact,
+  messages,
+  composer,
+}: Props): ReactElement {
+  const contactIsActive = /\b(active|online)\b/.test(
+    contact.status.toLowerCase(),
+  );
+
+  return (
+    <div className="mx-auto flex h-[min(44rem,90vh)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/10">
+      <header className="flex shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
+        <div
+          aria-hidden="true"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full border border-teal-200 bg-teal-100 text-sm font-bold tracking-wide text-teal-800"
+        >
+          {getInitials(contact.name)}
+        </div>
+
+        <div className="min-w-0">
+          <h2 className="truncate text-base font-semibold text-slate-900">
+            {contact.name}
+          </h2>
+          <div className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
+            <span
+              aria-hidden="true"
+              className={`size-1.5 shrink-0 rounded-full ${
+                contactIsActive ? "bg-emerald-500" : "bg-slate-400"
+              }`}
+            />
+            <span className="truncate">{contact.status}</span>
+          </div>
+        </div>
+      </header>
+
+      <div
+        role="log"
+        aria-live="polite"
+        aria-label={`Conversation with ${contact.name}`}
+        className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-slate-50 px-4 py-5 sm:px-6"
+      >
+        {messages.map((message) => {
+          const isMe = message.from === "me";
+          const senderLabel =
+            isMe && message.author
+              ? `You · ${message.author}`
+              : isMe
+                ? "You"
+                : message.author;
+
+          return (
+            <div
+              key={message.id}
+              className={`flex w-full ${isMe ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`flex max-w-[82%] flex-col ${
+                  isMe ? "items-end" : "items-start"
+                }`}
+              >
+                <div
+                  className={`mb-1 flex items-center gap-2 px-1 text-xs font-medium ${
+                    isMe ? "text-indigo-700" : "text-slate-600"
+                  }`}
+                >
+                  <span>{senderLabel}</span>
+                  <span aria-hidden="true" className="text-slate-300">
+                    •
+                  </span>
+                  <time className="font-normal text-slate-400">
+                    {message.time}
+                  </time>
+                </div>
+
+                <div
+                  className={`rounded-2xl border px-4 py-3 text-sm leading-6 shadow-sm ${
+                    isMe
+                      ? "rounded-br-md border-indigo-500/20 bg-indigo-600 text-white"
+                      : "rounded-bl-md border-slate-200 bg-white text-slate-800"
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap break-words">
+                    {message.text}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-4 sm:px-6">
+        <div className="flex items-end gap-2">
+          <label htmlFor="murmelby-message" className="sr-only">
+            Message
+          </label>
+          <textarea
+            id="murmelby-message"
+            rows={1}
+            placeholder={composer.placeholder}
+            className="min-h-11 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"
+          />
+          <button
+            type="button"
+            className="inline-flex h-11 shrink-0 items-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            {composer.sendLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

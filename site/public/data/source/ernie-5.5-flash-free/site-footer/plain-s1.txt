@@ -1,0 +1,106 @@
+import * as React from "react";
+
+interface FooterLink {
+  label: string;
+  href: string;
+}
+
+interface LinkColumn {
+  title: string;
+  links: FooterLink[];
+}
+
+interface Newsletter {
+  prompt: string;
+  label: string;
+  placeholder: string;
+  buttonLabel: string;
+}
+
+interface Props {
+  companyName: string;
+  tagline: string;
+  columns: LinkColumn[];
+  newsletter: Newsletter;
+  legal: string;
+}
+
+export default function Footer(props: Props): React.ReactElement {
+  return (
+    <footer className="w-full bg-slate-950 text-slate-100">
+      <div className="mx-auto max-w-7xl px-6 py-14 md:px-8 lg:py-16">
+        <div className="grid gap-10 lg:grid-cols-5 lg:gap-16">
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-3">
+              <div
+                aria-hidden="true"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-300 text-lg font-bold text-slate-950"
+              >
+                {props.companyName.charAt(0).toUpperCase()}
+              </div>
+              <p className="text-2xl font-semibold tracking-tight">{props.companyName}</p>
+            </div>
+            <p className="mt-5 max-w-md text-base leading-7 text-slate-400">
+              {props.tagline}
+            </p>
+          </div>
+
+          <div className="lg:col-span-3">
+            <div className="rounded-2xl bg-slate-900 p-6 ring-1 ring-slate-800 sm:p-8">
+              <p className="text-lg font-medium text-slate-100">{props.newsletter.prompt}</p>
+              <div className="mt-5">
+                <label
+                  htmlFor="footer-newsletter-email"
+                  className="block text-sm font-medium text-slate-300"
+                >
+                  {props.newsletter.label}
+                </label>
+                <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+                  <input
+                    id="footer-newsletter-email"
+                    name="email"
+                    type="email"
+                    placeholder={props.newsletter.placeholder}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-amber-300 focus:ring-2 focus:ring-amber-300"
+                  />
+                  <button
+                    type="button"
+                    className="rounded-lg bg-amber-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-200 focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  >
+                    {props.newsletter.buttonLabel}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {props.columns.map((column) => (
+            <nav key={column.title} aria-label={column.title}>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-200">
+                {column.title}
+              </h2>
+              <ul className="mt-4 space-y-3">
+                {column.links.map((link) => (
+                  <li key={`${column.title}-${link.href}`}>
+                    <a
+                      href={link.href}
+                      className="text-sm text-slate-400 transition hover:text-amber-300"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
+        </div>
+
+        <div className="mt-12 border-t border-slate-800 pt-6">
+          <p className="text-sm text-slate-500">{props.legal}</p>
+        </div>
+      </div>
+    </footer>
+  );
+}

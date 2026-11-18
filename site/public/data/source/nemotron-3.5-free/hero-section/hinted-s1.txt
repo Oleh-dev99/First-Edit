@@ -1,0 +1,97 @@
+import { type FC } from "react";
+
+export interface Props {
+  headline: string;
+  subheadline: string;
+  primaryCtaLabel: string;
+  secondaryCtaLabel: string;
+  benefits: string[];
+  customerCount: number;
+  customers: string[];
+}
+
+const Hero: FC<Props> = ({
+  headline,
+  subheadline,
+  primaryCtaLabel,
+  secondaryCtaLabel,
+  benefits,
+  customerCount,
+  customers,
+}) => {
+  return (
+    <section className="w-full bg-white overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+        <div className="text-center sm:text-left">
+          <h1
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight break-words"
+          >
+            {headline}
+          </h1>
+          <p
+            className="mt-4 sm:mt-6 text-lg sm:text-xl text-slate-600 leading-relaxed max-w-2xl break-words"
+          >
+            {subheadline}
+          </p>
+          <div
+            className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center sm:justify-start flex-wrap"
+          >
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-6 py-3 text-sm font-medium text-white shadow-sm"
+            >
+              {primaryCtaLabel}
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-medium text-slate-700 shadow-sm"
+            >
+              {secondaryCtaLabel}
+            </button>
+          </div>
+        </div>
+
+        {benefits.length > 0 && (
+          <div className="mt-12 sm:mt-16 max-w-2xl mx-auto sm:mx-0">
+            <ul className="divide-y divide-slate-100">
+              {benefits.map((benefit, index) => (
+                <li
+                  key={index}
+                  className="py-3 flex items-start gap-2 text-slate-600 break-words"
+                >
+                  <span className="shrink-0 text-slate-400">•</span>
+                  {benefit}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mt-16 sm:mt-20 border-t border-slate-200 pt-8 sm:pt-12">
+          <div className="text-center sm:text-left">
+            <p className="text-3xl sm:text-4xl font-bold text-slate-900">
+              {customerCount.toLocaleString()}
+            </p>
+            <p className="mt-1 text-sm text-slate-500">customers</p>
+          </div>
+          {customers.length > 0 && (
+            <div
+              className="mt-8 sm:mt-10 flex flex-wrap justify-center sm:justify-start gap-4 sm:gap-6 items-center"
+            >
+              {customers.map((customer, index) => (
+                <span
+                  key={index}
+                  className="text-base sm:text-lg font-medium text-slate-500 uppercase tracking-wider break-words"
+                >
+                  {customer}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Hero;

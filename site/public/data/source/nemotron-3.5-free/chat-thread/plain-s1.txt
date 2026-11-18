@@ -1,0 +1,103 @@
+import { FC } from "react";
+
+export interface Contact {
+  name: string;
+  status: string;
+}
+
+export type Sender = "me" | "them";
+
+export interface Message {
+  id: string;
+  from: Sender;
+  author: string;
+  text: string;
+  time: string;
+}
+
+export interface Composer {
+  placeholder: string;
+  sendLabel: string;
+}
+
+export interface Props {
+  contact: Contact;
+  messages: Message[];
+  composer: Composer;
+}
+
+const ChatThread: FC<Props> = ({ contact, messages, composer }) => {
+  const initials = contact.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0))
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "?";
+
+  return (
+    <div className="flex flex-col w-full bg-white border border-gray-200 rounded-xl shadow-sm">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 bg-gray-50">
+        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-600">
+          {initials}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900 truncate">{contact.name}</p>
+          <p className="text-xs text-gray-500">{contact.status}</p>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+        {messages.map((message) => {
+          const isMe = message.from === "me";
+
+          return (
+            <div key={message.id} className="flex w-full mt-2">
+              {isMe ? (
+                <div className="flex flex-col items-end max-w-[75%]">
+                  <p className="text-right text-xs font-semibold text-blue-600 mb-0.5">
+                    {message.author}
+                  </p>
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg rounded-tr-none px-3 py-1.5 text-sm text-gray-900">
+                    {message.text}
+                  </div>
+                  <p className="text-right text-xs text-gray-400 mt-0.5">
+                    {message.time}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-start max-w-[75%]">
+                  <p className="text-xs font-semibold text-gray-600 mb-0.5">
+                    {message.author}
+                  </p>
+                  <div className="bg-white border border-gray-200 rounded-lg rounded-tl-none px-3 py-1.5 text-sm text-gray-900">
+                    {message.text}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {message.time}
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="border-t border-gray-200 bg-gray-50 p-3">
+        <div className="flex gap-2">
+          <textarea
+            className="flex-1 min-h-[40px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-500 focus:ring-1 focus:ring-blue-500 resize-none outline-none"
+            placeholder={composer.placeholder}
+          />
+          <button
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+          >
+            {composer.sendLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ChatThread;

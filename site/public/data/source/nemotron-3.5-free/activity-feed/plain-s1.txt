@@ -1,0 +1,72 @@
+interface Filter {
+  id: string;
+  label: string;
+  active: boolean;
+}
+
+interface ActivityEvent {
+  id: string;
+  actor: string;
+  action: string;
+  target: string;
+  time: string;
+  comment: string | null;
+}
+
+interface Props {
+  title: string;
+  filters: Filter[];
+  events: ActivityEvent[];
+}
+
+export default function ActivityFeed({ title, filters, events }: Props) {
+  return (
+    <section className="w-full">
+      <div className="px-4 py-6">
+        <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {filters.map((filter) => (
+            <button
+              key={filter.id}
+              type="button"
+              aria-pressed={filter.active}
+              className={
+                filter.active
+                  ? "inline-flex items-center gap-1 rounded-md border border-blue-600 bg-blue-600 px-3 py-1 text-xs font-medium text-white shadow-sm"
+                  : "inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              }
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-6 space-y-4">
+          {events.map((event) => (
+            <div
+              key={event.id}
+              className="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0"
+            >
+              <div className="flex items-baseline gap-2">
+                <p className="text-sm text-gray-900">
+                  <span className="font-medium">{event.actor}</span>{" "}
+                  {event.action}{" "}
+                  <span className="font-medium">{event.target}</span>
+                </p>
+                <span className="ml-auto text-xs text-gray-500">
+                  {event.time}
+                </span>
+              </div>
+              {event.comment && (
+                <p className="mt-1 text-sm text-gray-600">
+                  “{event.comment}”
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

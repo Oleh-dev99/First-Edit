@@ -1,0 +1,208 @@
+interface Props {
+  title: string;
+  currency: string;
+  items: OrderItem[];
+  promo: PromoField;
+  subtotal: number;
+  shipping: number;
+  tax: number;
+  total: number;
+  note: string;
+  payLabel: string;
+}
+
+interface OrderItem {
+  id: string;
+  image: ItemImage;
+  name: string;
+  variant: string;
+  quantity: number;
+  price: number;
+}
+
+interface ItemImage {
+  src: string;
+  alt: string;
+}
+
+interface PromoField {
+  label: string;
+  placeholder: string;
+  applyLabel: string;
+}
+
+function formatAmount(value: number, currency: string): string {
+  const safeValue = Number.isFinite(value) ? value : 0;
+  const safeCurrency =
+    /^[A-Za-z]{3}$/.test(String(currency)) ? String(currency).toUpperCase() : "USD";
+
+  try {
+    const formatted = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: safeCurrency,
+    }).format(safeValue);
+
+    if (formatted.length <= 20) return formatted;
+  } catch {
+    // Fall through to a manual amount when the currency code is not supported.
+  }
+
+  const sign = safeValue < 0 ? "-" : "";
+  const parts = Math.abs(safeValue).toFixed(2).split(".");
+  const grouped = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+  return `${sign}${safeCurrency} ${grouped}.${parts[1]}`;
+}
+
+function OrderRow({ item, currency }: { item: OrderItem; currency: string }) {
+  return (
+    <li className="flex min-w-0 items-start gap-3 py-4">
+      <div className="relative shrink-0">
+        <img
+          src={item.image.src}
+          alt={item.image.alt}
+          className="h-16 w-16 rounded-md bg-stone-100 object-cover sm:h-20 sm:w-20"
+          style={{ maxWidth: "100%" }}
+        />
+        <span
+          aria-hidden="true"
+          className="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-stone-800 px-1 text-[11px] leading-none font-semibold text-white tabular-nums"
+        >
+          {item.quantity}
+        </span>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-1">
+          <h3 className="min-w-0 flex-1 basis-[10rem] text-sm leading-snug font-medium break-words text-stone-900">
+            {item.name}
+          </h3>
+          <span className="text-sm font-semibold break-words text-stone-900 tabular-nums">
+            {formatAmount(item.price, currency)}
+          </span>
+        </div>
+        <p className="mt-1 text-xs break-words text-stone-600">{item.variant}</p>
+        <p className="mt-1 text-xs text-stone-500 tabular-nums">
+          Qty {item.quantity}
+        </p>
+      </div>
+    </li>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  emphasis = false,
+}: {
+  label: string;
+  value: string;
+  emphasis?: boolean;
+}) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+      <span className="min-w-0 flex-1 basis-[8rem] break-words text-sm text-stone-600">
+        {label}
+      </span>
+      <span
+        className={
+          emphasis
+            ? "text-sm font-semibold break-words text-stone-900 tabular-nums"
+            : "text-sm break-words text-stone-800 tabular-nums"
+        }
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+export default function CheckoutOrderSummary({
+  title,
+  currency,
+  items,
+  promo,
+  subtotal,
+  shipping,
+  tax,
+  total,
+  note,
+  payLabel,
+}: Props) {
+  return (
+    <section
+      aria-label={title}
+      className="w-full max-w-xl min-w-0 self-start rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:p-6"
+    >
+      <h2 className="text-lg font-semibold tracking-tight break-words text-stone-900">
+        {title}
+      </h2>
+
+      {items.length > 0 ? (
+        <ul className="mt-2 divide-y divide-stone-200">
+          {items.map((item) => (
+            <OrderRow key={item.id} item={item} currency={currency} />
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-4 rounded-lg border border-dashed border-stone-300 bg-stone-50 px-3 py-4 text-sm break-words text-stone-600">
+          No items in this order yet.
+        </p>
+      )}
+
+      <form
+        className="mt-4 rounded-lg bg-stone-50 p-3 sm:p-4"
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <label
+          htmlFor="checkout-promo-code"
+          className="block text-sm font-medium break-words text-stone-800"
+        >
+          {promo.label}
+        </label>
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+          <input
+            id="checkout-promo-code"
+            name="promoCode"
+            type="text"
+            autoComplete="off"
+            placeholder={promo.placeholder}
+            className="min-w-0 w-full flex-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-500 focus:border-stone-500 focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="shrink-0 rounded-lg border border-stone-800 bg-stone-800 px-4 py-2 text-sm font-medium break-words text-white transition-colors hover:bg-stone-700"
+          >
+            {promo.applyLabel}
+          </button>
+        </div>
+      </form>
+
+      <dl className="mt-5 space-y-2 border-t border-stone-200 pt-4">
+        <SummaryRow label="Subtotal" value={formatAmount(subtotal, currency)} />
+        <SummaryRow label="Shipping" value={formatAmount(shipping, currency)} />
+        <SummaryRow label="Tax" value={formatAmount(tax, currency)} />
+      </dl>
+
+      <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg bg-emerald-50 px-3 py-3 ring-1 ring-emerald-100 sm:px-4">
+        <span className="min-w-0 flex-1 basis-[8rem] text-base font-semibold break-words text-emerald-900">
+          Total
+        </span>
+        <span className="text-xl font-bold break-words text-emerald-900 tabular-nums">
+          {formatAmount(total, currency)}
+        </span>
+      </div>
+
+      <p className="mt-4 text-xs leading-relaxed break-words text-stone-600">
+        {note}
+      </p>
+
+      <button
+        type="button"
+        className="mt-3 w-full rounded-lg bg-emerald-700 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-800"
+      >
+        <span className="break-words">{payLabel}</span>
+      </button>
+    </section>
+  );
+}
